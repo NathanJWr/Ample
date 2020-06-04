@@ -16,6 +16,7 @@ struct _SSLString {
 #define SSL_BASE_POINTER(p_str) ((struct _SSLString*) (p_str - sizeof(struct _SSLString)))
 #define DEFAULT_RESIZE(size) size*2
 void ssl_free (char* str);
+uint32_t ssl_strlen (char* str);
 char* ssl_resize (char* str, uint32_t size);
 char* ssl_strcpy (char* dest, char* str);
 char* ssl_strcat (char* dest, char* src);

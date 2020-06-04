@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "lexer.h"
+#include "parser.h"
 
 char* read_whole_file (FILE* f)
 {
@@ -23,8 +24,8 @@ int main (int argc, char** argv) {
         char* file = read_whole_file (f);
         fclose (f);
 
-        struct Token* tokens = lex_all(file);
-
+        struct Token* tokens = lex_all (file);
+        struct AST tree = parse_tokens (tokens);
         token_free_all (tokens);
         free (file);
     }

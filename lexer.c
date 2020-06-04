@@ -27,7 +27,13 @@ struct Token* lex_all (char* fb)
             i--;
 
             token.string = id;
-            token.value = TOK_IDENTIFIER;
+            if (0 == strncmp ("true", id, ssl_strlen(id))) {
+                token.value = TOK_BOOL;
+            } else if (0 == strncmp ("false", id, ssl_strlen (id))) {
+                token.value = TOK_BOOL;
+            } else {
+                token.value = TOK_IDENTIFIER;
+            }
         } else if (isdigit (c) && c != '0') { /* INTEGER */
             char* num = ssl_addchar (NULL, c);
             c = fb[i++];
@@ -39,7 +45,7 @@ struct Token* lex_all (char* fb)
 
             token.string = num;
             token.value = TOK_INTEGER;
-        } else {
+        } else { /* Any other kind of ASCII token */
             token.value = c;
         }
         c = fb[i++];

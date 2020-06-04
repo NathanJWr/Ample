@@ -1,10 +1,21 @@
 #include "ssl.h"
+#include "ncl.h"
 // Calls free on the base pointer of the ssl string
 void ssl_free (char* str) 
 {
     free (SSL_BASE_POINTER(str));
 }
 
+/* Gets the strlen of an ssl string */
+uint32_t ssl_strlen (char* str)
+{
+    if (str) {
+        struct _SSLString* s = SSL_BASE_POINTER (str);
+        return s->length;
+    } else {
+        return 0;
+    }
+}
 // Create a ssl string from a cstring
 char* ssl_strcpy (char* restrict dest, char* restrict str)
 {
@@ -38,7 +49,7 @@ char* ssl_resize (char* str, uint32_t size)
     cp = ssl_strcpy (cp, n->string);
 
     // Reallocate memory to fit the new, bigger size specified
-    n = realloc (n, sizeof(struct _SSLString) + size);
+    n = ncl_realloc (n, sizeof(struct _SSLString) + size);
     if (n) {
         n->size = size;
         n->length = orig_length;
