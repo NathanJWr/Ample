@@ -25,7 +25,9 @@ int main (int argc, char** argv) {
         fclose (f);
 
         struct Token* tokens = lex_all (file);
-        struct AST tree = parse_tokens (tokens);
+        struct AST* tree = parse_tokens (tokens);
+
+        free_ast_buffer ();
         token_free_all (tokens);
         free (file);
     }

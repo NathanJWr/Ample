@@ -11,19 +11,20 @@ unsigned int statement_size (struct Statement s)
     return s.end - s.start + 1;
 }
 
-struct AST parse_tokens (struct Token* tokens)
+struct AST* parse_tokens (struct Token* tokens)
 {
     unsigned int index = 0;
-    struct AST head = {0};
-    struct AST** statements = NULL;
+    unsigned int head = parse__allocate_ast ();
+    unsigned int* statements = NULL;
     while (index < sb_count (tokens)) {
         struct Statement s = parse__get_statement(tokens, &index);
         sb_push (statements, parse__statement (tokens, s));
     }
 
-    head.type = AST_SCOPE;
-    head.scope_data.statements = statements;
-    return head;
+    struct AST* h = parse__get_ast (head);
+    h->type = AST_SCOPE;
+    h->scope_data.statements = statements;
+    return h;
 }
 
 struct Statement parse__get_statement (struct Token* restrict tokens, unsigned int* restrict index)
@@ -42,44 +43,60 @@ struct Statement parse__get_statement (struct Token* restrict tokens, unsigned i
     return s;
 }
 
-struct AST* parse__statement (struct Token* t_arr, struct Statement s)
+unsigned int parse__statement (struct Token* t_arr, struct Statement s)
 {
-    struct AST* node = NULL;
-
+    unsigned int node = 0;
     node = parse__possible_integer (t_arr, s);
     if (node) return node;
 
     node = parse__possible_identifier (t_arr, s);
     if (node) return node;
 
-    return NULL;
+    return 0;
 }
-struct AST* parse__possible_integer (struct Token* t_arr, struct Statement s)
+unsigned int parse__possible_integer (struct Token* t_arr, struct Statement s)
 {
-    struct AST* node = NULL;
+    unsigned int node = 0;
     if (statement_size (s)  == 1 &&
         t_arr[s.start].value == TOK_INTEGER) { /* INTEGER literal */
         node = parse__allocate_ast ();
-        node->type = AST_INTEGER;
-        node->int_data.value = atoi (t_arr[s.start].string);
+        struct AST* n = parse__get_ast (node);
+        n->type = AST_INTEGER;
+        n->int_data.value = atoi (t_arr[s.start].string);
     }
     return node;
 }
-struct AST* parse__possible_identifier (struct Token* t_arr, struct Statement s)
+unsigned int parse__possible_identifier (struct Token* t_arr, struct Statement s)
 {
-    struct AST* node = NULL;
+    unsigned int node = 0;
     if (statement_size (s) == 1 &&
         t_arr[s.start].value == TOK_IDENTIFIER) {
         node = parse__allocate_ast ();
-        node->type = AST_IDENTIFIER;
-        node->id_data.id = t_arr[s.start].string;
+        struct AST* n = parse__get_ast (node);
+        n->type = AST_IDENTIFIER;
+        n->id_data.id = t_arr[s.start].string;
     }
     return node;
 }
 
-struct AST* parse__allocate_ast ()
+unsigned int parse__allocate_ast ()
 {
     struct AST a = {0};
     sb_push (ast_buffer, a);
-    return &sb_last (ast_buffer);
+    return sb_count(ast_buffer) - 1;
+}
+
+void free_ast_buffer ()
+{
+    for (unsigned int i = 0; i < sb_count (ast_buffer); i++) {
+        if (ast_buffer[i].type == AST_SCOPE) {
+            sb_free (ast_buffer[i].scope_data.statements);
+        }
+    }
+    sb_free (ast_buffer);
+}
+
+struct AST* parse__get_ast(unsigned int index)
+{
+    return &ast_buffer[index];
 }
