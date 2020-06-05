@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "lexer.h"
+#include "ast.h"
 #include "stretchy_buffer.h"
 /* A subset of the token array */
 struct Statement {
@@ -14,14 +15,14 @@ unsigned int statement_size (struct Statement s)
 struct AST* parse_tokens (struct Token* tokens)
 {
     unsigned int index = 0;
-    unsigned int head = parse__allocate_ast ();
+    unsigned int head = ast_get_node_handle ();
     unsigned int* statements = NULL;
     while (index < sb_count (tokens)) {
         struct Statement s = parse__get_statement(tokens, &index);
         sb_push (statements, parse__statement (tokens, s));
     }
 
-    struct AST* h = parse__get_ast (head);
+    struct AST* h = ast_get_node (head);
     h->type = AST_SCOPE;
     h->scope_data.statements = statements;
     return h;
@@ -59,8 +60,8 @@ unsigned int parse__possible_integer (struct Token* t_arr, struct Statement s)
     unsigned int node = 0;
     if (statement_size (s)  == 1 &&
         t_arr[s.start].value == TOK_INTEGER) { /* INTEGER literal */
-        node = parse__allocate_ast ();
-        struct AST* n = parse__get_ast (node);
+        node = ast_get_node_handle ();
+        struct AST* n = ast_get_node (node);
         n->type = AST_INTEGER;
         n->int_data.value = atoi (t_arr[s.start].string);
     }
@@ -71,32 +72,10 @@ unsigned int parse__possible_identifier (struct Token* t_arr, struct Statement s
     unsigned int node = 0;
     if (statement_size (s) == 1 &&
         t_arr[s.start].value == TOK_IDENTIFIER) {
-        node = parse__allocate_ast ();
-        struct AST* n = parse__get_ast (node);
+        node = ast_get_node_handle ();
+        struct AST* n = ast_get_node (node);
         n->type = AST_IDENTIFIER;
         n->id_data.id = t_arr[s.start].string;
     }
     return node;
-}
-
-unsigned int parse__allocate_ast ()
-{
-    struct AST a = {0};
-    sb_push (ast_buffer, a);
-    return sb_count(ast_buffer) - 1;
-}
-
-void free_ast_buffer ()
-{
-    for (unsigned int i = 0; i < sb_count (ast_buffer); i++) {
-        if (ast_buffer[i].type == AST_SCOPE) {
-            sb_free (ast_buffer[i].scope_data.statements);
-        }
-    }
-    sb_free (ast_buffer);
-}
-
-struct AST* parse__get_ast(unsigned int index)
-{
-    return &ast_buffer[index];
 }
