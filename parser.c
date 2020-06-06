@@ -57,6 +57,9 @@ ASTHandle parse__statement (struct Token* t_arr, struct Statement s)
     node = parser__possible_arithmetic (t_arr, s);
     if (node) return node;
 
+    node = parser__possible_string (t_arr, s);
+    if (node) return node;
+
     return 0;
 }
 ASTHandle parser__possible_integer (struct Token* t_arr, struct Statement s)
@@ -306,6 +309,23 @@ ASTHandle parser__possible_identifier (struct Token* t_arr, struct Statement s)
             .type = AST_IDENTIFIER,
             .id_data = {
                 .id = t_arr[s.start].string,
+            }
+        };
+    }
+    return node;
+}
+
+ASTHandle parser__possible_string (struct Token* t_arr, struct Statement s)
+{
+    ASTHandle node = 0;
+    if (statement_size (s) == 1 &&
+        t_arr[s.start].value == TOK_STRING) {
+        node = ast_get_node_handle ();
+        struct AST* n = ast_get_node (node);
+        *n = (struct AST) {
+            .type = AST_STRING,
+            .str_data = {
+                .str = t_arr[s.start].string,
             }
         };
     }

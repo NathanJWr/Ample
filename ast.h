@@ -4,6 +4,7 @@
 typedef unsigned int ASTHandle;
 enum ASTType {
     AST_INTEGER,
+    AST_STRING,
     AST_IDENTIFIER,
     AST_SCOPE,
     AST_BINARY_OP,
@@ -18,6 +19,11 @@ struct ScopeAST {
 struct IntegerAST {
     int value;
 };
+
+struct StringAST {
+    char* str;
+};
+
 struct IdentifierAST {
     char* id; /* ssl string */
 };
@@ -33,6 +39,7 @@ struct AST {
         struct IntegerAST int_data;
         struct IdentifierAST id_data;
         struct BinaryOpAST bop_data; 
+        struct StringAST str_data;
     };
 };
 

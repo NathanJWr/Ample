@@ -45,6 +45,15 @@ struct Token* lex_all (char* fb)
 
             token.string = num;
             token.value = TOK_INTEGER;
+        } else if (c == '"') { /* STRING */
+            char* str = NULL;
+            c = fb[i++];
+            while (c != '"') {
+                str = ssl_addchar (str, c);
+                c = fb[i++];
+            }
+            token.string = str;
+            token.value = TOK_STRING;
         } else { /* Any other kind of ASCII token */
             token.value = c;
         }

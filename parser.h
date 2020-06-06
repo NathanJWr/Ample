@@ -17,6 +17,7 @@ ASTHandle parse__statement (struct Token* t_arr, struct Statement s);
 ASTHandle parser__possible_integer (struct Token* t_arr, struct Statement s);
 ASTHandle parser__possible_identifier (struct Token* t_arr, struct Statement s);
 ASTHandle parser__possible_arithmetic (struct Token* t_arr, struct Statement s);
+ASTHandle parser__possible_string (struct Token* t_arr, struct Statement s);
 
 bool parser__is_arithmetic_op (TValue v);
 bool parser__greater_precedence (struct Token* left, struct Token* right);

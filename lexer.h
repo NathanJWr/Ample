@@ -7,6 +7,7 @@ typedef enum {
     TOK_IDENTIFIER = 127,
     TOK_INTEGER = 128,
     TOK_BOOL = 129,
+    TOK_STRING = 130,
 } TValue;
 struct Token {
     TValue value;
