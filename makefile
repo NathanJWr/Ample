@@ -18,7 +18,7 @@ LD = ld
 CFLAGS = -Wall
 LDFLAGS = -lbsd
 ifeq ($(BUILD), debug)
-	CFLAGS+=-g -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope 
+	CFLAGS+=-g -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope -Wno-switch
 	LDFLAGS+=-fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope 
 endif
 ifeq ($(BUILD), release)

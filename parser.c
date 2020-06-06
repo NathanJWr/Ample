@@ -48,26 +48,30 @@ struct Statement parse__get_statement (struct Token* restrict tokens, unsigned i
 ASTHandle parse__statement (struct Token* t_arr, struct Statement s)
 {
     ASTHandle node = 0;
-    node = parse__possible_integer (t_arr, s);
+    node = parser__possible_integer (t_arr, s);
     if (node) return node;
 
-    node = parse__possible_identifier (t_arr, s);
+    node = parser__possible_identifier (t_arr, s);
     if (node) return node;
 
-    node = parse__possible_arithmetic (t_arr, s);
+    node = parser__possible_arithmetic (t_arr, s);
     if (node) return node;
 
     return 0;
 }
-ASTHandle parse__possible_integer (struct Token* t_arr, struct Statement s)
+ASTHandle parser__possible_integer (struct Token* t_arr, struct Statement s)
 {
     ASTHandle node = 0;
     if (statement_size (s)  == 1 &&
         t_arr[s.start].value == TOK_INTEGER) { /* INTEGER literal */
         node = ast_get_node_handle ();
         struct AST* n = ast_get_node (node);
-        n->type = AST_INTEGER;
-        n->int_data.value = atoi (t_arr[s.start].string);
+        *n = (struct AST) {
+            .type = AST_INTEGER,
+            .int_data = {
+                .value = atoi (t_arr[s.start].string),
+            },
+        };
     }
     return node;
 }
@@ -189,10 +193,14 @@ ASTHandle parser__convert_postfix_to_ast (struct TokenTailQ postfix_q, unsigned 
     
             /* Fill out information of binary op */
             op = ast_get_node (ast_handle);
-            op->type = AST_BINARY_OP;
-            op->bop_data.left = left->ast;
-            op->bop_data.right = right->ast;
-            op->bop_data.op = n->tok->value;
+            *op = (struct AST) {
+                .type = AST_BINARY_OP,
+                .bop_data = {
+                    .left = left->ast,
+                    .right = right->ast,
+                    .op = n->tok->value
+                }
+            };
             
             /* Insert the operation, instead of the left and right values
                back on to the stack */
@@ -217,20 +225,17 @@ int evaluate_binary_op (ASTHandle handle)
     struct AST* node = ast_get_node (handle);
 
     if (node->type == AST_BINARY_OP) {
-        struct AST *left, *right;
-        ASTHandle right_handle, left_handle;
-
-        right_handle = node->bop_data.right;
-        left_handle = node->bop_data.left;
-        left = ast_get_node (right_handle);
-        right = ast_get_node (left_handle);
-
+        ASTHandle right_handle = node->bop_data.right;
+        ASTHandle left_handle = node->bop_data.left;
+        
+        struct AST* right = ast_get_node (right_handle);
         if (right->type == AST_INTEGER) {
             right_value = right->int_data.value;
         } else if (right->type == AST_BINARY_OP) {
             right_value = evaluate_binary_op (right_handle);
         }
 
+        struct AST* left = ast_get_node (left_handle);
         if (left->type == AST_INTEGER) {
             left_value = left->int_data.value;
         } else if (left->type == AST_BINARY_OP) {
@@ -247,13 +252,12 @@ int evaluate_binary_op (ASTHandle handle)
     }
     return 0;
 }
-ASTHandle parse__arithmetic (struct Token* t_arr, struct Statement s)
+ASTHandle parser__arithmetic (struct Token* t_arr, struct Statement s)
 {
     /* storage necessary to put tokens into a queue/stack 
        no more memory should be allocated for this process */
     struct TokenTailQ expr_q = STAILQ_HEAD_INITIALIZER (expr_q);
-    struct TokenNode* nodes = malloc (statement_size (s) * sizeof(struct TokenNode));
-
+    struct TokenNode nodes[statement_size (s) * sizeof(struct TokenNode)];
     STAILQ_INIT (&expr_q);
     for (unsigned int i = s.start; i <= s.end; i++) {
         nodes[i].tok = t_arr + i;
@@ -262,10 +266,7 @@ ASTHandle parse__arithmetic (struct Token* t_arr, struct Statement s)
     struct TokenTailQ postfix = parser__convert_infix_to_postfix (&expr_q);
     parser__debug_print_queue (&postfix);
     ASTHandle op = parser__convert_postfix_to_ast (postfix, statement_size (s));
-    int val = evaluate_binary_op (op);
-    printf ("EVALUATED: %d", val);
-    free (nodes);
-    return 0;
+    return op;
 }
 
 
@@ -283,26 +284,30 @@ void parser__debug_print_queue (struct TokenTailQ* q)
     }
 }
 
-ASTHandle parse__possible_arithmetic (struct Token* t_arr, struct Statement s)
+ASTHandle parser__possible_arithmetic (struct Token* t_arr, struct Statement s)
 {
     ASTHandle node = 0;
     if (statement_size (s) >= 2 &&
         t_arr[s.start].value == TOK_INTEGER &&
         parser__is_arithmetic_op (t_arr[s.start + 1].value)) {
-        node = parse__arithmetic (t_arr, s);
+        node = parser__arithmetic (t_arr, s);
     }
     return node;
 }
 
-ASTHandle parse__possible_identifier (struct Token* t_arr, struct Statement s)
+ASTHandle parser__possible_identifier (struct Token* t_arr, struct Statement s)
 {
     ASTHandle node = 0;
     if (statement_size (s) == 1 &&
         t_arr[s.start].value == TOK_IDENTIFIER) {
         node = ast_get_node_handle ();
         struct AST* n = ast_get_node (node);
-        n->type = AST_IDENTIFIER;
-        n->id_data.id = t_arr[s.start].string;
+        *n = (struct AST) {
+            .type = AST_IDENTIFIER,
+            .id_data = {
+                .id = t_arr[s.start].string,
+            }
+        };
     }
     return node;
 }

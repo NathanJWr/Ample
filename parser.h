@@ -14,9 +14,9 @@ struct AST* parse_tokens (struct Token* tokens);
 struct Statement parse__get_statement (struct Token* restrict tokens, unsigned int* restrict index);
 ASTHandle parse__statement (struct Token* t_arr, struct Statement s);
 
-ASTHandle parse__possible_integer (struct Token* t_arr, struct Statement s);
-ASTHandle parse__possible_identifier (struct Token* t_arr, struct Statement s);
-ASTHandle parse__possible_arithmetic (struct Token* t_arr, struct Statement s);
+ASTHandle parser__possible_integer (struct Token* t_arr, struct Statement s);
+ASTHandle parser__possible_identifier (struct Token* t_arr, struct Statement s);
+ASTHandle parser__possible_arithmetic (struct Token* t_arr, struct Statement s);
 
 bool parser__is_arithmetic_op (TValue v);
 bool parser__greater_precedence (struct Token* left, struct Token* right);
