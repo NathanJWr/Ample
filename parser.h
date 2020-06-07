@@ -5,25 +5,40 @@
 #include "lexer.h"
 #include "queue.h"
 #define STATEMENT_DELIM ';'
-/* external functions */
+/* ****************
+    External functions
+   **************** */
 struct Token;
 struct AST* parse_tokens (struct Token* tokens);
 
 
-/* internal functions */
+/* *********************
+   Internal Functions
+   ********************* */
 struct Statement parse__get_statement (struct Token* restrict tokens, unsigned int* restrict index);
 ASTHandle parse__statement (struct Token* t_arr, struct Statement s);
 
+/* ========================================================
+    Possible parsers
+    Return a valid node if the statement is actually of X ast type
+   ======================================================== */
 ASTHandle parser__possible_integer (struct Token* t_arr, struct Statement s);
 ASTHandle parser__possible_identifier (struct Token* t_arr, struct Statement s);
 ASTHandle parser__possible_arithmetic (struct Token* t_arr, struct Statement s);
 ASTHandle parser__possible_string (struct Token* t_arr, struct Statement s);
 
+/* ===================
+    Arithmetic helpers
+   =================== */
 bool parser__is_arithmetic_op (TValue v);
+/* true if left is of greater operator precedence than right */
 bool parser__greater_precedence (struct Token* left, struct Token* right);
+/* true if left is of equal operator precedence than right */
 bool parser__equal_precedence (struct Token* left, struct Token* right);
 
-/* arithmetic parsing */
+/* ==================
+    Arithmetic parsing 
+   ==================*/
 struct TokenNode {
     struct Token* tok;
     STAILQ_ENTRY(TokenNode) tqentries; /* entries for queue */
@@ -36,11 +51,12 @@ struct ASTNode {
     SLIST_ENTRY(ASTNode) slentries; /* entries for stack */
 };
 SLIST_HEAD (ASTHandleStack, ASTNode);
-
 struct TokenTailQ parser__convert_infix_to_postfix (struct TokenTailQ* expr_q);
 ASTHandle parser__convert_postfix_to_ast (struct TokenTailQ infix_q, unsigned int expr_size);
 
 
-/* debug output */
+/* ==============
+    Debug output
+   ============== */
 void parser__debug_print_queue (struct TokenTailQ* q);
 #endif // PARSER_H_
