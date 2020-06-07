@@ -47,7 +47,7 @@
 } while (0)
 
 #define QUEUE_PUSH(queue_p, entry) \
-    if ((queue_p)->tail >= (queue_p)->capacity) { \
+    if ((queue_p)->tail + 1  >= (queue_p)->capacity) { \
         QUEUE_RESIZE (queue_p, (queue_p)->capacity * 2); \
     } \
     (queue_p)->tail++; \

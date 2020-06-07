@@ -43,6 +43,7 @@ bool test_queue_push_pop_half ()
 
         EXPECT (var == i);
     }
+    QUEUE_FREE (&q, Integer);
     return true;
 }
 
@@ -61,6 +62,7 @@ bool test_queue_with_pointers ()
         QUEUE_POP (&q);
         EXPECT (*num == i + 10);
     }
+    QUEUE_FREE (&q, IntegerPointer);
     return true;
 }
 
