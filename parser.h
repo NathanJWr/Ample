@@ -15,6 +15,18 @@ ASTHandle parse_tokens (struct Token* tokens);
 /* *********************
    Internal Functions
    ********************* */
+
+/* ======================
+    Statement declaratins
+   ====================== */
+/* A subset of the token array */
+struct Statement {
+    unsigned int start;
+    unsigned int end;
+};
+/* returns the number of tokens that make up a statement */
+unsigned int statement_size (struct Statement s);
+
 /* Returns a statement struct containing the start and 
    end index of the next statement in the token array */
 struct Statement parse__get_statement (struct Token* restrict tokens, unsigned int* restrict index);
@@ -29,6 +41,7 @@ ASTHandle parser__possible_integer (struct Token* t_arr, struct Statement s);
 ASTHandle parser__possible_identifier (struct Token* t_arr, struct Statement s);
 ASTHandle parser__possible_arithmetic (struct Token* t_arr, struct Statement s);
 ASTHandle parser__possible_string (struct Token* t_arr, struct Statement s);
+ASTHandle parser__possible_assignment (struct Token* t_arr, struct Statement s);
 
 /* ===================
     Arithmetic helpers

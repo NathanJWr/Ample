@@ -8,12 +8,13 @@ enum ASTType {
     AST_IDENTIFIER,
     AST_SCOPE,
     AST_BINARY_OP,
+    AST_ASSIGNMENT,
 };
 /* declare here so sub-ast types can have pointers to the general struct */
 struct AST;
 
 struct ScopeAST {
-    unsigned int* statements;
+    unsigned int* statements; /* sb array */
 };
 
 struct IntegerAST {
@@ -32,6 +33,10 @@ struct BinaryOpAST {
     ASTHandle right;
     TValue op;
 };
+struct AssignmentAST {
+    char* var;
+    ASTHandle expr;
+};
 struct AST {
     enum ASTType type;
     union {
@@ -40,6 +45,7 @@ struct AST {
         struct IdentifierAST id_data;
         struct BinaryOpAST bop_data; 
         struct StringAST str_data;
+        struct AssignmentAST asgn_data;
     };
 };
 

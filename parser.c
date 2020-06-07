@@ -3,11 +3,6 @@
 #include "ast.h"
 #include "stretchy_buffer.h"
 #include "queue.h"
-/* A subset of the token array */
-struct Statement {
-    unsigned int start;
-    unsigned int end;
-};
 unsigned int statement_size (struct Statement s)
 {
     return s.end - s.start + 1;
@@ -52,6 +47,9 @@ struct Statement parse__get_statement (struct Token* restrict tokens, unsigned i
 ASTHandle parse__statement (struct Token* t_arr, struct Statement s)
 {
     ASTHandle node = 0;
+    node = parser__possible_assignment (t_arr, s);
+    if (node) return node;
+
     node = parser__possible_integer (t_arr, s);
     if (node) return node;
 
@@ -226,39 +224,6 @@ ASTHandle parser__convert_postfix_to_ast (struct TokenTailQ postfix_q, unsigned 
     return n->ast;
 }
 
-int evaluate_binary_op (ASTHandle handle)
-{
-    int left_value, right_value;
-    struct AST* node = ast_get_node (handle);
-
-    if (node->type == AST_BINARY_OP) {
-        ASTHandle right_handle = node->bop_data.right;
-        ASTHandle left_handle = node->bop_data.left;
-        
-        struct AST* right = ast_get_node (right_handle);
-        if (right->type == AST_INTEGER) {
-            right_value = right->int_data.value;
-        } else if (right->type == AST_BINARY_OP) {
-            right_value = evaluate_binary_op (right_handle);
-        }
-
-        struct AST* left = ast_get_node (left_handle);
-        if (left->type == AST_INTEGER) {
-            left_value = left->int_data.value;
-        } else if (left->type == AST_BINARY_OP) {
-            left_value = evaluate_binary_op (left_handle);
-        }
-
-        switch (node->bop_data.op) {
-            case '+': return right_value + left_value; break;
-            case '-': return right_value - left_value; break;
-            case '*': return right_value * left_value; break;
-            case '/': return right_value / left_value; break;
-            default: return 0;
-        }
-    }
-    return 0;
-}
 ASTHandle parser__arithmetic (struct Token* t_arr, struct Statement s)
 {
     /* storage necessary to put tokens into a queue/stack 
@@ -332,6 +297,33 @@ ASTHandle parser__possible_string (struct Token* t_arr, struct Statement s)
                 .str = t_arr[s.start].string,
             }
         };
+    }
+    return node;
+}
+
+ASTHandle parser__possible_assignment (struct Token* t_arr, struct Statement s)
+{
+    ASTHandle node = 0;
+    /* VAR = EXPR */
+    if (statement_size (s) >= 3 &&
+        t_arr[s.start].value == TOK_IDENTIFIER &&
+        t_arr[s.start+1].value == '=' &&
+        t_arr[s.start+2].value != '=') {
+        node = ast_get_node_handle ();
+
+        struct Statement sub_statement = {
+            .start = s.start + 2,
+            .end = s.end,
+        };
+        struct AST ast =  {
+            .type = AST_ASSIGNMENT,
+            .asgn_data = {
+                .var = t_arr[s.start].string,
+                .expr = parse__statement (t_arr, sub_statement),
+            }
+        };
+        struct AST* n = ast_get_node (node);
+        *n = ast;
     }
     return node;
 }
