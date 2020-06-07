@@ -1,4 +1,5 @@
 #include "interpreter.h"
+#include "stretchy_buffer.h"
 void interpreter_start (ASTHandle head)
 {
     struct AST* h = ast_get_node (head);
@@ -32,14 +33,14 @@ int interpreter__evaluate_binary_op (ASTHandle handle)
         if (right->type == AST_INTEGER) {
             right_value = right->int_data.value;
         } else if (right->type == AST_BINARY_OP) {
-            right_value = evaluate_binary_op (right_handle);
+            right_value = interpreter__evaluate_binary_op (right_handle);
         }
 
         struct AST* left = ast_get_node (left_handle);
         if (left->type == AST_INTEGER) {
             left_value = left->int_data.value;
         } else if (left->type == AST_BINARY_OP) {
-            left_value = evaluate_binary_op (left_handle);
+            left_value = interpreter__evaluate_binary_op (left_handle);
         }
 
         switch (node->bop_data.op) {

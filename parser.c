@@ -110,90 +110,80 @@ bool parser__equal_precedence (struct Token* left, struct Token* right)
     }
     return false;
 }
-struct TokenTailQ parser__convert_infix_to_postfix (struct TokenTailQ* expr_q)
+
+
+QUEUE (TokenQueue) parser__convert_infix_to_postfix (QUEUE (TokenQueue)* expr_q)
 {
-    struct TokenTailQ q = STAILQ_HEAD_INITIALIZER (q);
-    struct TokenStack s = SLIST_HEAD_INITIALIZER (s);
-    SLIST_INIT (&s);
-    STAILQ_INIT (&q);
+    STACK (TokenStack) s = STACK_STRUCT_INIT (TokenStack, struct Token*, 10);
+    QUEUE (TokenQueue) q = QUEUE_STRUCT_INIT (TokenQueue, struct Token*, 10);
+    while (!QUEUE_EMPTY (expr_q)) {
+        struct Token* n = QUEUE_FRONT (expr_q);
+        QUEUE_POP (expr_q);
 
-    while (!STAILQ_EMPTY(expr_q)) {
-        struct TokenNode* n = STAILQ_FIRST(expr_q);
-        STAILQ_REMOVE_HEAD (expr_q, tqentries);
-
-        if (n->tok->value == TOK_INTEGER || n->tok->value == TOK_IDENTIFIER) {
-            STAILQ_INSERT_TAIL (&q, n, tqentries);
+        if (n->value == TOK_INTEGER || n->value == TOK_IDENTIFIER) {
+            QUEUE_PUSH (&q, n);
         }
-        if (parser__is_arithmetic_op (n->tok->value)) {
-            if (!SLIST_EMPTY (&s)) {
-                struct TokenNode* top_token = SLIST_FIRST (&s);
-                while ((parser__greater_precedence(top_token->tok, n->tok)) ||
-                       ((parser__equal_precedence(top_token->tok, n->tok)) && (top_token->tok->value != ')'))) {
-                    SLIST_REMOVE_HEAD (&s, slentries); /* pop from the stack */
-                    STAILQ_INSERT_TAIL (&q, top_token, tqentries); /* push the stack value on to the queue */
+        if (parser__is_arithmetic_op (n->value)) {
+            if (!STACK_EMPTY (&s)) {
+                struct Token* top_token = STACK_FRONT (&s);
+                while ((parser__greater_precedence(top_token, n)) ||
+                       ((parser__equal_precedence(top_token, n)) && (top_token->value != ')'))) {
+                    STACK_POP (&s);
+                    QUEUE_PUSH (&q, top_token);
 
-                    if (SLIST_EMPTY (&s)) break;
-                    top_token = SLIST_FIRST (&s);
+                    if (STACK_EMPTY (&s)) break;
+                    top_token = STACK_FRONT (&s);
                 }
             }
-            SLIST_INSERT_HEAD (&s, n, slentries); /* push the token on to the stack of operators */
+            STACK_PUSH (&s, n);
         }
-    
-        if (n->tok->value == '(') {
-            SLIST_INSERT_HEAD (&s, n, slentries);
+        if (n->value == '(') {
+            STACK_PUSH (&s, n);
         }
-        if (n->tok->value == ')') {
-            struct TokenNode* tn = SLIST_FIRST (&s);
-            SLIST_REMOVE_HEAD (&s, slentries);
-            while (tn->tok->value != '(') {
-                STAILQ_INSERT_TAIL (&q, tn, tqentries);
-                tn = SLIST_FIRST (&s);
-                SLIST_REMOVE_HEAD (&s, slentries);
+        if (n->value == ')') {
+            struct Token* tn = STACK_FRONT (&s);
+            STACK_POP (&s);
+            while (tn->value != '(') {
+                QUEUE_PUSH (&q, tn);
+                tn = STACK_FRONT (&s);
+                STACK_POP (&s);
             }
         }
-        if (n->tok->value == STATEMENT_DELIM) break;
-
+        if (n->value == STATEMENT_DELIM) break;
     }
-    /* Empty the stack into the queue */
-    struct TokenNode* tn;
-    while (!SLIST_EMPTY (&s)) {
-        tn = SLIST_FIRST (&s);
-        SLIST_REMOVE_HEAD (&s, slentries);
-        STAILQ_INSERT_TAIL (&q, tn, tqentries);
+    while (!STACK_EMPTY (&s)) {
+        struct Token* tn = STACK_FRONT (&s);
+        STACK_POP (&s);
+        QUEUE_PUSH (&q, tn);
     }
+    STACK_FREE (&s, TokenStack);
+    QUEUE_FREE (expr_q, TokenQueue);
     return q;
 }
-ASTHandle parser__convert_postfix_to_ast (struct TokenTailQ postfix_q, unsigned int expr_size)
+ASTHandle parser__convert_postfix_to_ast (QUEUE (TokenQueue)* postfix_q, unsigned int expr_size)
 {
-    struct ASTHandleStack s = SLIST_HEAD_INITIALIZER (s);
-    SLIST_INIT (&s);
-    struct ASTNode nodes[expr_size];
-    unsigned int index = 0;
-    while (!STAILQ_EMPTY (&postfix_q)) {
-        struct TokenNode* n = STAILQ_FIRST (&postfix_q);
-        STAILQ_REMOVE_HEAD (&postfix_q, tqentries);
+    STACK (ASTHandleStack) s = STACK_STRUCT_INIT (ASTHandleStack, ASTHandle, 10);
+    while (!QUEUE_EMPTY (postfix_q)) {
+        struct Token* n = QUEUE_FRONT (postfix_q);
+        QUEUE_POP (postfix_q);
 
-        if (n->tok->value == TOK_INTEGER) {
+        if (n->value == TOK_INTEGER) {
             ASTHandle ast_handle = ast_get_node_handle ();
             struct AST* integer_ast = ast_get_node (ast_handle);
             integer_ast->type = AST_INTEGER;
-            integer_ast->int_data.value = atoi (n->tok->string);
+            integer_ast->int_data.value = atoi (n->string);
 
-            /* insert the integer ast on to the stack */
-            nodes[index].ast = ast_handle;
-            SLIST_INSERT_HEAD (&s, &nodes[index], slentries);
-            index++;
-        } else if (parser__is_arithmetic_op (n->tok->value)) {
-            struct ASTNode *left, *right;
-            ASTHandle ast_handle;
+            STACK_PUSH (&s, ast_handle);
+        } else if (parser__is_arithmetic_op (n->value)) {
+            ASTHandle left, right, ast_handle;
             struct AST* op;
 
             /* Remove the first two elements from the stack.
                They will be the left and right params of a binary op */
-            left = SLIST_FIRST (&s);
-            SLIST_REMOVE_HEAD (&s, slentries);
-            right = SLIST_FIRST (&s);
-            SLIST_REMOVE_HEAD (&s, slentries);
+            left = STACK_FRONT (&s);
+            STACK_POP (&s);
+            right = STACK_FRONT (&s);
+            STACK_POP (&s);
             ast_handle = ast_get_node_handle ();
     
             /* Fill out information of binary op */
@@ -201,60 +191,51 @@ ASTHandle parser__convert_postfix_to_ast (struct TokenTailQ postfix_q, unsigned 
             *op = (struct AST) {
                 .type = AST_BINARY_OP,
                 .bop_data = {
-                    .left = left->ast,
-                    .right = right->ast,
-                    .op = n->tok->value
+                    .left = left,
+                    .right = right,
+                    .op = n->value
                 }
             };
-            
-            /* Insert the operation, instead of the left and right values
-               back on to the stack */
-            nodes[index].ast = ast_handle;
-            SLIST_INSERT_HEAD (&s, &nodes[index], slentries);
-            index++;
+            /* Insert the operation, instead of the left and right values */
+            STACK_PUSH (&s, ast_handle);   
         }
     }
-
-    struct ASTNode* n;
-    SLIST_FOREACH (n, &s, slentries) {
-        printf ("%d ", n->ast);
-    }
-
-    n = SLIST_FIRST (&s);
-    return n->ast;
+    ASTHandle ret = STACK_FRONT (&s);
+    STACK_FREE (&s, ASTHandleStack);
+    QUEUE_FREE (postfix_q, TokenQueue);
+    return ret;
 }
 
 ASTHandle parser__arithmetic (struct Token* t_arr, struct Statement s)
 {
     /* storage necessary to put tokens into a queue/stack 
        no more memory should be allocated for this process */
-    struct TokenTailQ expr_q = STAILQ_HEAD_INITIALIZER (expr_q);
-    struct TokenNode nodes[statement_size (s) * sizeof(struct TokenNode)];
-    STAILQ_INIT (&expr_q);
+    QUEUE (TokenQueue) expr_q = QUEUE_STRUCT_INIT (TokenQueue, struct Token*, 10);
     for (unsigned int i = s.start; i <= s.end; i++) {
-        nodes[i].tok = t_arr + i;
-        STAILQ_INSERT_TAIL (&expr_q, &nodes[i], tqentries);
+        QUEUE_PUSH (&expr_q, t_arr+i);
     }
-    struct TokenTailQ postfix = parser__convert_infix_to_postfix (&expr_q);
+    QUEUE (TokenQueue) postfix = parser__convert_infix_to_postfix (&expr_q);
     parser__debug_print_queue (&postfix);
-    ASTHandle op = parser__convert_postfix_to_ast (postfix, statement_size (s));
+    ASTHandle op = parser__convert_postfix_to_ast (&postfix, statement_size (s));
     return op;
 }
 
 
-void parser__debug_print_queue (struct TokenTailQ* q)
+void parser__debug_print_queue (QUEUE (TokenQueue)* q)
 {
-    struct TokenNode* np;
-    STAILQ_FOREACH (np, q, tqentries) {
-        if (np->tok->value < 128)
-            printf ("Value: %c ", np->tok->value);
+    struct Token* np;
+    for (int i = q->head; i <= q->tail; i++) {
+        np = q->mem[i];
+        if (np->value < 128)
+            printf ("Value: %c ", np->value);
         else 
-            printf ("Value: %d ", np->tok->value);
-        if (np->tok->string)
-            printf("String: %s", np->tok->string);
+            printf ("Value: %d ", np->value);
+        if (np->string)
+            printf("String: %s", np->string);
         printf("\n");
     }
 }
+
 
 ASTHandle parser__possible_arithmetic (struct Token* t_arr, struct Statement s)
 {

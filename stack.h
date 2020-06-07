@@ -43,10 +43,14 @@
 
 #define STACK_POP(stack_p) \
     assert ((stack_p)->size != 0); \
-    (stack_p)->tail--;
+    (stack_p)->tail--; \
+    (stack_p)->size--
 
 #define STACK_FRONT(stack_p) \
     (stack_p)->mem[(stack_p)->tail]
+
+#define STACK_EMPTY(stack_p) \
+    ((stack_p)->size == 0)
 
 
 #endif // STACK_H_

@@ -1,4 +1,4 @@
-#include "../myqueue.h"
+#include "../queue.h"
 #include "../test_helper.h"
 #include <stdbool.h>
 QUEUE_DECLARATION (Integer, int);

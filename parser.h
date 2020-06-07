@@ -4,6 +4,7 @@
 #include "ast.h"
 #include "lexer.h"
 #include "queue.h"
+#include "stack.h"
 #define STATEMENT_DELIM ';'
 /* ****************
     External functions
@@ -55,26 +56,17 @@ bool parser__equal_precedence (struct Token* left, struct Token* right);
 /* ==================
     Arithmetic parsing 
    ==================*/
-struct TokenNode {
-    struct Token* tok;
-    STAILQ_ENTRY(TokenNode) tqentries; /* entries for queue */
-    SLIST_ENTRY(TokenNode) slentries; /* entries for stack */
-};
-STAILQ_HEAD (TokenTailQ, TokenNode);
-SLIST_HEAD (TokenStack, TokenNode);
-struct ASTNode {
-    ASTHandle ast;
-    SLIST_ENTRY(ASTNode) slentries; /* entries for stack */
-};
-SLIST_HEAD (ASTHandleStack, ASTNode);
+STACK_DECLARATION (TokenStack, struct Token*);
+QUEUE_DECLARATION (TokenQueue, struct Token*);
+STACK_DECLARATION (ASTHandleStack, ASTHandle);
 /* converts a normal mathematical (infix) expression to something more workable */
-struct TokenTailQ parser__convert_infix_to_postfix (struct TokenTailQ* expr_q);
+QUEUE (TokenQueue) parser__convert_infix_to_postfix (QUEUE (TokenQueue)* expr_q);
 /* converts a postfix expression gotten from convert_infix_to_postfix into an ast */
-ASTHandle parser__convert_postfix_to_ast (struct TokenTailQ infix_q, unsigned int expr_size);
+ASTHandle parser__convert_postfix_to_ast (QUEUE (TokenQueue)* infix_q, unsigned int expr_size);
 
 
 /* ==============
     Debug output
    ============== */
-void parser__debug_print_queue (struct TokenTailQ* q);
+void parser__debug_print_queue (QUEUE (TokenQueue)* q);
 #endif // PARSER_H_
