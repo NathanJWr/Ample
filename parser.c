@@ -13,7 +13,7 @@ unsigned int statement_size (struct Statement s)
     return s.end - s.start + 1;
 }
 
-struct AST* parse_tokens (struct Token* tokens)
+ASTHandle parse_tokens (struct Token* tokens)
 {
     unsigned int index = 0;
     unsigned int head = ast_get_node_handle ();
@@ -24,9 +24,13 @@ struct AST* parse_tokens (struct Token* tokens)
     }
 
     struct AST* h = ast_get_node (head);
-    h->type = AST_SCOPE;
-    h->scope_data.statements = statements;
-    return h;
+    *h = (struct AST) {
+        .type = AST_SCOPE,
+        .scope_data = {
+            .statements = statements,
+        }
+    };
+    return head;
 }
 
 struct Statement parse__get_statement (struct Token* restrict tokens, unsigned int* restrict index)

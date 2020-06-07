@@ -9,13 +9,16 @@
     External functions
    **************** */
 struct Token;
-struct AST* parse_tokens (struct Token* tokens);
+ASTHandle parse_tokens (struct Token* tokens);
 
 
 /* *********************
    Internal Functions
    ********************* */
+/* Returns a statement struct containing the start and 
+   end index of the next statement in the token array */
 struct Statement parse__get_statement (struct Token* restrict tokens, unsigned int* restrict index);
+/* Parsers *any* statement or substatement */
 ASTHandle parse__statement (struct Token* t_arr, struct Statement s);
 
 /* ========================================================
@@ -51,7 +54,9 @@ struct ASTNode {
     SLIST_ENTRY(ASTNode) slentries; /* entries for stack */
 };
 SLIST_HEAD (ASTHandleStack, ASTNode);
+/* converts a normal mathematical (infix) expression to something more workable */
 struct TokenTailQ parser__convert_infix_to_postfix (struct TokenTailQ* expr_q);
+/* converts a postfix expression gotten from convert_infix_to_postfix into an ast */
 ASTHandle parser__convert_postfix_to_ast (struct TokenTailQ infix_q, unsigned int expr_size);
 
 
