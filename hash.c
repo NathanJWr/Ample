@@ -14,4 +14,30 @@
     You should have received a copy of the GNU General Public License
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "hash.h"
+#include "ssl.h"
+uint64_t hash_string (const char* s)
+{
+    const unsigned char* us = (const unsigned char*) s;
+    uint64_t h = 0;
+    while (*us != '\0') {
+        h += h * HASH_MULTIPLIER + *us;
+        us++;
+    }
+    return h;
+}
+
+DICT_DECLARATION (String, const char*, int);
+int main () {
+    DICT(String) s = {0};
+    DICT_INIT (&s, hash_string, 1);
+
+    char* var = ssl_strcpy (NULL, "ab");
+    DICT_INSERT (String, &s, var, 10);
+
+    char* var2 = ssl_strcpy (NULL, "ba");
+    DICT_INSERT (String, &s, var2, 20);
+    
+    int b = 0;
+}
 
