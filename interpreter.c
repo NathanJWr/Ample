@@ -1,10 +1,10 @@
 #include "interpreter.h"
-#include "stretchy_buffer.h"
+#include "array.h"
 void interpreter_start (ASTHandle head)
 {
     struct AST* h = ast_get_node (head);
     if (h->type == AST_SCOPE) {
-        for (unsigned int i = 0; i < sb_count (h->scope_data.statements); i++) {
+        for (unsigned int i = 0; i < ARRAY_COUNT (h->scope_data.statements); i++) {
             interpreter__evaluate_statement (h->scope_data.statements[i]);
         }
     }

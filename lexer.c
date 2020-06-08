@@ -1,5 +1,5 @@
 #include "ssl.h"
-#include "stretchy_buffer.h"
+#include "array.h"
 #include "lexer.h"
 #include <stdio.h>
 #include <ctype.h>
@@ -58,17 +58,17 @@ struct Token* lex_all (char* fb)
             token.value = c;
         }
         c = fb[i++];
-        sb_push(tokens, token);
+        ARRAY_PUSH(tokens, token);
     }
     return tokens;
 }
 
 void token_free_all (struct Token* tokens)
 {
-    uint32_t count = sb_count (tokens);
+    uint32_t count = ARRAY_COUNT (tokens);
     for (uint32_t i = 0; i < count; i++) {
         if (tokens[i].string)
             ssl_free (tokens[i].string);
     }
-    sb_free (tokens);
+    ARRAY_FREE (tokens);
 }

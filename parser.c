@@ -1,7 +1,7 @@
 #include "parser.h"
 #include "lexer.h"
 #include "ast.h"
-#include "stretchy_buffer.h"
+#include "array.h"
 #include "queue.h"
 unsigned int statement_size (struct Statement s)
 {
@@ -13,9 +13,9 @@ ASTHandle parse_tokens (struct Token* tokens)
     unsigned int index = 0;
     unsigned int head = ast_get_node_handle ();
     unsigned int* statements = NULL;
-    while (index < sb_count (tokens)) {
+    while (index < ARRAY_COUNT (tokens)) {
         struct Statement s = parse__get_statement(tokens, &index);
-        sb_push (statements, parse__statement (tokens, s));
+        ARRAY_PUSH (statements, parse__statement (tokens, s));
     }
 
     struct AST* h = ast_get_node (head);
@@ -32,7 +32,7 @@ struct Statement parse__get_statement (struct Token* restrict tokens, unsigned i
 {
     unsigned int i = *index;
     struct Statement s = {0};
-    while (i < sb_count (tokens) && tokens[i].value != STATEMENT_DELIM) {
+    while (i < ARRAY_COUNT (tokens) && tokens[i].value != STATEMENT_DELIM) {
         i++;
     }
 
