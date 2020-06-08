@@ -14,8 +14,4 @@
     You should have received a copy of the GNU General Public License
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
-#ifndef HASH_H_
-#define HASH_H_
-#define HASH_MULTIPLIER (37)
-unsigned long hash_string (const char* s);
-#endif // HASH_H_
+
