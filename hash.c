@@ -39,12 +39,20 @@ int main () {
         "321",
         "cac",
         "pac",
+        "adlcamsdlkc",
+        "pokemon",
+        "hello",
     };
 
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 9; i++) {
         DICT_INSERT (String, &s, vars[i], i + 20);
     }
+    for (int i = 0; i < 9; i++) {
+        int val = DICT_GET (String, &s, vars[i]);
+        printf("Val: %d\n", val);
+    }
 
+    DICT_FREE (&s);
 
     int b = 0;
 }

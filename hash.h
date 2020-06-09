@@ -40,6 +40,10 @@ typedef uint32_t DictEntryHandle;
         DictEntryHandle* map; /* actual map structure */ \
     }
 
+#define DICT_FREE(dict_ptr) \
+    free ((dict_ptr)->map); \
+    ARRAY_FREE ((dict_ptr)->mem)
+
 /* Allocates and returns the handle to a DictEntry */
 #define DICT_GET_ENTRY_HANDLE(name, dict_ptr) ({ \
     DictEntryHandle retval; \
@@ -101,7 +105,8 @@ typedef uint32_t DictEntryHandle;
             ARRAY_FREE (collided_handles_next); \
         } \
     } \
-    *dict_ptr = new_dict; \
+    free((dict_ptr)->map); \
+    *(dict_ptr) = new_dict; \
 } while(0)
 
 #define DICT_INSERT(name, dict_ptr, k, v) do { \
@@ -113,8 +118,6 @@ typedef uint32_t DictEntryHandle;
         .val = v, \
         .next = (dict_ptr)->map[hash], \
     }; \
-    printf("Hash: %ld\n", hash); \
-    printf("Next val: %d\n", e->next); \
     (dict_ptr)->map[hash] = handle; \
     (dict_ptr)->count++; \
     if ((dict_ptr)->count >= (dict_ptr)->capacity * DICT_MAX_LOAD_FACTOR) { \
@@ -122,6 +125,17 @@ typedef uint32_t DictEntryHandle;
     } \
 } while (0)
 
+#define DICT_GET(name, dict_ptr, k) ({ \
+    uint64_t hash = (dict_ptr)->hash_function(k) % (dict_ptr)->capacity; \
+    DictEntryHandle handle  = (dict_ptr)->map[hash]; \
+    typeof ((dict_ptr)->mem[0].val) retval; \
+    while (handle != 0) { \
+        DICT_ENTRY(name)* e = DICT_GET_ENTRY_POINTER (dict_ptr, handle); \
+        if (strcmp (e->key, k) == 0) retval = e->val; \
+        handle = e->next; \
+    } \
+    retval; \
+})
 uint64_t hash_string (const char* s);
 void hash_insert_string_key (const char* key, int value);
 #endif // HASH_H_
