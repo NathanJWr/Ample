@@ -32,12 +32,20 @@ int main () {
     DICT(String) s = {0};
     DICT_INIT (&s, hash_string, 1);
 
-    char* var = ssl_strcpy (NULL, "ab");
-    DICT_INSERT (String, &s, var, 10);
+    char* vars [] = {
+        "abc",
+        "123",
+        "bcav",
+        "321",
+        "cac",
+        "pac",
+    };
 
-    char* var2 = ssl_strcpy (NULL, "ba");
-    DICT_INSERT (String, &s, var2, 20);
-    
+    for (int i = 0; i < 6; i++) {
+        DICT_INSERT (String, &s, vars[i], i + 20);
+    }
+
+
     int b = 0;
 }
 
