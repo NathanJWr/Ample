@@ -26,34 +26,3 @@ uint64_t hash_string (const char* s)
     }
     return h;
 }
-
-DICT_DECLARATION (String, const char*, int);
-int main () {
-    DICT(String) s = {0};
-    DICT_INIT (&s, hash_string, 1);
-
-    char* vars [] = {
-        "abc",
-        "123",
-        "bcav",
-        "321",
-        "cac",
-        "pac",
-        "adlcamsdlkc",
-        "pokemon",
-        "hello",
-    };
-
-    for (int i = 0; i < 9; i++) {
-        DICT_INSERT (String, &s, vars[i], i + 20);
-    }
-    for (int i = 0; i < 9; i++) {
-        int val = DICT_GET (String, &s, vars[i]);
-        printf("Val: %d\n", val);
-    }
-
-    DICT_FREE (&s);
-
-    int b = 0;
-}
-
