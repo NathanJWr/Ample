@@ -63,34 +63,33 @@ typedef uint32_t DictEntryHandle;
     (dict_ptr)->map = calloc (1, sizeof(*(dict_ptr)->map) * initial_capacity)
 
 #define DICT_GROW(name, dict_ptr) do { \
+    /* create a new dict that will have a greater capacity */ \
     DICT(name) new_dict = {0}; \
     uint32_t new_capacity = (dict_ptr)->capacity * DICT_GROWTH_FACTOR; \
     DICT_INIT (&new_dict, (dict_ptr)->hash_function, new_capacity); \
     new_dict.count = (dict_ptr)->count; \
     new_dict.mem = (dict_ptr)->mem; \
-    printf("Reached grow for\n"); \
+    /* Need to rehash all entries because the capacity changed */ \
     for (uint32_t i = 0; i < (dict_ptr)->count; i++) { \
-        printf ("i value: %d\n", i); \
         DictEntryHandle* collided_handles = NULL; \
         DictEntryHandle* collided_handles_next = NULL; \
         for (DictEntryHandle e_handle = (dict_ptr)->map[i]; \
              e_handle != 0;  ) { \
-            printf("Rellocating handle: %d\n", e_handle); \
             DICT_ENTRY (name) *e_new = DICT_GET_ENTRY_POINTER (dict_ptr, e_handle); \
             uint64_t hash = new_dict.hash_function(e_new->key) % new_dict.capacity; \
             if (new_dict.map[hash] != 0) { \
                 /* collision */ \
-                printf ("There was a collison\n"); \
+                /* need to track these because the pointers to the next handle need \
+                   to be preserved in this loop, but changed later */ \
                 ARRAY_PUSH (collided_handles, e_handle); \
                 ARRAY_PUSH (collided_handles_next, new_dict.map[hash]); \
             } \
-            /* if there were collisions, fix the next handles */ \
             new_dict.map[hash] = e_handle; \
             e_handle = e_new->next; \
         } \
+        /* if there were collisions, fix the next handles */ \
         if (collided_handles) { \
             for (int i = 0; i < ARRAY_COUNT (collided_handles); i++) { \
-                printf ("Rellocating i value: %d\n", i); \
                 DICT_ENTRY (name) *e = DICT_GET_ENTRY_POINTER(dict_ptr, collided_handles[i]); \
                 /* set the next handle of the collided entry to the one logged from before */ \
                 e->next = collided_handles_next[i]; \
