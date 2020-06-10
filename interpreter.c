@@ -19,6 +19,13 @@
 #include "interpreter.h"
 DICT_DECLARATION (IntVars, const char *, int);
 static DICT (IntVars) int_vars;
+
+void
+interpreter__erase_variable_if_exists (const char *var)
+{
+  DICT_ERASE (IntVars, &int_vars, var);
+  return;
+}
 void
 interpreter__add_integer_variable (const char *var_name, int val)
 {
@@ -26,6 +33,7 @@ interpreter__add_integer_variable (const char *var_name, int val)
     {
       DICT_INIT (&int_vars, hash_string, string_compare, 10);
     }
+  interpreter__erase_variable_if_exists (var_name);
   DICT_INSERT (IntVars, &int_vars, var_name, val);
 }
 void
@@ -58,7 +66,8 @@ interpreter__evaluate_statement (ASTHandle statement)
 int
 interpreter__evaluate_binary_op (ASTHandle handle)
 {
-  int left_value, right_value;
+  int left_value = 0;
+  int right_value = 0;
   struct AST *node = ast_get_node (handle);
 
   if (node->type == AST_BINARY_OP)
@@ -75,6 +84,10 @@ interpreter__evaluate_binary_op (ASTHandle handle)
         {
           right_value = interpreter__evaluate_binary_op (right_handle);
         }
+      else
+        {
+          exit (1);
+        }
 
       struct AST *left = ast_get_node (left_handle);
       if (left->type == AST_INTEGER)
@@ -84,6 +97,10 @@ interpreter__evaluate_binary_op (ASTHandle handle)
       else if (left->type == AST_BINARY_OP)
         {
           left_value = interpreter__evaluate_binary_op (left_handle);
+        }
+      else
+        {
+          exit (1);
         }
 
       switch (node->bop_data.op)
@@ -107,7 +124,8 @@ interpreter__evaluate_binary_op (ASTHandle handle)
   return 0;
 }
 
-void interpreter__evaluate_assignment (statement)
+void
+interpreter__evaluate_assignment (ASTHandle statement)
 {
   struct AST *s = ast_get_node (statement);
   struct AST *expr = ast_get_node (s->asgn_data.expr);
