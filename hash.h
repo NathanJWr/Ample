@@ -157,10 +157,12 @@ typedef uint32_t DictEntryHandle;
     DictEntryHandle handle = (dict_ptr)->map[hash];                            \
     DICT_ENTRY(name) * e;                                                      \
     DICT_ENTRY(name) *prev = NULL;                                             \
+    bool removed = false;                                                      \
     while (handle != 0) {                                                      \
       e = DICT_GET_ENTRY_POINTER(dict_ptr, handle);                            \
       if ((dict_ptr)->key_compare(e->key, k)) {                                \
         /* remove this key, it's a match */                                    \
+        removed = true;                                                        \
         if (prev == NULL && e->next != 0) {                                    \
           /* there is at least 1 entry in the linked list */                   \
           (dict_ptr)->map[hash] = e->next;                                     \
@@ -175,7 +177,8 @@ typedef uint32_t DictEntryHandle;
       prev = e;                                                                \
       handle = e->next;                                                        \
     }                                                                          \
-    (dict_ptr)->count--;                                                       \
+    if (removed)                                                               \
+      (dict_ptr)->count--;                                                     \
   } while (0)
 
 #define DICT_AT(name, dict_ptr, k, value_ptr)                                  \
