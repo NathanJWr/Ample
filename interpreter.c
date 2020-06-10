@@ -15,7 +15,19 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "array.h"
+#include "hash.h"
 #include "interpreter.h"
+DICT_DECLARATION (IntVars, const char *, int);
+static DICT (IntVars) int_vars;
+void
+interpreter__add_integer_variable (const char *var_name, int val)
+{
+  if (int_vars.mem == NULL)
+    {
+      DICT_INIT (&int_vars, hash_string, 10);
+    }
+  DICT_INSERT (IntVars, &int_vars, var_name, val);
+}
 void
 interpreter_start (ASTHandle head)
 {
@@ -101,5 +113,7 @@ void interpreter__evaluate_assignment (statement)
   struct AST *expr = ast_get_node (s->asgn_data.expr);
   if (expr->type == AST_INTEGER)
     {
+      int val = expr->int_data.value;
+      interpreter__add_integer_variable (s->asgn_data.var, val);
     }
 }

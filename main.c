@@ -17,6 +17,7 @@
 #include "ast.h"
 #include "lexer.h"
 #include "parser.h"
+#include "interpreter.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,8 +48,7 @@ main (int argc, char **argv)
 
       struct Token *tokens = lex_all (file);
       ASTHandle ast_head = parse_tokens (tokens);
-      printf ("%d", ast_head);
-
+      interpreter_start (ast_head);
       ast_free_buffer ();
       token_free_all (tokens);
       free (file);
