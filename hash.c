@@ -16,13 +16,15 @@
 */
 #include "hash.h"
 #include "ssl.h"
-uint64_t hash_string (const char* s)
+uint64_t
+hash_string (const char *s)
 {
-    const unsigned char* us = (const unsigned char*) s;
-    uint64_t h = 0;
-    while (*us != '\0') {
-        h += h * HASH_MULTIPLIER + *us;
-        us++;
+  const unsigned char *us = (const unsigned char *)s;
+  uint64_t h = 0;
+  while (*us != '\0')
+    {
+      h += h * HASH_MULTIPLIER + *us;
+      us++;
     }
-    return h;
+  return h;
 }
