@@ -148,29 +148,32 @@ typedef uint32_t DictEntryHandle;
     retval;                                                                    \
   })
 
-#define DICT_ERASE                                                             \
-  (dict_ptr, k, cmp_func) uint64_t hash =                                      \
-      (dict_ptr)->hash_function(k) % (dict_ptr)->capacity;                     \
-  DictEntryHandle handle = (dict_ptr)->map[hash];                              \
-  DICT_ENTRY(name) * e;                                                        \
-  DICT_ENTRY(name) *prev = NULL;                                               \
-  while (handle != 0) {                                                        \
-    e = DICT_ENTRY_GET_POINTER(dict_ptr, handle);                              \
-    if ((dict_ptr)->key_compare(e->key, k)) {                                  \
-      /* remove this key, it's a match */                                      \
-      if (prev == NULL && e->next != 0) {                                      \
-        /* there is at least 1 entry in the linked list */ \
-        (dict_ptr)->map[hash] = e->next;                                       \
-      } else if (prev == NULL && e->next == 0) {                               \
-        /* there are no entries in the linked list */ \
-        (dict_ptr)->map[hash] = 0;                                             \
-      } else if (prev) {                                                       \
-        /* the entry that needs to be deleted is in the linked list */ \
-        prev->next = 0;                                                        \
+#define DICT_ERASE(name, dict_ptr, k)                                          \
+  do {                                                                         \
+    uint64_t hash = (dict_ptr)->hash_function(k) % (dict_ptr)->capacity;       \
+    DictEntryHandle handle = (dict_ptr)->map[hash];                            \
+    DICT_ENTRY(name) * e;                                                      \
+    DICT_ENTRY(name) *prev = NULL;                                             \
+    while (handle != 0) {                                                      \
+      e = DICT_GET_ENTRY_POINTER(dict_ptr, handle);                            \
+      if ((dict_ptr)->key_compare(e->key, k)) {                                \
+        /* remove this key, it's a match */                                    \
+        if (prev == NULL && e->next != 0) {                                    \
+          /* there is at least 1 entry in the linked list */                   \
+          (dict_ptr)->map[hash] = e->next;                                     \
+        } else if (prev == NULL && e->next == 0) {                             \
+          /* there are no entries in the linked list */                        \
+          (dict_ptr)->map[hash] = 0;                                           \
+        } else if (prev) {                                                     \
+          /* the entry that needs to be deleted is in the linked list */       \
+          prev->next = 0;                                                      \
+        }                                                                      \
       }                                                                        \
+      prev = e;                                                                \
+      handle = e->next;                                                        \
     }                                                                          \
-    prev = e; \
-  }
+    (dict_ptr)->count--;                                                       \
+  } while (0)
 
 uint64_t hash_string(const char *s);
 bool string_compare(const char *key, const char *input);
