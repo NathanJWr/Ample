@@ -178,6 +178,28 @@ typedef uint32_t DictEntryHandle;
     (dict_ptr)->count--;                                                       \
   } while (0)
 
+#define DICT_AT(name, dict_ptr, k, value_ptr)                                  \
+  ({                                                                           \
+    bool retval = false;                                                       \
+    uint64_t hash = (dict_ptr)->hash_function(k) % (dict_ptr)->capacity;       \
+    DictEntryHandle handle = (dict_ptr)->map[hash];                            \
+    DICT_ENTRY(name) *e = NULL;                                                \
+    while (handle != 0) {                                                      \
+      DICT_ENTRY(name) *n = DICT_GET_ENTRY_POINTER(dict_ptr, handle);          \
+      if ((dict_ptr)->key_compare(k, n->key)) {                                \
+        e = n;                                                                 \
+      }                                                                        \
+      handle = n->next;                                                        \
+    }                                                                          \
+    if (e != NULL) {                                                           \
+      *(value_ptr) = e->val;                                                   \
+      retval = true;                                                           \
+    } else {                                                                   \
+      retval = false;                                                          \
+    }                                                                          \
+    retval;                                                                    \
+  })
+
 uint64_t hash_string(const char *s);
 bool string_compare(const char *key, const char *input);
 void hash_insert_string_key(const char *key, int value);
