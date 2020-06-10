@@ -42,6 +42,9 @@ typedef uint32_t DictEntryHandle;
     DictEntryHandle *map;   /* actual map structure */                         \
   }
 
+#define DICT_SIZE(dict_ptr) (dict_ptr)->capacity
+#define DICT_COUNT(dict_ptr) (dict_ptr)->count
+
 #define DICT_FREE(dict_ptr)                                                    \
   free((dict_ptr)->map);                                                       \
   ARRAY_FREE((dict_ptr)->mem)
