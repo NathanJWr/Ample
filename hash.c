@@ -28,3 +28,8 @@ hash_string (const char *s)
     }
   return h;
 }
+bool
+string_compare (const char *key, const char *input)
+{
+  return (0 == strcmp (key, input));
+}

@@ -18,6 +18,7 @@
 #define HASH_H_
 #include "array.h"
 #include <inttypes.h>
+#include <stdbool.h>
 #define HASH_MULTIPLIER (37)
 #define DICT_MAX_LOAD_FACTOR (1)
 #define DICT_GROWTH_FACTOR (2)
@@ -36,6 +37,7 @@ typedef uint32_t DictEntryHandle;
     uint32_t capacity;                                                         \
     uint32_t count;                                                            \
     uint64_t (*hash_function)(key_type key);                                   \
+    bool (*key_compare)(key_type key, key_type input);                         \
     DICT_ENTRY(name) * mem; /* flat array of all entries */                    \
     DictEntryHandle *map;   /* actual map structure */                         \
   }
@@ -61,8 +63,9 @@ typedef uint32_t DictEntryHandle;
 #define DICT_GET_ENTRY_POINTER(dict_ptr, handle)                               \
   ((typeof((dict_ptr)->mem))(&(dict_ptr)->mem[handle]))
 
-#define DICT_INIT(dict_ptr, hash, initial_capacity)                            \
+#define DICT_INIT(dict_ptr, hash, compare, initial_capacity)                   \
   (dict_ptr)->hash_function = hash;                                            \
+  (dict_ptr)->key_compare = compare;                                           \
   (dict_ptr)->capacity = initial_capacity;                                     \
   (dict_ptr)->mem = NULL;                                                      \
   (dict_ptr)->map = calloc(1, sizeof(*(dict_ptr)->map) * initial_capacity)
@@ -72,7 +75,8 @@ typedef uint32_t DictEntryHandle;
     /* create a new dict that will have a greater capacity */                  \
     DICT(name) new_dict = {0};                                                 \
     uint32_t new_capacity = (dict_ptr)->capacity * DICT_GROWTH_FACTOR;         \
-    DICT_INIT(&new_dict, (dict_ptr)->hash_function, new_capacity);             \
+    DICT_INIT(&new_dict, (dict_ptr)->hash_function, (dict_ptr)->key_compare,   \
+              new_capacity);                                                   \
     new_dict.count = (dict_ptr)->count;                                        \
     new_dict.mem = (dict_ptr)->mem;                                            \
     /* Need to rehash all entries because the capacity changed */              \
@@ -143,6 +147,32 @@ typedef uint32_t DictEntryHandle;
     }                                                                          \
     retval;                                                                    \
   })
+
+#define DICT_ERASE                                                             \
+  (dict_ptr, k, cmp_func) uint64_t hash =                                      \
+      (dict_ptr)->hash_function(k) % (dict_ptr)->capacity;                     \
+  DictEntryHandle handle = (dict_ptr)->map[hash];                              \
+  DICT_ENTRY(name) * e;                                                        \
+  DICT_ENTRY(name) *prev = NULL;                                               \
+  while (handle != 0) {                                                        \
+    e = DICT_ENTRY_GET_POINTER(dict_ptr, handle);                              \
+    if ((dict_ptr)->key_compare(e->key, k)) {                                  \
+      /* remove this key, it's a match */                                      \
+      if (prev == NULL && e->next != 0) {                                      \
+        /* there is at least 1 entry in the linked list */ \
+        (dict_ptr)->map[hash] = e->next;                                       \
+      } else if (prev == NULL && e->next == 0) {                               \
+        /* there are no entries in the linked list */ \
+        (dict_ptr)->map[hash] = 0;                                             \
+      } else if (prev) {                                                       \
+        /* the entry that needs to be deleted is in the linked list */ \
+        prev->next = 0;                                                        \
+      }                                                                        \
+    }                                                                          \
+    prev = e; \
+  }
+
 uint64_t hash_string(const char *s);
+bool string_compare(const char *key, const char *input);
 void hash_insert_string_key(const char *key, int value);
 #endif // HASH_H_

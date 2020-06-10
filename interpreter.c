@@ -24,7 +24,7 @@ interpreter__add_integer_variable (const char *var_name, int val)
 {
   if (int_vars.mem == NULL)
     {
-      DICT_INIT (&int_vars, hash_string, 10);
+      DICT_INIT (&int_vars, hash_string, string_compare, 10);
     }
   DICT_INSERT (IntVars, &int_vars, var_name, val);
 }
