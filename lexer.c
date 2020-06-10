@@ -35,6 +35,9 @@ lex_all (char *fb)
         {
           c = fb[i++];
         }
+      /* in case we hit eof after newline */
+      if (c == '\0')
+        break;
       if (isalpha (c))
         { /* IDENTIFIER */
           char *id = NULL;
