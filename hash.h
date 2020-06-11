@@ -19,6 +19,11 @@
 #include "array.h"
 #include <inttypes.h>
 #include <stdbool.h>
+/* USAGE: 
+   This file has two user facing macros: DICT_DECLARE and DICT_IMPL
+   DICT_DECLARE creates the header definitions and structures necessary
+   for any dict functions
+   DICT_IMPL creates the definition of each function */
 #define HASH_MULTIPLIER (37)
 #define DICT_MAX_LOAD_FACTOR (1)
 #define DICT_GROWTH_FACTOR (2)
