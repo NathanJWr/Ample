@@ -27,183 +27,157 @@ typedef uint32_t DictEntryHandle;
 
 #define DICT(name) struct Dict##name
 #define DICT_ENTRY(name) struct DictEntry##name
-#define DICT_DECLARATION(name, key_type, val_type)                             \
-  DICT_ENTRY(name) {                                                           \
-    key_type key;                                                              \
-    val_type val;                                                              \
-    DictEntryHandle next;                                                      \
-  };                                                                           \
-  DICT(name) {                                                                 \
-    uint32_t capacity;                                                         \
-    uint32_t count;                                                            \
-    uint64_t (*hash_function)(key_type key);                                   \
-    bool (*key_compare)(key_type key, key_type input);                         \
-    DICT_ENTRY(name) * mem; /* flat array of all entries */                    \
-    DictEntryHandle *map;   /* actual map structure */                         \
+#define DICT_FUNCTION2(name, func_name) name__##func_name
+#define DICT_FUNCTION(name, func_name) Dict##name##_##func_name
+#define DICT_DECLARATION(name, key_type, val_type)                            \
+  DICT_ENTRY (name)                                                           \
+  {                                                                           \
+    key_type key;                                                             \
+    val_type val;                                                             \
+    DictEntryHandle next;                                                     \
+  };                                                                          \
+  DICT (name)                                                                 \
+  {                                                                           \
+    uint32_t capacity;                                                        \
+    uint32_t count;                                                           \
+    uint64_t (*hash_function) (key_type key);                                 \
+    bool (*key_compare) (key_type key, key_type input);                       \
+    DICT_ENTRY (name) * mem; /* flat array of all entries */                  \
+    DictEntryHandle *map;    /* actual map structure */                       \
+  };                                                                          \
+  void DICT_FUNCTION (name, init) (                                           \
+      DICT (name) * dict, uint64_t (*hash_function) (key_type key),           \
+      bool (*key_compare) (key_type key, key_type input),                     \
+      size_t initial_capacity)                                                \
+  {                                                                           \
+    *dict = (DICT (name)){                                                    \
+      .capacity = initial_capacity,                                           \
+      .count = 0,                                                             \
+      .hash_function = hash_function,                                         \
+      .key_compare = key_compare,                                             \
+      .mem = NULL,                                                            \
+      .map = calloc (1, sizeof (*dict->map) * initial_capacity),              \
+    };                                                                        \
+  }                                                                           \
+  void DICT_FUNCTION (name, free) (DICT (name) * dict)                        \
+  {                                                                           \
+    free (dict->map);                                                         \
+    ARRAY_FREE (dict->mem);                                                   \
+  };                                                                          \
+  DictEntryHandle DICT_FUNCTION (name, get_entry_handle) (DICT (name) * dict) \
+  {                                                                           \
+    DICT_ENTRY (name) e = { 0 };                                              \
+    ARRAY_PUSH (dict->mem, e);                                                \
+    if (ARRAY_COUNT (dict->mem) == 1)                                         \
+      {                                                                       \
+        ARRAY_PUSH (dict->mem, e);                                            \
+      }                                                                       \
+    return ARRAY_COUNT (dict->mem) - 1;                                       \
+  }                                                                           \
+  DICT_ENTRY (name)                                                           \
+  *DICT_FUNCTION (name, get_entry_pointer) (DICT (name) * dict,               \
+                                            DictEntryHandle handle)           \
+  {                                                                           \
+    return &(dict->mem[handle]);                                              \
+  }                                                                           \
+  void DICT_FUNCTION (name, grow) (DICT (name) * dict);                       \
+  void DICT_FUNCTION (name, insert) (DICT (name) * dict, key_type key,        \
+                                     val_type val)                            \
+  {                                                                           \
+    uint64_t hash = dict->hash_function (key) % dict->capacity;               \
+    DictEntryHandle handle = DICT_FUNCTION (name, get_entry_handle) (dict);   \
+    DICT_ENTRY (name) *e                                                      \
+        = DICT_FUNCTION (name, get_entry_pointer) (dict, handle);             \
+    *e = (DICT_ENTRY (name)){                                                 \
+      .key = key,                                                             \
+      .val = val,                                                             \
+      .next = dict->map[hash],                                                \
+    };                                                                        \
+    dict->map[hash] = handle;                                                 \
+    dict->count++;                                                            \
+    if (dict->count >= dict->capacity * DICT_MAX_LOAD_FACTOR)                 \
+      {                                                                       \
+        DICT_FUNCTION (name, grow) (dict);                                    \
+      }                                                                       \
+  }                                                                           \
+  void DICT_FUNCTION (name, grow) (DICT (name) * dict)                        \
+  {                                                                           \
+    /* create a new dict that will have a greater capcaity */                 \
+    DICT (name) new_dict = { 0 };                                             \
+    uint32_t new_capacity = dict->capacity * DICT_GROWTH_FACTOR;              \
+    DICT_FUNCTION (name, init)                                                \
+    (&new_dict, dict->hash_function, dict->key_compare, new_capacity);        \
+    /* Need to rehash all entries because the capacity changed */             \
+    for (uint32_t i = 0; i < dict->count; i++)                                \
+      {                                                                       \
+        for (DictEntryHandle e_handle = dict->map[i]; e_handle != 0;)         \
+          {                                                                   \
+            DICT_ENTRY (name) *e                                              \
+                = DICT_FUNCTION (name, get_entry_pointer) (dict, e_handle);   \
+            DICT_FUNCTION (name, insert)                                      \
+            (&new_dict, e->key, e->val);                                      \
+            e_handle = e->next;                                               \
+          }                                                                   \
+      }                                                                       \
+    new_dict.count = dict->count;                                             \
+    DICT_FUNCTION (name, free) (dict);                                        \
+    *dict = new_dict;                                                         \
+  }                                                                           \
+  bool DICT_FUNCTION (name, get) (DICT (name) * dict, key_type key,           \
+                                  val_type * val)                             \
+  {                                                                           \
+    uint64_t hash = dict->hash_function (key) % dict->capacity;               \
+    DictEntryHandle handle = dict->map[hash];                                 \
+    while (handle != 0)                                                       \
+      {                                                                       \
+        DICT_ENTRY (name) *e                                                  \
+            = DICT_FUNCTION (name, get_entry_pointer) (dict, handle);         \
+        if (dict->key_compare (e->key, key))                                  \
+          {                                                                   \
+            *val = e->val;                                                    \
+            return true;                                                      \
+          }                                                                   \
+        handle = e->next;                                                     \
+      }                                                                       \
+    return false;                                                             \
+  }                                                                           \
+  void DICT_FUNCTION (name, erase) (DICT (name) * dict, key_type key)         \
+  {                                                                           \
+    uint64_t hash = dict->hash_function (key) % dict->capacity;               \
+    DictEntryHandle handle = dict->map[hash];                                 \
+    DICT_ENTRY (name) *e = NULL;                                              \
+    DICT_ENTRY (name) *prev = NULL;                                           \
+    while (handle != 0)                                                       \
+      {                                                                       \
+        e = DICT_FUNCTION (name, get_entry_pointer) (dict, handle);           \
+        if (dict->key_compare (e->key, key))                                  \
+          {                                                                   \
+            /* remove this key, it's a match */                               \
+            dict->count--;                                                    \
+            if (prev == NULL && e->next != 0)                                 \
+              {                                                               \
+                /* there is at least 1 entry in the linked list */            \
+                dict->map[hash] = e->next;                                    \
+              }                                                               \
+            else if (prev == NULL && e->next == 0)                            \
+              {                                                               \
+                /* there are no entries in the linked list */                 \
+                dict->map[hash] = 0;                                          \
+              }                                                               \
+            else if (prev)                                                    \
+              {                                                               \
+                /* the entry that needs to be deleted is in the linked list   \
+                 */                                                           \
+                prev->next = 0;                                               \
+              }                                                               \
+            return;                                                           \
+          }                                                                   \
+        prev = e;                                                             \
+        handle = e->next;                                                     \
+      }                                                                       \
   }
 
-#define DICT_SIZE(dict_ptr) (dict_ptr)->capacity
-#define DICT_COUNT(dict_ptr) (dict_ptr)->count
-
-#define DICT_FREE(dict_ptr)                                                    \
-  free((dict_ptr)->map);                                                       \
-  ARRAY_FREE((dict_ptr)->mem)
-
-/* Allocates and returns the handle to a DictEntry */
-#define DICT_GET_ENTRY_HANDLE(name, dict_ptr)                                  \
-  ({                                                                           \
-    DictEntryHandle retval;                                                    \
-    DICT_ENTRY(name) e = {0};                                                  \
-    ARRAY_PUSH((dict_ptr)->mem, e);                                            \
-    if (ARRAY_COUNT((dict_ptr)->mem) == 1) {                                   \
-      ARRAY_PUSH((dict_ptr)->mem, e);                                          \
-    }                                                                          \
-    retval = ARRAY_COUNT((dict_ptr)->mem) - 1;                                 \
-    retval;                                                                    \
-  })
-
-/* Gets the pointer to a DictEntry from a DictEntryHandle */
-#define DICT_GET_ENTRY_POINTER(dict_ptr, handle)                               \
-  ((typeof((dict_ptr)->mem))(&(dict_ptr)->mem[handle]))
-
-#define DICT_INIT(dict_ptr, hash, compare, initial_capacity)                   \
-  (dict_ptr)->hash_function = hash;                                            \
-  (dict_ptr)->key_compare = compare;                                           \
-  (dict_ptr)->capacity = initial_capacity;                                     \
-  (dict_ptr)->mem = NULL;                                                      \
-  (dict_ptr)->map = calloc(1, sizeof(*(dict_ptr)->map) * initial_capacity)
-
-#define DICT_GROW(name, dict_ptr)                                              \
-  do {                                                                         \
-    /* create a new dict that will have a greater capacity */                  \
-    DICT(name) new_dict = {0};                                                 \
-    uint32_t new_capacity = (dict_ptr)->capacity * DICT_GROWTH_FACTOR;         \
-    DICT_INIT(&new_dict, (dict_ptr)->hash_function, (dict_ptr)->key_compare,   \
-              new_capacity);                                                   \
-    new_dict.count = (dict_ptr)->count;                                        \
-    new_dict.mem = (dict_ptr)->mem;                                            \
-    /* Need to rehash all entries because the capacity changed */              \
-    for (uint32_t i = 0; i < (dict_ptr)->count; i++) {                         \
-      DictEntryHandle *collided_handles = NULL;                                \
-      DictEntryHandle *collided_handles_next = NULL;                           \
-      for (DictEntryHandle e_handle = (dict_ptr)->map[i]; e_handle != 0;) {    \
-        DICT_ENTRY(name) *e_new = DICT_GET_ENTRY_POINTER(dict_ptr, e_handle);  \
-        uint64_t hash =                                                        \
-            new_dict.hash_function(e_new->key) % new_dict.capacity;            \
-        if (new_dict.map[hash] != 0) {                                         \
-          /* collision */                                                      \
-          /* need to track these because the pointers to the next handle need  \
-             to be preserved in this loop, but changed later */                \
-          ARRAY_PUSH(collided_handles, e_handle);                              \
-          ARRAY_PUSH(collided_handles_next, new_dict.map[hash]);               \
-        }                                                                      \
-        new_dict.map[hash] = e_handle;                                         \
-        e_handle = e_new->next;                                                \
-      }                                                                        \
-      /* if there were collisions, fix the next handles */                     \
-      if (collided_handles) {                                                  \
-        for (int i = 0; i < ARRAY_COUNT(collided_handles); i++) {              \
-          DICT_ENTRY(name) *e =                                                \
-              DICT_GET_ENTRY_POINTER(dict_ptr, collided_handles[i]);           \
-          /* set the next handle of the collided entry to the one logged from  \
-           * before */                                                         \
-          e->next = collided_handles_next[i];                                  \
-          /* set the logged handle's next to 0 */                              \
-          e = DICT_GET_ENTRY_POINTER(dict_ptr, collided_handles_next[i]);      \
-          e->next = 0;                                                         \
-        }                                                                      \
-        ARRAY_FREE(collided_handles);                                          \
-        ARRAY_FREE(collided_handles_next);                                     \
-      }                                                                        \
-    }                                                                          \
-    free((dict_ptr)->map);                                                     \
-    *(dict_ptr) = new_dict;                                                    \
-  } while (0)
-
-#define DICT_INSERT(name, dict_ptr, k, v)                                      \
-  do {                                                                         \
-    uint64_t hash = (dict_ptr)->hash_function(k) % (dict_ptr)->capacity;       \
-    DictEntryHandle handle = DICT_GET_ENTRY_HANDLE(name, dict_ptr);            \
-    DICT_ENTRY(name) *e = DICT_GET_ENTRY_POINTER(dict_ptr, handle);            \
-    *e = (DICT_ENTRY(name)){                                                   \
-        .key = k,                                                              \
-        .val = v,                                                              \
-        .next = (dict_ptr)->map[hash],                                         \
-    };                                                                         \
-    (dict_ptr)->map[hash] = handle;                                            \
-    (dict_ptr)->count++;                                                       \
-    if ((dict_ptr)->count >= (dict_ptr)->capacity * DICT_MAX_LOAD_FACTOR) {    \
-      DICT_GROW(name, dict_ptr);                                               \
-    }                                                                          \
-  } while (0)
-
-#define DICT_GET(name, dict_ptr, k)                                            \
-  ({                                                                           \
-    uint64_t hash = (dict_ptr)->hash_function(k) % (dict_ptr)->capacity;       \
-    DictEntryHandle handle = (dict_ptr)->map[hash];                            \
-    typeof((dict_ptr)->mem[0].val) retval;                                     \
-    while (handle != 0) {                                                      \
-      DICT_ENTRY(name) *e = DICT_GET_ENTRY_POINTER(dict_ptr, handle);          \
-      if (strcmp(e->key, k) == 0)                                              \
-        retval = e->val;                                                       \
-      handle = e->next;                                                        \
-    }                                                                          \
-    retval;                                                                    \
-  })
-
-#define DICT_ERASE(name, dict_ptr, k)                                          \
-  do {                                                                         \
-    uint64_t hash = (dict_ptr)->hash_function(k) % (dict_ptr)->capacity;       \
-    DictEntryHandle handle = (dict_ptr)->map[hash];                            \
-    DICT_ENTRY(name) * e;                                                      \
-    DICT_ENTRY(name) *prev = NULL;                                             \
-    bool removed = false;                                                      \
-    while (handle != 0) {                                                      \
-      e = DICT_GET_ENTRY_POINTER(dict_ptr, handle);                            \
-      if ((dict_ptr)->key_compare(e->key, k)) {                                \
-        /* remove this key, it's a match */                                    \
-        removed = true;                                                        \
-        if (prev == NULL && e->next != 0) {                                    \
-          /* there is at least 1 entry in the linked list */                   \
-          (dict_ptr)->map[hash] = e->next;                                     \
-        } else if (prev == NULL && e->next == 0) {                             \
-          /* there are no entries in the linked list */                        \
-          (dict_ptr)->map[hash] = 0;                                           \
-        } else if (prev) {                                                     \
-          /* the entry that needs to be deleted is in the linked list */       \
-          prev->next = 0;                                                      \
-        }                                                                      \
-      }                                                                        \
-      prev = e;                                                                \
-      handle = e->next;                                                        \
-    }                                                                          \
-    if (removed)                                                               \
-      (dict_ptr)->count--;                                                     \
-  } while (0)
-
-#define DICT_AT(name, dict_ptr, k, value_ptr)                                  \
-  ({                                                                           \
-    bool retval = false;                                                       \
-    uint64_t hash = (dict_ptr)->hash_function(k) % (dict_ptr)->capacity;       \
-    DictEntryHandle handle = (dict_ptr)->map[hash];                            \
-    DICT_ENTRY(name) *e = NULL;                                                \
-    while (handle != 0) {                                                      \
-      DICT_ENTRY(name) *n = DICT_GET_ENTRY_POINTER(dict_ptr, handle);          \
-      if ((dict_ptr)->key_compare(k, n->key)) {                                \
-        e = n;                                                                 \
-      }                                                                        \
-      handle = n->next;                                                        \
-    }                                                                          \
-    if (e != NULL) {                                                           \
-      *(value_ptr) = e->val;                                                   \
-      retval = true;                                                           \
-    } else {                                                                   \
-      retval = false;                                                          \
-    }                                                                          \
-    retval;                                                                    \
-  })
-
-uint64_t hash_string(const char *s);
-bool string_compare(const char *key, const char *input);
-void hash_insert_string_key(const char *key, int value);
+uint64_t hash_string (const char *s);
+bool string_compare (const char *key, const char *input);
+void hash_insert_string_key (const char *key, int value);
 #endif // HASH_H_
