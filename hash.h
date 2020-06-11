@@ -29,7 +29,7 @@ typedef uint32_t DictEntryHandle;
 #define DICT_ENTRY(name) struct DictEntry##name
 #define DICT_FUNCTION2(name, func_name) name__##func_name
 #define DICT_FUNCTION(name, func_name) Dict##name##_##func_name
-#define DICT_DECLARATION(name, key_type, val_type)                            \
+#define DICT_DECLARE(name, key_type, val_type)                                \
   DICT_ENTRY (name)                                                           \
   {                                                                           \
     key_type key;                                                             \
@@ -45,6 +45,24 @@ typedef uint32_t DictEntryHandle;
     DICT_ENTRY (name) * mem; /* flat array of all entries */                  \
     DictEntryHandle *map;    /* actual map structure */                       \
   };                                                                          \
+  void DICT_FUNCTION (name, init) (                                           \
+      DICT (name) * dict, uint64_t (*hash_function) (key_type key),           \
+      bool (*key_compare) (key_type key, key_type input),                     \
+      size_t initial_capacity);                                               \
+  void DICT_FUNCTION (name, free) (DICT (name) * dict);                       \
+  DictEntryHandle DICT_FUNCTION (name,                                        \
+                                 get_entry_handle) (DICT (name) * dict);      \
+  DICT_ENTRY (name)                                                           \
+  *DICT_FUNCTION (name, get_entry_pointer) (DICT (name) * dict,               \
+                                            DictEntryHandle handle);          \
+  void DICT_FUNCTION (name, grow) (DICT (name) * dict);                       \
+  void DICT_FUNCTION (name, insert) (DICT (name) * dict, key_type key,        \
+                                     val_type val);                           \
+  bool DICT_FUNCTION (name, get) (DICT (name) * dict, key_type key,           \
+                                  val_type * val);                            \
+  void DICT_FUNCTION (name, erase) (DICT (name) * dict, key_type key);
+
+#define DICT_IMPL(name, key_type, val_type)                                   \
   void DICT_FUNCTION (name, init) (                                           \
       DICT (name) * dict, uint64_t (*hash_function) (key_type key),           \
       bool (*key_compare) (key_type key, key_type input),                     \
