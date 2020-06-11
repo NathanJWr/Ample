@@ -17,13 +17,16 @@
 #include "array.h"
 #include "hash.h"
 #include "interpreter.h"
-DICT_DECLARATION (IntVars, const char *, int);
+#include "dict_int_vars.h"
+#include "dict_str_vars.h"
 static DICT (IntVars) int_vars;
+static DICT (StrVars) str_vars;
 
 void
 interpreter__erase_variable_if_exists (const char *var)
 {
-  DICT_ERASE (IntVars, &int_vars, var);
+  DictIntVars_erase (&int_vars, var);
+  DictStrVars_erase (&str_vars, var);
   return;
 }
 void
@@ -31,11 +34,23 @@ interpreter__add_integer_variable (const char *var_name, int val)
 {
   if (int_vars.mem == NULL)
     {
-      DICT_INIT (&int_vars, hash_string, string_compare, 10);
+      DictIntVars_init (&int_vars, hash_string, string_compare, 10);
     }
   interpreter__erase_variable_if_exists (var_name);
-  DICT_INSERT (IntVars, &int_vars, var_name, val);
+  DictIntVars_insert (&int_vars, var_name, val);
 }
+
+void
+interpreter__add_string_variable (const char *var_name, const char *val)
+{
+  if (str_vars.mem == NULL)
+    {
+      DictStrVars_init (&str_vars, hash_string, string_compare, 10);
+    }
+  interpreter__erase_variable_if_exists (var_name);
+  DictStrVars_insert (&str_vars, var_name, val);
+}
+
 void
 interpreter_start (ASTHandle head)
 {

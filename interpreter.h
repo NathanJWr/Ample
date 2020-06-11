@@ -30,4 +30,5 @@ int interpreter__evaluate_binary_op(ASTHandle handle);
 void interpreter__evaluate_assignment(ASTHandle statement);
 void interpreter__add_integer_variable(const char *var_name, int val);
 void interpreter__erase_variable_if_exists(const char *var);
+void interpreter__add_string_variable(const char *var_name, const char *val);
 #endif // INTERPRETER_H_
