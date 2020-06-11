@@ -15,10 +15,9 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "array.h"
+#include "dict_vars.h"
 #include "hash.h"
 #include "interpreter.h"
-#include "dict_int_vars.h"
-#include "dict_str_vars.h"
 static DICT (IntVars) int_vars;
 static DICT (StrVars) str_vars;
 
@@ -32,10 +31,6 @@ interpreter__erase_variable_if_exists (const char *var)
 void
 interpreter__add_integer_variable (const char *var_name, int val)
 {
-  if (int_vars.mem == NULL)
-    {
-      DictIntVars_init (&int_vars, hash_string, string_compare, 10);
-    }
   interpreter__erase_variable_if_exists (var_name);
   DictIntVars_insert (&int_vars, var_name, val);
 }
@@ -43,10 +38,6 @@ interpreter__add_integer_variable (const char *var_name, int val)
 void
 interpreter__add_string_variable (const char *var_name, const char *val)
 {
-  if (str_vars.mem == NULL)
-    {
-      DictStrVars_init (&str_vars, hash_string, string_compare, 10);
-    }
   interpreter__erase_variable_if_exists (var_name);
   DictStrVars_insert (&str_vars, var_name, val);
 }
@@ -54,6 +45,9 @@ interpreter__add_string_variable (const char *var_name, const char *val)
 void
 interpreter_start (ASTHandle head)
 {
+  /* initialize all variable maps */
+  DictStrVars_init (&str_vars, hash_string, string_compare, 10);
+  DictIntVars_init (&int_vars, hash_string, string_compare, 10);
   struct AST *h = ast_get_node (head);
   if (h->type == AST_SCOPE)
     {
@@ -62,6 +56,8 @@ interpreter_start (ASTHandle head)
           interpreter__evaluate_statement (h->scope_data.statements[i]);
         }
     }
+  DictStrVars_free (&str_vars);
+  DictIntVars_free (&int_vars);
 }
 
 void
