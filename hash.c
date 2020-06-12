@@ -33,3 +33,9 @@ string_compare (const char *key, const char *input)
 {
   return (0 == strcmp (key, input));
 }
+
+bool
+int_compare (int key, int input)
+{
+  return (key == input);
+}

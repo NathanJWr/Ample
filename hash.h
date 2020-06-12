@@ -62,7 +62,7 @@ typedef uint32_t DictEntryHandle;
                                    val_type val);                              \
   bool DICT_FUNCTION(name, get)(DICT(name) * dict, key_type key,               \
                                 val_type * val);                               \
-  void DICT_FUNCTION(name, erase)(DICT(name) * dict, key_type key);
+  bool DICT_FUNCTION(name, erase)(DICT(name) * dict, key_type key);
 
 #define DICT_IMPL(name, key_type, val_type)                                    \
   void DICT_FUNCTION(name, init)(                                              \
@@ -150,7 +150,7 @@ typedef uint32_t DictEntryHandle;
     }                                                                          \
     return false;                                                              \
   }                                                                            \
-  void DICT_FUNCTION(name, erase)(DICT(name) * dict, key_type key) {           \
+  bool DICT_FUNCTION(name, erase)(DICT(name) * dict, key_type key) {           \
     uint64_t hash = dict->hash_function(key) % dict->capacity;                 \
     DictEntryHandle handle = dict->map[hash];                                  \
     DICT_ENTRY(name) *e = NULL;                                                \
@@ -171,14 +171,16 @@ typedef uint32_t DictEntryHandle;
            */                                                                  \
           prev->next = 0;                                                      \
         }                                                                      \
-        return;                                                                \
+        return true;                                                           \
       }                                                                        \
       prev = e;                                                                \
       handle = e->next;                                                        \
     }                                                                          \
-  }
+    return false;
+}
 
 uint64_t hash_string(const char *s);
 bool string_compare(const char *key, const char *input);
+bool int_compare(int key, int input);
 void hash_insert_string_key(const char *key, int value);
 #endif // HASH_H_
