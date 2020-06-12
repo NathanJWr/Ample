@@ -144,6 +144,33 @@ interpreter__evaluate_binary_op (ASTHandle handle)
 }
 
 void
+interpreter__duplicate_variable(const char* var, const char* assign)
+{
+  enum VarTypes type;
+  bool success = DictVars_get (&var_types, var, &type);
+  if (!success)
+    {
+      printf ("Variable %s does not exist\n", var);
+      exit (1);
+    }
+  switch (type)
+    {
+    case VAR_INTEGER:
+      {
+        int val;
+        success = DictIntVars_get (&int_vars, var, &val);
+        if (!success)
+          {
+            printf ("Variable %s does not exist\n", var);
+            exit (1);
+          }
+        DictIntVars_insert (&int_vars, assign, val);
+      }
+      break;
+    }
+}
+
+void
 interpreter__evaluate_assignment (ASTHandle statement)
 {
   struct AST *s = ast_get_node (statement);
@@ -167,28 +194,7 @@ interpreter__evaluate_assignment (ASTHandle statement)
     {
       const char *var = s->asgn_data.var;
       const char *expr_var = expr->id_data.id;
-
-      enum VarTypes type;
-      bool success = DictVars_get (&var_types, expr_var, &type);
-      if (!success)
-        {
-          printf ("Variable %s does node exist\n", expr_var);
-          exit (1);
-        }
-      switch (type)
-        {
-        case VAR_INTEGER:
-          {
-            int val;
-            success = DictIntVars_get (&int_vars, expr_var, &val);
-            if (!success)
-              {
-                printf ("Variable %s does node exist\n", expr_var);
-                exit (1);
-              }
-            DictIntVars_insert (&int_vars, var, val);
-          }
-          break;
-        }
+      interpreter__duplicate_variable (expr_var, var);
     }
+
 }
