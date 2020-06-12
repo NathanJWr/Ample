@@ -176,8 +176,8 @@ typedef uint32_t DictEntryHandle;
       prev = e;                                                                \
       handle = e->next;                                                        \
     }                                                                          \
-    return false;
-}
+    return false;                                                              \
+  }
 
 uint64_t hash_string(const char *s);
 bool string_compare(const char *key, const char *input);

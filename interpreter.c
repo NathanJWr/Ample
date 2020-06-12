@@ -14,10 +14,10 @@
     You should have received a copy of the GNU General Public License
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "interpreter.h"
 #include "array.h"
 #include "dict_vars.h"
 #include "hash.h"
-#include "interpreter.h"
 static DICT (IntVars) int_vars;
 static DICT (StrVars) str_vars;
 static DICT (Vars) var_types;
@@ -36,7 +36,8 @@ void
 interpreter__add_integer_variable (const char *var_name, int val)
 {
   interpreter__erase_variable_if_exists (var_name);
-  DictIntVars_insert (&int_vars, var_name, val);
+  struct IntVariable *v = variable_int_create (val);
+  DictIntVars_insert (&int_vars, var_name, v);
   DictVars_insert (&var_types, var_name, VAR_INTEGER);
 }
 
@@ -61,6 +62,19 @@ interpreter_start (ASTHandle head)
       for (unsigned int i = 0; i < ARRAY_COUNT (h->scope_data.statements); i++)
         {
           interpreter__evaluate_statement (h->scope_data.statements[i]);
+        }
+    }
+
+  /* end of the program */
+  /* all variables have reached the end of their scope */
+  for (int i = 0; i < int_vars.capacity; i++)
+    {
+      if (int_vars.map[i] != 0)
+        {
+          struct IntVariable *val
+              = DictIntVars_get_entry_pointer (&int_vars, int_vars.map[i])
+                    ->val;
+          decrement_refcount (val);
         }
     }
   DictStrVars_free (&str_vars);
@@ -144,7 +158,7 @@ interpreter__evaluate_binary_op (ASTHandle handle)
 }
 
 void
-interpreter__duplicate_variable(const char* var, const char* assign)
+interpreter__duplicate_variable (const char *var, const char *assign)
 {
   enum VarTypes type;
   bool success = DictVars_get (&var_types, var, &type);
@@ -157,16 +171,28 @@ interpreter__duplicate_variable(const char* var, const char* assign)
     {
     case VAR_INTEGER:
       {
-        int val;
+        struct IntVariable *val;
         success = DictIntVars_get (&int_vars, var, &val);
         if (!success)
           {
             printf ("Variable %s does not exist\n", var);
             exit (1);
           }
+        increment_refcount (val);
         DictIntVars_insert (&int_vars, assign, val);
       }
       break;
+    case VAR_STRING:
+      {
+        const char *val;
+        success = DictStrVars_get (&str_vars, var, &val);
+        if (!success)
+          {
+            printf ("Variable %s does not exist\n", var);
+            exit (1);
+          }
+        DictStrVars_insert (&str_vars, assign, val);
+      }
     }
 }
 
@@ -196,5 +222,4 @@ interpreter__evaluate_assignment (ASTHandle statement)
       const char *expr_var = expr->id_data.id;
       interpreter__duplicate_variable (expr_var, var);
     }
-
 }
