@@ -20,19 +20,24 @@
 #include "interpreter.h"
 static DICT (IntVars) int_vars;
 static DICT (StrVars) str_vars;
+static DICT (Vars) var_types;
 
 void
 interpreter__erase_variable_if_exists (const char *var)
 {
+  /* erase actual variable */
   DictIntVars_erase (&int_vars, var);
   DictStrVars_erase (&str_vars, var);
-  return;
+
+  /* erase variable type mapping */
+  DictVars_erase (&var_types, var);
 }
 void
 interpreter__add_integer_variable (const char *var_name, int val)
 {
   interpreter__erase_variable_if_exists (var_name);
   DictIntVars_insert (&int_vars, var_name, val);
+  DictVars_insert (&var_types, var_name, VAR_INTEGER);
 }
 
 void
@@ -40,6 +45,7 @@ interpreter__add_string_variable (const char *var_name, const char *val)
 {
   interpreter__erase_variable_if_exists (var_name);
   DictStrVars_insert (&str_vars, var_name, val);
+  DictVars_insert (&var_types, var_name, VAR_STRING);
 }
 
 void
@@ -48,6 +54,7 @@ interpreter_start (ASTHandle head)
   /* initialize all variable maps */
   DictStrVars_init (&str_vars, hash_string, string_compare, 10);
   DictIntVars_init (&int_vars, hash_string, string_compare, 10);
+  DictVars_init (&var_types, hash_string, string_compare, 10);
   struct AST *h = ast_get_node (head);
   if (h->type == AST_SCOPE)
     {
@@ -58,6 +65,7 @@ interpreter_start (ASTHandle head)
     }
   DictStrVars_free (&str_vars);
   DictIntVars_free (&int_vars);
+  DictVars_free (&var_types);
 }
 
 void
@@ -144,5 +152,43 @@ interpreter__evaluate_assignment (ASTHandle statement)
     {
       int val = expr->int_data.value;
       interpreter__add_integer_variable (s->asgn_data.var, val);
+    }
+  else if (expr->type == AST_BINARY_OP)
+    {
+      int val = interpreter__evaluate_binary_op (s->asgn_data.expr);
+      interpreter__add_integer_variable (s->asgn_data.var, val);
+    }
+  else if (expr->type == AST_STRING)
+    {
+      const char *val = expr->str_data.str;
+      interpreter__add_string_variable (s->asgn_data.var, val);
+    }
+  else if (expr->type == AST_IDENTIFIER)
+    {
+      const char *var = s->asgn_data.var;
+      const char *expr_var = expr->id_data.id;
+
+      enum VarTypes type;
+      bool success = DictVars_get (&var_types, expr_var, &type);
+      if (!success)
+        {
+          printf ("Variable %s does node exist\n", expr_var);
+          exit (1);
+        }
+      switch (type)
+        {
+        case VAR_INTEGER:
+          {
+            int val;
+            success = DictIntVars_get (&int_vars, expr_var, &val);
+            if (!success)
+              {
+                printf ("Variable %s does node exist\n", expr_var);
+                exit (1);
+              }
+            DictIntVars_insert (&int_vars, var, val);
+          }
+          break;
+        }
     }
 }
