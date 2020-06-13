@@ -26,7 +26,15 @@ void
 interpreter__erase_variable_if_exists (const char *var)
 {
   /* erase actual variable */
-  DictIntVars_erase (&int_vars, var);
+  bool success = false;
+
+  struct IntVariable* int_var;
+  success = DictIntVars_get_and_erase (&int_vars, var, &int_var);
+  if (success)
+    {
+      obj_dec_refcount (int_var);
+    }
+  
   DictStrVars_erase (&str_vars, var);
 
   /* erase variable type mapping */
@@ -45,7 +53,8 @@ void
 interpreter__add_string_variable (const char *var_name, const char *val)
 {
   interpreter__erase_variable_if_exists (var_name);
-  DictStrVars_insert (&str_vars, var_name, val);
+  struct StrVariable *v = variable_str_create (val);
+  DictStrVars_insert (&str_vars, var_name, v);
   DictVars_insert (&var_types, var_name, VAR_STRING);
 }
 
@@ -74,7 +83,15 @@ interpreter_start (ASTHandle head)
           struct IntVariable *val
               = DictIntVars_get_entry_pointer (&int_vars, int_vars.map[i])
                     ->val;
-          decrement_refcount (val);
+          obj_dec_refcount (val);
+        }
+    }
+  for (int i = 0; i < str_vars.capacity; i++)
+    {
+      if (str_vars.map[i] != 0)
+        {
+          StrVariable *val = DictStrVars_get_entry_pointer (&str_vars, str_vars.map[i])->val;
+          obj_dec_refcount (val);
         }
     }
   DictStrVars_free (&str_vars);
@@ -178,19 +195,20 @@ interpreter__duplicate_variable (const char *var, const char *assign)
             printf ("Variable %s does not exist\n", var);
             exit (1);
           }
-        increment_refcount (val);
+        obj_inc_refcount (val);
         DictIntVars_insert (&int_vars, assign, val);
       }
       break;
     case VAR_STRING:
       {
-        const char *val;
+        struct StrVariable *val;
         success = DictStrVars_get (&str_vars, var, &val);
         if (!success)
           {
             printf ("Variable %s does not exist\n", var);
             exit (1);
           }
+        obj_dec_refcount (val);
         DictStrVars_insert (&str_vars, assign, val);
       }
     }
