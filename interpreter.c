@@ -17,7 +17,7 @@
 #include "interpreter.h"
 #include "array.h"
 #include "dict_vars.h"
-#include "hash.h"
+#include "ampobject.h"
 static DICT (IntVars) int_vars;
 static DICT (StrVars) str_vars;
 static DICT (Vars) var_types;

@@ -14,9 +14,33 @@
     You should have received a copy of the GNU General Public License
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "hash.h"
-#include "ampobject.h"
-DICT_DECLARE (IntVars, const char *, AmpObject *);
-DICT_DECLARE (StrVars, const char *, AmpObject *);
-/* maps a variable to a particular type */
-DICT_DECLARE (Vars, const char *, enum VarTypes);
+#ifndef AMP_OBJECT_H_
+#define AMP_OBJECT_H_
+enum VarTypes
+{
+  VAR_INTEGER,
+  VAR_STRING,
+};
+
+typedef enum AmpObjectType {
+  AMP_OBJ_INT,
+  AMP_OBJ_STR,
+} AmpObjectType;
+
+#define AMP_OBJECT_HEADER \
+  unsigned int refcount; \
+  AmpObjectType type; \
+  void (*dealloc) (); \
+  void* value
+
+typedef struct AmpObject
+{
+  AMP_OBJECT_HEADER;
+} AmpObject;
+
+void obj_inc_refcount (AmpObject* obj);
+void obj_dec_refcount (AmpObject* obj);
+
+AmpObject *amp_object_create_integer (int val);
+AmpObject *amp_object_create_string (const char *str);
+#endif // AMP_OBJECT_H_
