@@ -266,7 +266,6 @@ parser__arithmetic (struct Token *t_arr, struct Statement s)
       QUEUE_PUSH (&expr_q, t_arr + i);
     }
   QUEUE (TokenQueue) postfix = parser__convert_infix_to_postfix (&expr_q);
-  parser__debug_print_queue (&postfix);
   ASTHandle op = parser__convert_postfix_to_ast (&postfix, statement_size (s));
   return op;
 }

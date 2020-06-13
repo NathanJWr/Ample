@@ -35,7 +35,7 @@ struct _SSLString {
 void ssl_free(char *str);
 uint32_t ssl_strlen(char *str);
 char *ssl_resize(char *str, uint32_t size);
-char *ssl_strcpy(char *dest, char *str);
+char *ssl_strcpy(char *dest, const char *str);
 char *ssl_strcat(char *dest, char *src);
 char *ssl_addchar(char *str, char c);
 

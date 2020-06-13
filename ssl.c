@@ -39,7 +39,7 @@ ssl_strlen (char *str)
 }
 // Create a ssl string from a cstring
 char *
-ssl_strcpy (char *restrict dest, char *restrict str)
+ssl_strcpy (char *restrict dest, const char *restrict str)
 {
   struct _SSLString *s = NULL;
   if (dest)
@@ -56,7 +56,7 @@ ssl_strcpy (char *restrict dest, char *restrict str)
       s->size = size;
       s->length = strlen (str);
 
-      memset (s->string, 0, size);
+      explicit_bzero(s->string, size);
       strlcpy (s->string, str, size);
     }
   return s->string;
@@ -80,7 +80,7 @@ ssl_resize (char *str, uint32_t size)
     {
       n->size = size;
       n->length = orig_length;
-      memset (n->string, 0, size);
+      explicit_bzero (n->string, size);
       strlcpy (n->string, cp, size);
       ssl_free (cp);
       return n->string;

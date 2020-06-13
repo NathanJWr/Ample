@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.16.0)
 project(ample C)
 add_executable(ample main.c ast.c hash.c interpreter.c lexer.c parser.c ncl.c ssl.c dict_vars.c)
 target_link_libraries (ample bsd)
-target_compile_options (ample PRIVATE -ggdb3 -g3 -fsanitize=address)
+target_compile_options (ample PRIVATE -Wall -ggdb3 -g3 -fsanitize=address)
 target_link_options (ample PRIVATE -ggdb3 -g3 -fsanitize=address)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
