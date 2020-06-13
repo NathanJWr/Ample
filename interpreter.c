@@ -25,20 +25,50 @@ static DICT (Vars) var_types;
 void
 interpreter__erase_variable_if_exists (const char *var)
 {
-  /* erase actual variable */
-  bool success = false;
-
-  struct IntVariable* int_var;
-  success = DictIntVars_get_and_erase (&int_vars, var, &int_var);
-  if (success)
-    {
-      obj_dec_refcount (int_var);
-    }
-  
-  DictStrVars_erase (&str_vars, var);
-
   /* erase variable type mapping */
-  DictVars_erase (&var_types, var);
+  enum VarTypes type;
+  if (!DictVars_get_and_erase (&var_types, var, &type))
+    {
+      printf ("Variable has no type\n");
+      exit (1);
+    }
+
+  /* erase actual variable */
+  switch (type)
+    {
+    case VAR_INTEGER:
+      {
+        IntVariable *int_var;
+        bool success = DictIntVars_get_and_erase (&int_vars, var, &int_var);
+        if (success)
+          {
+            obj_dec_refcount (int_var);
+            return;
+          }
+        else
+          {
+            printf ("Type mapping and value mismatch\n");
+            exit (1);
+          }
+      }
+      break;
+    case VAR_STRING:
+      {
+        StrVariable *str_var;
+        bool success = DictStrVars_get_and_erase (&str_vars, var, &str_var);
+        if (success)
+          {
+            obj_dec_refcount (str_var);
+            return;
+          }
+        else
+          {
+            printf ("Type mapping and value mismatch\n");
+            exit (1);
+          }
+      }
+      break;
+    }
 }
 void
 interpreter__add_integer_variable (const char *var_name, int val)
@@ -90,7 +120,9 @@ interpreter_start (ASTHandle head)
     {
       if (str_vars.map[i] != 0)
         {
-          StrVariable *val = DictStrVars_get_entry_pointer (&str_vars, str_vars.map[i])->val;
+          StrVariable *val
+              = DictStrVars_get_entry_pointer (&str_vars, str_vars.map[i])
+                    ->val;
           obj_dec_refcount (val);
         }
     }
