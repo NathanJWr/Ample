@@ -1,40 +1,51 @@
 #include "dict_vars.h"
 #include "hash.h"
 #include "ssl.h"
-DICT_IMPL (IntVars, const char *, IntVariable *);
-DICT_IMPL (StrVars, const char *, struct StrVariable *);
+DICT_IMPL (IntVars, const char *, AmpObject *);
+DICT_IMPL (StrVars, const char *, AmpObject *);
 DICT_IMPL (Vars, const char *, enum VarTypes);
 
 void
-amp_object_integer_dealloc (IntVariable *v)
+amp_object_destroy_basic (AmpObject *obj)
 {
-  free (v);
+  free (obj->value);
+  free (obj);
+}
+AmpObject *
+amp_object_create_integer (int val)
+{
+  struct AmpObject *a = malloc (sizeof (AmpObject));
+  a->type = AMP_OBJ_INT;
+  a->refcount = 1;
+  a->dealloc = amp_object_destroy_basic;
+  a->value = malloc (sizeof (int));
+  *(int *)(a->value) = val;
+
+  return a;
 }
 
+AmpObject *
+amp_object_create_string (const char *str)
+{
+  AmpObject *a = malloc (sizeof (AmpObject));
+  a->type = AMP_OBJ_STR;
+  a->refcount = 1;
+  a->dealloc = amp_object_destroy_basic;
+  a->value = strdup (str);
+
+  return a;
+}
 void
-amp_object_string_dealloc (StrVariable *v)
+obj_inc_refcount (AmpObject *obj)
 {
-  free (v->str);
-  free (v);
+  obj->refcount++;
 }
-
-struct IntVariable *
-variable_int_create (int val)
+void
+obj_dec_refcount (AmpObject *obj)
 {
-  struct IntVariable *v = malloc (sizeof (struct IntVariable));
-  v->amp_obj.dealloc = amp_object_integer_dealloc;
-  v->amp_obj.refcount = 1;
-  v->val = val;
-
-  return v;
-}
-struct StrVariable *
-variable_str_create (const char *str)
-{
-  struct StrVariable *v = malloc (sizeof (struct StrVariable));
-  v->amp_obj.dealloc = amp_object_string_dealloc;
-  v->amp_obj.refcount = 1;
-  v->str = strdup (str);
-
-  return v;
+  obj->refcount--;
+  if (obj->refcount == 0)
+    {
+      obj->dealloc (obj);
+    }
 }

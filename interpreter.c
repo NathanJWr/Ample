@@ -29,8 +29,8 @@ interpreter__erase_variable_if_exists (const char *var)
   enum VarTypes type;
   if (!DictVars_get_and_erase (&var_types, var, &type))
     {
-      printf ("Variable has no type\n");
-      exit (1);
+      /* the variable should not exist in any of the following dicts */
+      return;
     }
 
   /* erase actual variable */
@@ -38,7 +38,7 @@ interpreter__erase_variable_if_exists (const char *var)
     {
     case VAR_INTEGER:
       {
-        IntVariable *int_var;
+        AmpObject *int_var;
         bool success = DictIntVars_get_and_erase (&int_vars, var, &int_var);
         if (success)
           {
@@ -54,7 +54,7 @@ interpreter__erase_variable_if_exists (const char *var)
       break;
     case VAR_STRING:
       {
-        StrVariable *str_var;
+        AmpObject *str_var;
         bool success = DictStrVars_get_and_erase (&str_vars, var, &str_var);
         if (success)
           {
@@ -74,8 +74,8 @@ void
 interpreter__add_integer_variable (const char *var_name, int val)
 {
   interpreter__erase_variable_if_exists (var_name);
-  struct IntVariable *v = variable_int_create (val);
-  DictIntVars_insert (&int_vars, var_name, v);
+  AmpObject *obj = amp_object_create_integer (val);
+  DictIntVars_insert (&int_vars, var_name, obj);
   DictVars_insert (&var_types, var_name, VAR_INTEGER);
 }
 
@@ -83,8 +83,8 @@ void
 interpreter__add_string_variable (const char *var_name, const char *val)
 {
   interpreter__erase_variable_if_exists (var_name);
-  struct StrVariable *v = variable_str_create (val);
-  DictStrVars_insert (&str_vars, var_name, v);
+  AmpObject *obj = amp_object_create_string (val);
+  DictStrVars_insert (&str_vars, var_name, obj);
   DictVars_insert (&var_types, var_name, VAR_STRING);
 }
 
@@ -110,7 +110,7 @@ interpreter_start (ASTHandle head)
     {
       if (int_vars.map[i] != 0)
         {
-          struct IntVariable *val
+          AmpObject *val
               = DictIntVars_get_entry_pointer (&int_vars, int_vars.map[i])
                     ->val;
           obj_dec_refcount (val);
@@ -120,7 +120,7 @@ interpreter_start (ASTHandle head)
     {
       if (str_vars.map[i] != 0)
         {
-          StrVariable *val
+          AmpObject *val
               = DictStrVars_get_entry_pointer (&str_vars, str_vars.map[i])
                     ->val;
           obj_dec_refcount (val);
@@ -220,7 +220,7 @@ interpreter__duplicate_variable (const char *var, const char *assign)
     {
     case VAR_INTEGER:
       {
-        struct IntVariable *val;
+        AmpObject *val;
         success = DictIntVars_get (&int_vars, var, &val);
         if (!success)
           {
@@ -233,7 +233,7 @@ interpreter__duplicate_variable (const char *var, const char *assign)
       break;
     case VAR_STRING:
       {
-        struct StrVariable *val;
+        AmpObject *val;
         success = DictStrVars_get (&str_vars, var, &val);
         if (!success)
           {
