@@ -18,6 +18,7 @@
 #include "array.h"
 #include "dict_vars.h"
 #include "ampobject.h"
+#include "intobject.h"
 static DICT (IntVars) int_vars;
 static DICT (StrVars) str_vars;
 static DICT (Vars) var_types;
