@@ -15,10 +15,12 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "interpreter.h"
+#include "ampobject.h"
 #include "array.h"
 #include "dict_vars.h"
-#include "ampobject.h"
 #include "intobject.h"
+
+#include <assert.h>
 static DICT (IntVars) int_vars;
 static DICT (StrVars) str_vars;
 static DICT (Vars) var_types;
@@ -76,6 +78,14 @@ interpreter__add_integer_variable (const char *var_name, int val)
 {
   interpreter__erase_variable_if_exists (var_name);
   AmpObject *obj = amp_object_create_integer (val);
+  DictIntVars_insert (&int_vars, var_name, obj);
+  DictVars_insert (&var_types, var_name, AMP_OBJ_INT);
+}
+
+void
+interpreter__add_integer_obj (const char *var_name, AmpObject *obj)
+{
+  interpreter__erase_variable_if_exists (var_name);
   DictIntVars_insert (&int_vars, var_name, obj);
   DictVars_insert (&var_types, var_name, AMP_OBJ_INT);
 }
@@ -146,7 +156,54 @@ interpreter__evaluate_statement (ASTHandle statement)
     }
 }
 
-int
+AmpObject *
+interpreter__get_amp_object (const char *var)
+{
+  AmpObjectType type;
+  bool success = DictVars_get (&var_types, var, &type);
+  if (success)
+    {
+      AmpObject *obj;
+      switch (type)
+        {
+        case AMP_OBJ_INT:
+          DictIntVars_get (&int_vars, var, &obj);
+          break;
+        case AMP_OBJ_STR:
+          DictStrVars_get (&str_vars, var, &obj);
+          break;
+        }
+      return obj;
+    }
+  printf ("Variable \"%s\" does not exist\n", var);
+  exit (1);
+  return NULL;
+}
+
+/* returns an owning pointer to an Amp Object
+   i.e the object returned will have it's reference counter incremented */
+AmpObject *
+interpreter__get_or_generate_amp_object (ASTHandle handle)
+{
+  struct AST *node = ast_get_node (handle);
+  AmpObject *obj = NULL;
+  switch (node->type)
+    {
+    case AST_IDENTIFIER:
+      obj = interpreter__get_amp_object (node->id_data.id);
+      obj_inc_refcount (obj);
+      break;
+    case AST_INTEGER:
+      obj = amp_object_create_integer (node->int_data.value);
+      break;
+    default:
+      assert (false);
+      break;
+    }
+  return obj;
+}
+
+AmpObject *
 interpreter__evaluate_binary_op (ASTHandle handle)
 {
   int left_value = 0;
@@ -157,51 +214,75 @@ interpreter__evaluate_binary_op (ASTHandle handle)
     {
       ASTHandle right_handle = node->bop_data.right;
       ASTHandle left_handle = node->bop_data.left;
+      struct AST *right_node = ast_get_node (right_handle);
+      struct AST *left_node = ast_get_node (left_handle);
+      AmpObject *left = NULL, *right = NULL;
 
-      struct AST *right = ast_get_node (right_handle);
-      if (right->type == AST_INTEGER)
+      if (right_node->type == AST_INTEGER
+          || right_node->type == AST_IDENTIFIER)
         {
-          right_value = right->int_data.value;
+          right = interpreter__get_or_generate_amp_object (right_handle);
         }
-      else if (right->type == AST_BINARY_OP)
+      else if (right_node->type == AST_BINARY_OP)
         {
-          right_value = interpreter__evaluate_binary_op (right_handle);
+          right = interpreter__evaluate_binary_op (right_handle);
         }
       else
         {
           exit (1);
         }
 
-      struct AST *left = ast_get_node (left_handle);
-      if (left->type == AST_INTEGER)
+      if (left_node->type == AST_INTEGER || left_node->type == AST_IDENTIFIER)
         {
-          left_value = left->int_data.value;
+          left = interpreter__get_or_generate_amp_object (left_handle);
         }
-      else if (left->type == AST_BINARY_OP)
+      else if (left_node->type == AST_BINARY_OP)
         {
-          left_value = interpreter__evaluate_binary_op (left_handle);
+          left = interpreter__evaluate_binary_op (left_handle);
         }
       else
         {
           exit (1);
         }
 
-      switch (node->bop_data.op)
+      if (left->type == right->type)
         {
-        case '+':
-          return right_value + left_value;
-          break;
-        case '-':
-          return right_value - left_value;
-          break;
-        case '*':
-          return right_value * left_value;
-          break;
-        case '/':
-          return right_value / left_value;
-          break;
-        default:
-          return 0;
+          AmpObject *obj = NULL;
+          switch (right->type)
+            {
+            case AMP_OBJ_INT:
+              {
+                switch (node->bop_data.op)
+                  {
+                  case '+':
+                    obj = AMP_INTEGER (right)->addition (right, left);
+                    break;
+                  case '-':
+                    obj = AMP_INTEGER (right)->subtraction (right, left);
+                    break;
+                  case '/':
+                    obj = AMP_INTEGER (right)->division (right, left);
+                    break;
+                  case '*':
+                    obj = AMP_INTEGER (right)->multiplication (right, left);
+                    break;
+                  default:
+                    printf ("Unsupported integer binary operation\n");
+                    exit (1);
+                  }
+              } break;
+            default:
+              printf ("Type does not support binary operations\n");
+              exit (1);
+            }
+          obj_dec_refcount (left);
+          obj_dec_refcount (right);
+          return obj;
+        }
+      else
+        {
+          printf ("Attempting arithmetic on values of different types\n");
+          exit (1);
         }
     }
   return 0;
@@ -259,8 +340,8 @@ interpreter__evaluate_assignment (ASTHandle statement)
     }
   else if (expr->type == AST_BINARY_OP)
     {
-      int val = interpreter__evaluate_binary_op (s->asgn_data.expr);
-      interpreter__add_integer_variable (s->asgn_data.var, val);
+      AmpObject *obj = interpreter__evaluate_binary_op (s->asgn_data.expr);
+      interpreter__add_integer_obj (s->asgn_data.var, obj);
     }
   else if (expr->type == AST_STRING)
     {

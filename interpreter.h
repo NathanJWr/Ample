@@ -17,6 +17,7 @@
 #ifndef INTERPRETER_H_
 #define INTERPRETER_H_
 #include "ast.h"
+#include "ampobject.h"
 /* ******************
    External functions
    ****************** */
@@ -26,7 +27,7 @@ void interpreter_start(ASTHandle head);
    Internal Functions
    ****************** */
 void interpreter__evaluate_statement(ASTHandle statement);
-int interpreter__evaluate_binary_op(ASTHandle handle);
+AmpObject* interpreter__evaluate_binary_op(ASTHandle handle);
 void interpreter__evaluate_assignment(ASTHandle statement);
 void interpreter__add_integer_variable(const char *var_name, int val);
 void interpreter__erase_variable_if_exists(const char *var);

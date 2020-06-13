@@ -32,7 +32,7 @@ typedef struct AmpObject
 {
   AMP_OBJECT_HEADER;
 } AmpObject;
-
+#define AMP_OBJECT(obj) ((AmpObject*)(obj))
 void obj_inc_refcount (AmpObject *obj);
 void obj_dec_refcount (AmpObject *obj);
 void amp_object_destroy_basic (AmpObject *obj);

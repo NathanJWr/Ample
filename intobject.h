@@ -3,7 +3,10 @@
 typedef struct AmpObject_Int
 {
   AMP_OBJECT_HEADER;
-  struct AmpObject_Int* (*addition)(struct AmpObject_Int*, struct AmpObject_Int*);
+  AmpObject *(*addition) (AmpObject *, AmpObject *);
+  AmpObject *(*subtraction) (AmpObject *, AmpObject *);
+  AmpObject *(*division) (AmpObject *, AmpObject *);
+  AmpObject *(*multiplication) (AmpObject *, AmpObject *);
 } AmpObject_Int;
-
+#define AMP_INTEGER(obj) ((AmpObject_Int *)(obj))
 AmpObject *amp_object_create_integer (int val);

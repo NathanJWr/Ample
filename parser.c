@@ -14,10 +14,10 @@
     You should have received a copy of the GNU General Public License
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "parser.h"
 #include "array.h"
 #include "ast.h"
 #include "lexer.h"
-#include "parser.h"
 #include "queue.h"
 unsigned int
 statement_size (struct Statement s)
@@ -225,6 +225,15 @@ parser__convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
 
           STACK_PUSH (&s, ast_handle);
         }
+      else if (n->value == TOK_IDENTIFIER)
+        {
+          ASTHandle ast_handle = ast_get_node_handle ();
+          struct AST *id_ast = ast_get_node (ast_handle);
+          id_ast->type = AST_IDENTIFIER;
+          id_ast->id_data.id = n->string;
+
+          STACK_PUSH (&s, ast_handle);
+        }
       else if (parser__is_arithmetic_op (n->value))
         {
           ASTHandle left, right, ast_handle;
@@ -290,7 +299,9 @@ ASTHandle
 parser__possible_arithmetic (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
-  if (statement_size (s) >= 2 && t_arr[s.start].value == TOK_INTEGER
+  if (statement_size (s) >= 2
+      && (t_arr[s.start].value == TOK_INTEGER
+          || t_arr[s.start].value == TOK_IDENTIFIER)
       && parser__is_arithmetic_op (t_arr[s.start + 1].value))
     {
       node = parser__arithmetic (t_arr, s);
