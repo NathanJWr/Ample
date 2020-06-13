@@ -26,7 +26,7 @@ void
 interpreter__erase_variable_if_exists (const char *var)
 {
   /* erase variable type mapping */
-  enum VarTypes type;
+  AmpObjectType type;
   if (!DictVars_get_and_erase (&var_types, var, &type))
     {
       /* the variable should not exist in any of the following dicts */
@@ -36,7 +36,7 @@ interpreter__erase_variable_if_exists (const char *var)
   /* erase actual variable */
   switch (type)
     {
-    case VAR_INTEGER:
+    case AMP_OBJ_INT:
       {
         AmpObject *int_var;
         bool success = DictIntVars_get_and_erase (&int_vars, var, &int_var);
@@ -52,7 +52,7 @@ interpreter__erase_variable_if_exists (const char *var)
           }
       }
       break;
-    case VAR_STRING:
+    case AMP_OBJ_STR:
       {
         AmpObject *str_var;
         bool success = DictStrVars_get_and_erase (&str_vars, var, &str_var);
@@ -76,7 +76,7 @@ interpreter__add_integer_variable (const char *var_name, int val)
   interpreter__erase_variable_if_exists (var_name);
   AmpObject *obj = amp_object_create_integer (val);
   DictIntVars_insert (&int_vars, var_name, obj);
-  DictVars_insert (&var_types, var_name, VAR_INTEGER);
+  DictVars_insert (&var_types, var_name, AMP_OBJ_INT);
 }
 
 void
@@ -85,7 +85,7 @@ interpreter__add_string_variable (const char *var_name, const char *val)
   interpreter__erase_variable_if_exists (var_name);
   AmpObject *obj = amp_object_create_string (val);
   DictStrVars_insert (&str_vars, var_name, obj);
-  DictVars_insert (&var_types, var_name, VAR_STRING);
+  DictVars_insert (&var_types, var_name, AMP_OBJ_STR);
 }
 
 void
@@ -209,7 +209,7 @@ interpreter__evaluate_binary_op (ASTHandle handle)
 void
 interpreter__duplicate_variable (const char *var, const char *assign)
 {
-  enum VarTypes type;
+  AmpObjectType type;
   bool success = DictVars_get (&var_types, var, &type);
   if (!success)
     {
@@ -218,7 +218,7 @@ interpreter__duplicate_variable (const char *var, const char *assign)
     }
   switch (type)
     {
-    case VAR_INTEGER:
+    case AMP_OBJ_INT:
       {
         AmpObject *val;
         success = DictIntVars_get (&int_vars, var, &val);
@@ -231,7 +231,7 @@ interpreter__duplicate_variable (const char *var, const char *assign)
         DictIntVars_insert (&int_vars, assign, val);
       }
       break;
-    case VAR_STRING:
+    case AMP_OBJ_STR:
       {
         AmpObject *val;
         success = DictStrVars_get (&str_vars, var, &val);

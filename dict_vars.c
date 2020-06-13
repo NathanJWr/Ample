@@ -17,4 +17,4 @@
 #include "dict_vars.h"
 DICT_IMPL (IntVars, const char *, AmpObject *);
 DICT_IMPL (StrVars, const char *, AmpObject *);
-DICT_IMPL (Vars, const char *, enum VarTypes);
+DICT_IMPL (Vars, const char *, AmpObjectType);

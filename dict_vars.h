@@ -19,4 +19,4 @@
 DICT_DECLARE (IntVars, const char *, AmpObject *);
 DICT_DECLARE (StrVars, const char *, AmpObject *);
 /* maps a variable to a particular type */
-DICT_DECLARE (Vars, const char *, enum VarTypes);
+DICT_DECLARE (Vars, const char *, AmpObjectType);

@@ -16,12 +16,6 @@
 */
 #ifndef AMP_OBJECT_H_
 #define AMP_OBJECT_H_
-enum VarTypes
-{
-  VAR_INTEGER,
-  VAR_STRING,
-};
-
 typedef enum AmpObjectType {
   AMP_OBJ_INT,
   AMP_OBJ_STR,
