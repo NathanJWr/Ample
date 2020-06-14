@@ -22,91 +22,30 @@
 #include "strobject.h"
 
 #include <assert.h>
-static DICT (IntVars) int_vars;
-static DICT (StrVars) str_vars;
-static DICT (Vars) var_types;
+static DICT(ObjVars) varmap;
 
 void
 interpreter__erase_variable_if_exists (const char *var)
 {
-  /* erase variable type mapping */
-  AmpObjectType type;
-  if (!DictVars_get_and_erase (&var_types, var, &type))
-    {
-      /* the variable should not exist in any of the following dicts */
-      return;
-    }
 
-  /* erase actual variable */
-  switch (type)
-    {
-    case AMP_OBJ_INT:
-      {
-        AmpObject *int_var;
-        bool success = DictIntVars_get_and_erase (&int_vars, var, &int_var);
-        if (success)
-          {
-            obj_dec_refcount (int_var);
-            return;
-          }
-        else
-          {
-            printf ("Type mapping and value mismatch\n");
-            exit (1);
-          }
-      }
-      break;
-    case AMP_OBJ_STR:
-      {
-        AmpObject *str_var;
-        bool success = DictStrVars_get_and_erase (&str_vars, var, &str_var);
-        if (success)
-          {
-            obj_dec_refcount (str_var);
-            return;
-          }
-        else
-          {
-            printf ("Type mapping and value mismatch\n");
-            exit (1);
-          }
-      }
-      break;
-    }
-}
-void
-interpreter__add_integer_variable (const char *var_name, int val)
-{
-  interpreter__erase_variable_if_exists (var_name);
-  AmpObject *obj = amp_object_create_integer (val);
-  DictIntVars_insert (&int_vars, var_name, obj);
-  DictVars_insert (&var_types, var_name, AMP_OBJ_INT);
+  AmpObject *obj = NULL;
+  bool success = DictObjVars_get_and_erase (&varmap, var, &obj);
+  if (success)
+    obj_dec_refcount (obj);
 }
 
 void
-interpreter__add_integer_obj (const char *var_name, AmpObject *obj)
+interpreter__add_obj_mapping (const char *var_name, AmpObject *obj)
 {
   interpreter__erase_variable_if_exists (var_name);
-  DictIntVars_insert (&int_vars, var_name, obj);
-  DictVars_insert (&var_types, var_name, AMP_OBJ_INT);
-}
-
-void
-interpreter__add_string_variable (const char *var_name, const char *val)
-{
-  interpreter__erase_variable_if_exists (var_name);
-  AmpObject *obj = amp_object_create_string (val);
-  DictStrVars_insert (&str_vars, var_name, obj);
-  DictVars_insert (&var_types, var_name, AMP_OBJ_STR);
+  DictObjVars_insert (&varmap, var_name, obj);
 }
 
 void
 interpreter_start (ASTHandle head)
 {
   /* initialize all variable maps */
-  DictStrVars_init (&str_vars, hash_string, string_compare, 10);
-  DictIntVars_init (&int_vars, hash_string, string_compare, 10);
-  DictVars_init (&var_types, hash_string, string_compare, 10);
+  DictObjVars_init (&varmap, hash_string, string_compare, 10);
   struct AST *h = ast_get_node (head);
   if (h->type == AST_SCOPE)
     {
@@ -117,30 +56,18 @@ interpreter_start (ASTHandle head)
     }
 
   /* end of the program */
+  debug__interpreter_print_all_vars ();
   /* all variables have reached the end of their scope */
-  for (int i = 0; i < int_vars.capacity; i++)
+  for (int i = 0; i < varmap.capacity; i++)
     {
-      if (int_vars.map[i] != 0)
+      if (varmap.map[i] != 0)
         {
           AmpObject *val
-              = DictIntVars_get_entry_pointer (&int_vars, int_vars.map[i])
-                    ->val;
+              = DictObjVars_get_entry_pointer (&varmap, varmap.map[i])->val;
           obj_dec_refcount (val);
         }
     }
-  for (int i = 0; i < str_vars.capacity; i++)
-    {
-      if (str_vars.map[i] != 0)
-        {
-          AmpObject *val
-              = DictStrVars_get_entry_pointer (&str_vars, str_vars.map[i])
-                    ->val;
-          obj_dec_refcount (val);
-        }
-    }
-  DictStrVars_free (&str_vars);
-  DictIntVars_free (&int_vars);
-  DictVars_free (&var_types);
+  DictObjVars_free (&varmap);
 }
 
 void
@@ -160,25 +87,14 @@ interpreter__evaluate_statement (ASTHandle statement)
 AmpObject *
 interpreter__get_amp_object (const char *var)
 {
-  AmpObjectType type;
-  bool success = DictVars_get (&var_types, var, &type);
-  if (success)
+  AmpObject *obj = NULL;
+  bool success = DictObjVars_get (&varmap, var, &obj);
+  if (!success)
     {
-      AmpObject *obj;
-      switch (type)
-        {
-        case AMP_OBJ_INT:
-          DictIntVars_get (&int_vars, var, &obj);
-          break;
-        case AMP_OBJ_STR:
-          DictStrVars_get (&str_vars, var, &obj);
-          break;
-        }
-      return obj;
+      printf ("Variable \"%s\" does not exist\n", var);
+      exit (1);
     }
-  printf ("Variable \"%s\" does not exist\n", var);
-  exit (1);
-  return NULL;
+  return obj;
 }
 
 /* returns an owning pointer to an Amp Object
@@ -317,41 +233,16 @@ interpreter__evaluate_binary_op (ASTHandle handle)
 void
 interpreter__duplicate_variable (const char *var, const char *assign)
 {
-  AmpObjectType type;
-  bool success = DictVars_get (&var_types, var, &type);
+  AmpObject *obj = NULL;
+  bool success = DictObjVars_get (&varmap, var, &obj);
   if (!success)
     {
       printf ("Variable %s does not exist\n", var);
       exit (1);
     }
-  switch (type)
-    {
-    case AMP_OBJ_INT:
-      {
-        AmpObject *val;
-        success = DictIntVars_get (&int_vars, var, &val);
-        if (!success)
-          {
-            printf ("Variable %s does not exist\n", var);
-            exit (1);
-          }
-        obj_inc_refcount (val);
-        DictIntVars_insert (&int_vars, assign, val);
-      }
-      break;
-    case AMP_OBJ_STR:
-      {
-        AmpObject *val;
-        success = DictStrVars_get (&str_vars, var, &val);
-        if (!success)
-          {
-            printf ("Variable %s does not exist\n", var);
-            exit (1);
-          }
-        obj_dec_refcount (val);
-        DictStrVars_insert (&str_vars, assign, val);
-      }
-    }
+  /* new variable will be referencing the same memory */
+  obj_inc_refcount (obj);
+  DictObjVars_insert (&varmap, assign, obj);
 }
 
 void
@@ -362,22 +253,47 @@ interpreter__evaluate_assignment (ASTHandle statement)
   if (expr->type == AST_INTEGER)
     {
       int val = expr->int_data.value;
-      interpreter__add_integer_variable (s->asgn_data.var, val);
+      AmpObject *obj = amp_object_create_integer (val);
+      interpreter__add_obj_mapping (s->asgn_data.var, obj);
     }
   else if (expr->type == AST_BINARY_OP)
     {
       AmpObject *obj = interpreter__evaluate_binary_op (s->asgn_data.expr);
-      interpreter__add_integer_obj (s->asgn_data.var, obj);
+      interpreter__add_obj_mapping (s->asgn_data.var, obj);
     }
   else if (expr->type == AST_STRING)
     {
       const char *val = expr->str_data.str;
-      interpreter__add_string_variable (s->asgn_data.var, val);
+      AmpObject *obj = amp_object_create_string (val);
+      interpreter__add_obj_mapping (s->asgn_data.var, obj);
     }
   else if (expr->type == AST_IDENTIFIER)
     {
       const char *var = s->asgn_data.var;
       const char *expr_var = expr->id_data.id;
       interpreter__duplicate_variable (expr_var, var);
+    }
+}
+
+void
+debug__interpreter_print_all_vars ()
+{
+  for (unsigned int i = 0; i < varmap.capacity; i++)
+    {
+      DictEntryHandle h = varmap.map[i];
+      if (h != 0)
+        {
+          const DICT_ENTRY (ObjVars) *e = &varmap.mem[h];
+          AmpObject *obj = e->val;
+          switch (obj->type)
+            {
+            case AMP_OBJ_INT:
+              printf ("Int Variable: %s\n\tValue: %d\n", e->key, *(int*)e->val->value);
+              break;
+            case AMP_OBJ_STR:
+              printf ("Str Variable: %s\n\tValue: %s\n", e->key, (char*)e->val->value);
+              break;
+            }
+        }
     }
 }

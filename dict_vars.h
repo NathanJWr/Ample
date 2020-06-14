@@ -16,7 +16,4 @@
 */
 #include "hash.h"
 #include "ampobject.h"
-DICT_DECLARE (IntVars, const char *, AmpObject *);
-DICT_DECLARE (StrVars, const char *, AmpObject *);
-/* maps a variable to a particular type */
-DICT_DECLARE (Vars, const char *, AmpObjectType);
+DICT_DECLARE (ObjVars, const char *, AmpObject *);

@@ -15,6 +15,4 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "dict_vars.h"
-DICT_IMPL (IntVars, const char *, AmpObject *);
-DICT_IMPL (StrVars, const char *, AmpObject *);
-DICT_IMPL (Vars, const char *, AmpObjectType);
+DICT_IMPL (ObjVars, const char *, AmpObject *);
