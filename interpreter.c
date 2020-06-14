@@ -207,6 +207,46 @@ interpreter__get_or_generate_amp_object (ASTHandle handle)
   return obj;
 }
 
+AmpObject*
+interpreter__integer_operation (TValue op, AmpObject *right, AmpObject *left)
+{
+  AmpObject *obj = NULL;
+  switch (op)
+    {
+    case '+':
+      obj = AMP_INTEGER (right)->addition (right, left);
+      break;
+    case '-':
+      obj = AMP_INTEGER (right)->subtraction (right, left);
+      break;
+    case '/':
+      obj = AMP_INTEGER (right)->division (right, left);
+      break;
+    case '*':
+      obj = AMP_INTEGER (right)->multiplication (right, left);
+      break;
+    default:
+      printf ("Unsupported integer binary operation, %c\n", op);
+      exit (1);
+    }
+  return obj;
+}
+
+AmpObject *
+interpreter__string_operation (TValue op, AmpObject *right, AmpObject *left)
+{
+  AmpObject *obj = NULL;
+  switch (op)
+    {
+    case '+':
+      obj = AMP_STRING (right)->concat (right, left);
+      break;
+    default:
+      printf ("Unsupported string binary operation, %c\n", op);
+      exit (1);
+    }
+  return obj;
+}
 AmpObject *
 interpreter__evaluate_binary_op (ASTHandle handle)
 {
@@ -220,8 +260,7 @@ interpreter__evaluate_binary_op (ASTHandle handle)
       struct AST *left_node = ast_get_node (left_handle);
       AmpObject *left = NULL, *right = NULL;
 
-      if (right_node->type == AST_INTEGER || right_node->type == AST_IDENTIFIER
-          || right_node->type == AST_STRING)
+      if (right_node->type != AST_BINARY_OP)
         {
           right = interpreter__get_or_generate_amp_object (right_handle);
         }
@@ -234,8 +273,7 @@ interpreter__evaluate_binary_op (ASTHandle handle)
           exit (1);
         }
 
-      if (left_node->type == AST_INTEGER || left_node->type == AST_IDENTIFIER
-          || left_node->type == AST_STRING)
+      if (right_node->type != AST_BINARY_OP)
         {
           left = interpreter__get_or_generate_amp_object (left_handle);
         }
@@ -254,40 +292,11 @@ interpreter__evaluate_binary_op (ASTHandle handle)
           switch (right->type)
             {
             case AMP_OBJ_INT:
-              {
-                switch (node->bop_data.op)
-                  {
-                  case '+':
-                    obj = AMP_INTEGER (right)->addition (right, left);
-                    break;
-                  case '-':
-                    obj = AMP_INTEGER (right)->subtraction (right, left);
-                    break;
-                  case '/':
-                    obj = AMP_INTEGER (right)->division (right, left);
-                    break;
-                  case '*':
-                    obj = AMP_INTEGER (right)->multiplication (right, left);
-                    break;
-                  default:
-                    printf ("Unsupported integer binary operation\n");
-                    exit (1);
-                  }
-              }
+              obj = interpreter__integer_operation (node->bop_data.op, right, left);
               break;
             case AMP_OBJ_STR:
-              {
-                switch (node->bop_data.op)
-                  {
-                  case '+':
-                    obj = AMP_STRING (right)->concat (right, left);
-                    break;
-                  default:
-                    printf ("Unsupported string binary operation %c\n",
-                            node->bop_data.op);
-                    exit (1);
-                  }
-              } break;
+              obj = interpreter__string_operation (node->bop_data.op, right, left);
+              break;
             default:
               printf ("Type does not support binary operations\n");
               exit (1);
@@ -298,7 +307,7 @@ interpreter__evaluate_binary_op (ASTHandle handle)
         }
       else
         {
-          printf ("Attempting arithmetic on values of different types\n");
+          printf ("Attempting binary operation on values of different types\n");
           exit (1);
         }
     }
