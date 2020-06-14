@@ -155,7 +155,7 @@ parser__convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
       struct Token *n = QUEUE_FRONT (expr_q);
       QUEUE_POP (expr_q);
 
-      if (n->value == TOK_INTEGER || n->value == TOK_IDENTIFIER)
+      if (n->value == TOK_INTEGER || n->value == TOK_IDENTIFIER || n->value == TOK_STRING)
         {
           QUEUE_PUSH (&q, n);
         }
@@ -234,6 +234,15 @@ parser__convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
 
           STACK_PUSH (&s, ast_handle);
         }
+      else if (n->value == TOK_STRING)
+        {
+          ASTHandle ast_handle = ast_get_node_handle ();
+          struct AST *str = ast_get_node (ast_handle);
+          str->type = AST_STRING;
+          str->str_data.str = n->string;
+
+          STACK_PUSH (&s, ast_handle);
+        }
       else if (parser__is_arithmetic_op (n->value))
         {
           ASTHandle left, right, ast_handle;
@@ -301,7 +310,8 @@ parser__possible_arithmetic (struct Token *t_arr, struct Statement s)
   ASTHandle node = 0;
   if (statement_size (s) >= 2
       && (t_arr[s.start].value == TOK_INTEGER
-          || t_arr[s.start].value == TOK_IDENTIFIER)
+          || t_arr[s.start].value == TOK_IDENTIFIER
+          || t_arr[s.start].value == TOK_STRING)
       && parser__is_arithmetic_op (t_arr[s.start + 1].value))
     {
       node = parser__arithmetic (t_arr, s);

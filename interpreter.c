@@ -19,6 +19,7 @@
 #include "array.h"
 #include "dict_vars.h"
 #include "intobject.h"
+#include "strobject.h"
 
 #include <assert.h>
 static DICT (IntVars) int_vars;
@@ -196,6 +197,9 @@ interpreter__get_or_generate_amp_object (ASTHandle handle)
     case AST_INTEGER:
       obj = amp_object_create_integer (node->int_data.value);
       break;
+    case AST_STRING:
+      obj = amp_object_create_string (node->str_data.str);
+      break;
     default:
       assert (false);
       break;
@@ -206,8 +210,6 @@ interpreter__get_or_generate_amp_object (ASTHandle handle)
 AmpObject *
 interpreter__evaluate_binary_op (ASTHandle handle)
 {
-  int left_value = 0;
-  int right_value = 0;
   struct AST *node = ast_get_node (handle);
 
   if (node->type == AST_BINARY_OP)
@@ -218,8 +220,8 @@ interpreter__evaluate_binary_op (ASTHandle handle)
       struct AST *left_node = ast_get_node (left_handle);
       AmpObject *left = NULL, *right = NULL;
 
-      if (right_node->type == AST_INTEGER
-          || right_node->type == AST_IDENTIFIER)
+      if (right_node->type == AST_INTEGER || right_node->type == AST_IDENTIFIER
+          || right_node->type == AST_STRING)
         {
           right = interpreter__get_or_generate_amp_object (right_handle);
         }
@@ -232,7 +234,8 @@ interpreter__evaluate_binary_op (ASTHandle handle)
           exit (1);
         }
 
-      if (left_node->type == AST_INTEGER || left_node->type == AST_IDENTIFIER)
+      if (left_node->type == AST_INTEGER || left_node->type == AST_IDENTIFIER
+          || left_node->type == AST_STRING)
         {
           left = interpreter__get_or_generate_amp_object (left_handle);
         }
@@ -268,6 +271,20 @@ interpreter__evaluate_binary_op (ASTHandle handle)
                     break;
                   default:
                     printf ("Unsupported integer binary operation\n");
+                    exit (1);
+                  }
+              }
+              break;
+            case AMP_OBJ_STR:
+              {
+                switch (node->bop_data.op)
+                  {
+                  case '+':
+                    obj = AMP_STRING (right)->concat (right, left);
+                    break;
+                  default:
+                    printf ("Unsupported string binary operation %c\n",
+                            node->bop_data.op);
                     exit (1);
                   }
               } break;

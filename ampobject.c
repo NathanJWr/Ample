@@ -24,17 +24,6 @@ amp_object_destroy_basic (AmpObject *obj)
   free (obj);
 }
 
-AmpObject *
-amp_object_create_string (const char *str)
-{
-  AmpObject *a = malloc (sizeof (AmpObject));
-  a->type = AMP_OBJ_STR;
-  a->refcount = 1;
-  a->dealloc = amp_object_destroy_basic;
-  a->value = strdup (str);
-
-  return a;
-}
 void
 obj_inc_refcount (AmpObject *obj)
 {

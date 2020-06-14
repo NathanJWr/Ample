@@ -36,6 +36,4 @@ typedef struct AmpObject
 void obj_inc_refcount (AmpObject *obj);
 void obj_dec_refcount (AmpObject *obj);
 void amp_object_destroy_basic (AmpObject *obj);
-
-AmpObject *amp_object_create_string (const char *str);
 #endif // AMP_OBJECT_H_
