@@ -130,16 +130,16 @@ interpreter__integer_operation (TValue op, AmpObject *right, AmpObject *left)
   switch (op)
     {
     case '+':
-      obj = amp_object_add_integer (right, left);
+      obj = amp_integer_add (right, left);
       break;
     case '-':
-      obj = amp_object_sub_integer (right, left);
+      obj = amp_integer_sub (right, left);
       break;
     case '/':
-      obj = amp_object_div_integer (right, left);
+      obj = amp_integer_div (right, left);
       break;
     case '*':
-      obj = amp_object_mult_integer (right, left);
+      obj = amp_integer_mul (right, left);
       break;
     default:
       printf ("Unsupported integer binary operation, %c\n", op);

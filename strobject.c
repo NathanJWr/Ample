@@ -20,12 +20,12 @@
 AmpObject *
 amp_object_concat_string (AmpObject *this, AmpObject *str)
 {
-  unsigned int size = strlen ((char*) this->value);
-  size += strlen ((char*) str->value);
+  unsigned int size = strlen (AMP_STRING (this)->string);
+  size += strlen (AMP_STRING (str)->string);
 
   char* s = calloc (1, size + 1);
-  strcat (s, (char*) this->value);
-  strcat (s, (char*) str->value);
+  strcat (s, AMP_STRING (this)->string);
+  strcat (s, AMP_STRING (str)->string);
   return amp_object_create_string_nodup (s);
 }
 
@@ -37,8 +37,8 @@ amp_object_create_string (const char *str)
     .type = AMP_OBJ_STR,
     .refcount = 1,
     .dealloc = amp_object_destroy_string,
-    .string = strdup (str);
-  }
+    .string = strdup (str),
+  };
   a->concat = amp_object_concat_string;
   return AMP_OBJECT(a);
 }
@@ -46,7 +46,7 @@ amp_object_create_string (const char *str)
 void
 amp_object_destroy_string (AmpObject *obj)
 {
-  free (AMP_STRING (ojb)->string);
+  free (AMP_STRING (obj)->string);
   free (obj);
 }
 
@@ -58,8 +58,8 @@ amp_object_create_string_nodup (char *str)
     .type = AMP_OBJ_STR,
     .refcount = 1,
     .dealloc = amp_object_destroy_string,
-    .string = str;
-  }
+    .string = str,
+  };
   a->concat = amp_object_concat_string;
   return AMP_OBJECT(a);
 }
