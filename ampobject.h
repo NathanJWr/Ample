@@ -22,11 +22,10 @@ typedef enum AmpObjectType
   AMP_OBJ_STR,
 } AmpObjectType;
 
-#define AMP_OBJECT_HEADER                                                     \
-  unsigned int refcount;                                                      \
-  AmpObjectType type;                                                         \
-  void (*dealloc) ();                                                         \
-  void *value
+#define AMP_OBJECT_HEADER                                                      \
+  unsigned int refcount;                                                       \
+  AmpObjectType type;                                                          \
+  void (*dealloc)()
 
 typedef struct AmpObject
 {

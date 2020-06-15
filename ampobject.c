@@ -20,7 +20,6 @@
 void
 amp_object_destroy_basic (AmpObject *obj)
 {
-  free (obj->value);
   free (obj);
 }
 

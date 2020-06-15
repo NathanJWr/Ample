@@ -21,8 +21,10 @@ typedef struct AmpObject_Str
 {
   AMP_OBJECT_HEADER;
 	AmpObject *(*concat) (AmpObject *, AmpObject *);
+  char* string;
 } AmpObject_Str;
 #define AMP_STRING(obj) ((AmpObject_Str *)(obj))
 AmpObject *amp_object_create_string (const char* str);
 AmpObject *amp_object_create_string_nodup (char *str);
+void amp_object_destroy_string (AmpObject *obj);
 #endif // STR_OBJECT_H_

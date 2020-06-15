@@ -130,16 +130,16 @@ interpreter__integer_operation (TValue op, AmpObject *right, AmpObject *left)
   switch (op)
     {
     case '+':
-      obj = AMP_INTEGER (right)->addition (right, left);
+      obj = amp_object_add_integer (right, left);
       break;
     case '-':
-      obj = AMP_INTEGER (right)->subtraction (right, left);
+      obj = amp_object_sub_integer (right, left);
       break;
     case '/':
-      obj = AMP_INTEGER (right)->division (right, left);
+      obj = amp_object_div_integer (right, left);
       break;
     case '*':
-      obj = AMP_INTEGER (right)->multiplication (right, left);
+      obj = amp_object_mult_integer (right, left);
       break;
     default:
       printf ("Unsupported integer binary operation, %c\n", op);
@@ -288,10 +288,10 @@ debug__interpreter_print_all_vars ()
           switch (obj->type)
             {
             case AMP_OBJ_INT:
-              printf ("Int Variable: %s\n\tValue: %d\n", e->key, *(int*)e->val->value);
+              printf ("Int Variable: %s\n\tValue: %d\n", e->key, AMP_INTEGER (obj)->val);
               break;
             case AMP_OBJ_STR:
-              printf ("Str Variable: %s\n\tValue: %s\n", e->key, (char*)e->val->value);
+              printf ("Str Variable: %s\n\tValue: %s\n", e->key, AMP_STRING (obj)->string);
               break;
             }
         }

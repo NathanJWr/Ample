@@ -1,3 +1,5 @@
 a = "Hello" + " world";
 b = "!";
 c = a+b;
+var = 123 + 542;
+

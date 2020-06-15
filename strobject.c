@@ -33,24 +33,33 @@ AmpObject *
 amp_object_create_string (const char *str)
 {
   AmpObject_Str *a = malloc (sizeof (AmpObject_Str));
-  a->type = AMP_OBJ_STR;
-  a->refcount = 1;
-  a->dealloc = amp_object_destroy_basic;
-  a->value = strdup (str);
-
+  *a = (AmpObject_Str) {
+    .type = AMP_OBJ_STR,
+    .refcount = 1,
+    .dealloc = amp_object_destroy_string,
+    .string = strdup (str);
+  }
   a->concat = amp_object_concat_string;
   return AMP_OBJECT(a);
+}
+
+void
+amp_object_destroy_string (AmpObject *obj)
+{
+  free (AMP_STRING (ojb)->string);
+  free (obj);
 }
 
 AmpObject *
 amp_object_create_string_nodup (char *str)
 {
   AmpObject_Str *a = malloc (sizeof (AmpObject_Str));
-  a->type = AMP_OBJ_STR;
-  a->refcount = 1;
-  a->dealloc = amp_object_destroy_basic;
-  a->value = str;
-
+  *a = (AmpObject_Str) {
+    .type = AMP_OBJ_STR,
+    .refcount = 1,
+    .dealloc = amp_object_destroy_string,
+    .string = str;
+  }
   a->concat = amp_object_concat_string;
   return AMP_OBJECT(a);
 }
