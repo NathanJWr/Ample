@@ -1,2 +1,3 @@
-var = 123 + 542;
-
+A = "hello " + "world!";
+B = "alkdmclasmdclmasldmcalskmdcakmsdc";
+C_var = "c var";

@@ -15,51 +15,31 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "strobject.h"
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 AmpObject *
-amp_object_concat_string (AmpObject *this, AmpObject *str)
+amp_string_concat (AmpObject *this, AmpObject *str)
 {
   unsigned int size = strlen (AMP_STRING (this)->string);
   size += strlen (AMP_STRING (str)->string);
 
-  char* s = calloc (1, size + 1);
+  char s[size + 1];
+  s[0] = '\0';
   strcat (s, AMP_STRING (this)->string);
   strcat (s, AMP_STRING (str)->string);
-  return amp_object_create_string_nodup (s);
+  return amp_object_create_string (s);
 }
 
 AmpObject *
 amp_object_create_string (const char *str)
 {
-  AmpObject_Str *a = malloc (sizeof (AmpObject_Str));
-  *a = (AmpObject_Str) {
+  AmpObject_Str *a = malloc (sizeof (AmpObject_Str) + strlen (str) + 1);
+  *a = (AmpObject_Str){
     .type = AMP_OBJ_STR,
     .refcount = 1,
-    .dealloc = amp_object_destroy_string,
-    .string = strdup (str),
+    .dealloc = amp_object_destroy_basic,
   };
-  a->concat = amp_object_concat_string;
-  return AMP_OBJECT(a);
+  strcpy (a->string, str);
+  return AMP_OBJECT (a);
 }
 
-void
-amp_object_destroy_string (AmpObject *obj)
-{
-  free (AMP_STRING (obj)->string);
-  free (obj);
-}
-
-AmpObject *
-amp_object_create_string_nodup (char *str)
-{
-  AmpObject_Str *a = malloc (sizeof (AmpObject_Str));
-  *a = (AmpObject_Str) {
-    .type = AMP_OBJ_STR,
-    .refcount = 1,
-    .dealloc = amp_object_destroy_string,
-    .string = str,
-  };
-  a->concat = amp_object_concat_string;
-  return AMP_OBJECT(a);
-}

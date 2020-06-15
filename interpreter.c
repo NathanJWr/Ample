@@ -45,7 +45,7 @@ void
 interpreter_start (ASTHandle head)
 {
   /* initialize all variable maps */
-  DictObjVars_init (&varmap, hash_string, string_compare, 10);
+  DictObjVars_init (&varmap, hash_string, string_compare, 1);
   struct AST *h = ast_get_node (head);
   if (h->type == AST_SCOPE)
     {
@@ -155,7 +155,7 @@ interpreter__string_operation (TValue op, AmpObject *right, AmpObject *left)
   switch (op)
     {
     case '+':
-      obj = AMP_STRING (right)->concat (right, left);
+      obj = amp_string_concat (right, left);
       break;
     default:
       printf ("Unsupported string binary operation, %c\n", op);
