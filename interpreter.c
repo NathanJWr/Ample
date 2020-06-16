@@ -170,13 +170,13 @@ interpreter__evaluate_binary_op (ASTHandle handle)
 
           switch (node->d.bop_data.op)
             {
-              case '+': obj = right->info->add (right, left);
+              case '+': obj = right->info->ops.add (right, left);
                         break;
-              case '-': obj = right->info->sub (right, left);
+              case '-': obj = right->info->ops.sub (right, left);
                         break;
-              case '*': obj = right->info->mult (right, left);
+              case '*': obj = right->info->ops.mult (right, left);
                         break;
-              case '/': obj = right->info->div (right, left);
+              case '/': obj = right->info->ops.div (right, left);
                         break;
             }
           obj_dec_refcount (left);

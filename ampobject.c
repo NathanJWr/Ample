@@ -17,6 +17,7 @@
 #include "ampobject.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 void
 amp_object_destroy_basic (AmpObject *obj)
 {
@@ -36,4 +37,18 @@ obj_dec_refcount (AmpObject *obj)
     {
       obj->dealloc (obj);
     }
+}
+
+AmpObject *amp_unssuported_operation(AmpObject *this, AmpObject *var)
+{
+  printf ("unsupported operation for variable of type %d\n", this->info->type);
+  exit (1);
+}
+
+void initiailize_ops_to_unsupported (AmpOperations *ops)
+{
+  ops->add = amp_unssuported_operation;
+  ops->sub = amp_unssuported_operation;
+  ops->div = amp_unssuported_operation;
+  ops->mult = amp_unssuported_operation;
 }

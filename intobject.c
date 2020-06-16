@@ -16,6 +16,7 @@
 */
 #include "intobject.h"
 #include <stdlib.h>
+#include <stdbool.h>
 AmpObject *
 amp_integer_add (AmpObject *this, AmpObject *val)
 {
@@ -48,17 +49,23 @@ amp_integer_mul (AmpObject *this, AmpObject *val)
 }
 
 static AmpObjectInfo int_info;
+static bool int_info_initialized;
 AmpObject *
 amp_object_create_integer (int val)
 {
+  AmpObject_Int *a = NULL;
   /* fill out type info */
-  int_info.type = AMP_OBJ_INT;
-  int_info.add = amp_integer_add;
-  int_info.sub = amp_integer_sub;
-  int_info.div = amp_integer_div;
-  int_info.mult = amp_integer_mul;
+  if (!int_info_initialized)
+    {
+      int_info.type = AMP_OBJ_INT;
+      initiailize_ops_to_unsupported (&int_info.ops);
+      int_info.ops.add = amp_integer_add;
+      int_info.ops.sub = amp_integer_sub;
+      int_info.ops.div = amp_integer_div;
+      int_info.ops.mult = amp_integer_mul;
+    }
 
-  AmpObject_Int *a = malloc (sizeof (AmpObject_Int));
+  a = malloc (sizeof (AmpObject_Int));
   a->info = &int_info;
   a->refcount = 1;
   a->dealloc = amp_object_destroy_basic;

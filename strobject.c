@@ -17,6 +17,7 @@
 #include "strobject.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 AmpObject *
 amp_string_concat (AmpObject *this, AmpObject *str)
 {
@@ -35,13 +36,19 @@ amp_string_concat (AmpObject *this, AmpObject *str)
 }
 
 static AmpObjectInfo str_info;
+static bool str_info_initialized;
 AmpObject *
 amp_object_create_string (const char *str)
 {
   AmpObject_Str *a = NULL;
   
-  str_info.type = AMP_OBJ_STR;
-  str_info.add = amp_string_concat;
+  if (!str_info_initialized)
+    {
+      str_info.type = AMP_OBJ_STR;
+      initiailize_ops_to_unsupported (&str_info.ops);
+      str_info.ops.add = amp_string_concat;
+      str_info_initialized = true;
+    }
 
   a = malloc (sizeof (AmpObject_Str) - 1 + strlen (str) + 1);
   a->refcount = 1;

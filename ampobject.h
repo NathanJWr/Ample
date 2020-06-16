@@ -21,14 +21,17 @@ typedef enum AmpObjectType { AMP_OBJ_INT, AMP_OBJ_STR } AmpObjectType;
 struct AmpObject;
 typedef struct AmpObject AmpObject;
 
-typedef struct AmpObjectInfo {
-  AmpObjectType type;
-
-  /* if these are not implemented, set to null */
+typedef struct AmpOperations {
   AmpObject *(*add)(AmpObject *, AmpObject *);
   AmpObject *(*sub)(AmpObject *, AmpObject *);
   AmpObject *(*div)(AmpObject *, AmpObject *);
   AmpObject *(*mult)(AmpObject *, AmpObject *);
+} AmpOperations;
+typedef struct AmpObjectInfo {
+  AmpObjectType type;
+
+  /* if these are not implemented, set to null */
+  AmpOperations ops;
 } AmpObjectInfo;
 #define AMP_OBJECT_HEADER                                                      \
   unsigned int refcount;                                                       \
@@ -42,4 +45,7 @@ struct AmpObject {
 void obj_inc_refcount(AmpObject *obj);
 void obj_dec_refcount(AmpObject *obj);
 void amp_object_destroy_basic(AmpObject *obj);
+
+AmpObject *amp_unssuported_operation(AmpObject *, AmpObject *);
+void initiailize_ops_to_unsupported (AmpOperations *ops);
 #endif
