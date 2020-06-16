@@ -125,46 +125,6 @@ interpreter__get_or_generate_amp_object (ASTHandle handle)
   return obj;
 }
 
-AmpObject*
-interpreter__integer_operation (TValue op, AmpObject *right, AmpObject *left)
-{
-  AmpObject *obj = NULL;
-  switch (op)
-    {
-    case '+':
-      obj = amp_integer_add (right, left);
-      break;
-    case '-':
-      obj = amp_integer_sub (right, left);
-      break;
-    case '/':
-      obj = amp_integer_div (right, left);
-      break;
-    case '*':
-      obj = amp_integer_mul (right, left);
-      break;
-    default:
-      printf ("Unsupported integer binary operation, %c\n", op);
-      exit (1);
-    }
-  return obj;
-}
-
-AmpObject *
-interpreter__string_operation (TValue op, AmpObject *right, AmpObject *left)
-{
-  AmpObject *obj = NULL;
-  switch (op)
-    {
-    case '+':
-      obj = amp_string_concat (right, left);
-      break;
-    default:
-      printf ("Unsupported string binary operation, %c\n", op);
-      exit (1);
-    }
-  return obj;
-}
 AmpObject *
 interpreter__evaluate_binary_op (ASTHandle handle)
 {
@@ -204,20 +164,20 @@ interpreter__evaluate_binary_op (ASTHandle handle)
           exit (1);
         }
 
-      if (left->type == right->type)
+      if (left->info->type == right->info->type)
         {
           AmpObject *obj = NULL;
-          switch (right->type)
+
+          switch (node->d.bop_data.op)
             {
-            case AMP_OBJ_INT:
-              obj = interpreter__integer_operation (node->d.bop_data.op, right, left);
-              break;
-            case AMP_OBJ_STR:
-              obj = interpreter__string_operation (node->d.bop_data.op, right, left);
-              break;
-            default:
-              printf ("Type does not support binary operations\n");
-              exit (1);
+              case '+': obj = right->info->add (right, left);
+                        break;
+              case '-': obj = right->info->sub (right, left);
+                        break;
+              case '*': obj = right->info->mult (right, left);
+                        break;
+              case '/': obj = right->info->div (right, left);
+                        break;
             }
           obj_dec_refcount (left);
           obj_dec_refcount (right);
@@ -288,7 +248,7 @@ debug__interpreter_print_all_vars ()
         {
           const DICT_ENTRY (ObjVars) *e = &varmap.mem[h];
           AmpObject *obj = e->val;
-          switch (obj->type)
+          switch (obj->info->type)
             {
             case AMP_OBJ_INT:
               printf ("Int Variable: %s\n\tValue: %d\n", e->key, AMP_INTEGER (obj)->val);

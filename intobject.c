@@ -47,13 +47,22 @@ amp_integer_mul (AmpObject *this, AmpObject *val)
   return obj;
 }
 
+static AmpObjectInfo int_info;
 AmpObject *
 amp_object_create_integer (int val)
 {
+  /* fill out type info */
+  int_info.type = AMP_OBJ_INT;
+  int_info.add = amp_integer_add;
+  int_info.sub = amp_integer_sub;
+  int_info.div = amp_integer_div;
+  int_info.mult = amp_integer_mul;
+
   AmpObject_Int *a = malloc (sizeof (AmpObject_Int));
-  a->type = AMP_OBJ_INT;
+  a->info = &int_info;
   a->refcount = 1;
   a->dealloc = amp_object_destroy_basic;
   a->val = val;
+
   return AMP_OBJECT (a);
 }

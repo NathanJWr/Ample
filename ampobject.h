@@ -16,24 +16,30 @@
 */
 #ifndef AMP_OBJECT_H_
 #define AMP_OBJECT_H_
-typedef enum AmpObjectType
-{
-  AMP_OBJ_INT,
-  AMP_OBJ_STR
-} AmpObjectType;
+typedef enum AmpObjectType { AMP_OBJ_INT, AMP_OBJ_STR } AmpObjectType;
 
+struct AmpObject;
+typedef struct AmpObject AmpObject;
+
+typedef struct AmpObjectInfo {
+  AmpObjectType type;
+
+  /* if these are not implemented, set to null */
+  AmpObject *(*add)(AmpObject *, AmpObject *);
+  AmpObject *(*sub)(AmpObject *, AmpObject *);
+  AmpObject *(*div)(AmpObject *, AmpObject *);
+  AmpObject *(*mult)(AmpObject *, AmpObject *);
+} AmpObjectInfo;
 #define AMP_OBJECT_HEADER                                                      \
   unsigned int refcount;                                                       \
-  AmpObjectType type;                                                          \
+  AmpObjectInfo *info;                                                         \
   void (*dealloc)()
 
-typedef struct AmpObject
-{
+struct AmpObject {
   AMP_OBJECT_HEADER;
-} AmpObject;
-#define AMP_OBJECT(obj) ((AmpObject*)(obj))
-void obj_inc_refcount (AmpObject *obj);
-void obj_dec_refcount (AmpObject *obj);
-void amp_object_destroy_basic (AmpObject *obj);
+};
+#define AMP_OBJECT(obj) ((AmpObject *)(obj))
+void obj_inc_refcount(AmpObject *obj);
+void obj_dec_refcount(AmpObject *obj);
+void amp_object_destroy_basic(AmpObject *obj);
 #endif
-
