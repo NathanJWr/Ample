@@ -21,16 +21,16 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 struct _SSLString {
   uint32_t size;
   uint32_t length;
-  char string[];
+  char string[1];
 };
 
-// Access elements
-
 #define SSL_BASE_POINTER(p_str)                                                \
-  ((struct _SSLString *)(p_str - sizeof(struct _SSLString)))
+  ((struct _SSLString*)(((char*)p_str) - offsetof(struct _SSLString, string)))
+
 #define DEFAULT_RESIZE(size) size * 2
 void ssl_free(char *str);
 uint32_t ssl_strlen(char *str);
@@ -39,4 +39,4 @@ char *ssl_strcpy(char *dest, const char *str);
 char *ssl_strcat(char *dest, char *src);
 char *ssl_addchar(char *str, char c);
 
-#endif // SSL_H_
+#endif

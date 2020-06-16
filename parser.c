@@ -31,23 +31,23 @@ parse_tokens (struct Token *tokens)
   unsigned int index = 0;
   unsigned int head = ast_get_node_handle ();
   unsigned int *statements = NULL;
+  struct AST *h;
+
   while (index < ARRAY_COUNT (tokens))
     {
       struct Statement s = parse__get_statement (tokens, &index);
       ARRAY_PUSH (statements, parse__statement (tokens, s));
     }
 
-  struct AST *h = ast_get_node (head);
-  *h = (struct AST){ .type = AST_SCOPE,
-                     .scope_data = {
-                         .statements = statements,
-                     } };
+  h = ast_get_node (head);
+  h->type = AST_SCOPE;
+  h->d.scope_data.statements = statements;
   return head;
 }
 
 struct Statement
-parse__get_statement (struct Token *restrict tokens,
-                      unsigned int *restrict index)
+parse__get_statement (struct Token *__restrict tokens,
+                      unsigned int *__restrict index)
 {
   unsigned int i = *index;
   struct Statement s = { 0 };
@@ -96,14 +96,12 @@ parser__possible_integer (struct Token *t_arr, struct Statement s)
   ASTHandle node = 0;
   if (statement_size (s) == 1 && t_arr[s.start].value == TOK_INTEGER)
     { /* INTEGER literal */
+      struct AST *n;
+
       node = ast_get_node_handle ();
-      struct AST *n = ast_get_node (node);
-      *n = (struct AST) {
-            .type = AST_INTEGER,
-            .int_data = {
-                .value = atoi (t_arr[s.start].string),
-            },
-        };
+      n = ast_get_node (node);
+      n->type = AST_INTEGER;
+      n->d.int_data.value = atoi (t_arr[s.start].string);
     }
   return node;
 }
@@ -148,8 +146,10 @@ parser__equal_precedence (struct Token *left, struct Token *right)
 QUEUE (TokenQueue)
 parser__convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
 {
-  STACK (TokenStack) s = STACK_STRUCT_INIT (TokenStack, struct Token *, 10);
-  QUEUE (TokenQueue) q = QUEUE_STRUCT_INIT (TokenQueue, struct Token *, 10);
+  STACK (TokenStack) s = { 0 };
+  QUEUE (TokenQueue) q = { 0 };
+  STACK_STRUCT_INIT (TokenStack, &s, struct Token *, 10);
+  QUEUE_STRUCT_INIT (TokenQueue, &q, struct Token *, 10);
   while (!QUEUE_EMPTY (expr_q))
     {
       struct Token *n = QUEUE_FRONT (expr_q);
@@ -210,7 +210,9 @@ ASTHandle
 parser__convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
                                 unsigned int expr_size)
 {
-  STACK (ASTHandleStack) s = STACK_STRUCT_INIT (ASTHandleStack, ASTHandle, 10);
+  STACK (ASTHandleStack) s = { 0 };
+  ASTHandle return_handle;
+  STACK_STRUCT_INIT (ASTHandleStack, &s, ASTHandle, 10);
   while (!QUEUE_EMPTY (postfix_q))
     {
       struct Token *n = QUEUE_FRONT (postfix_q);
@@ -221,7 +223,7 @@ parser__convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
           ASTHandle ast_handle = ast_get_node_handle ();
           struct AST *integer_ast = ast_get_node (ast_handle);
           integer_ast->type = AST_INTEGER;
-          integer_ast->int_data.value = atoi (n->string);
+          integer_ast->d.int_data.value = atoi (n->string);
 
           STACK_PUSH (&s, ast_handle);
         }
@@ -230,7 +232,7 @@ parser__convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
           ASTHandle ast_handle = ast_get_node_handle ();
           struct AST *id_ast = ast_get_node (ast_handle);
           id_ast->type = AST_IDENTIFIER;
-          id_ast->id_data.id = n->string;
+          id_ast->d.id_data.id = n->string;
 
           STACK_PUSH (&s, ast_handle);
         }
@@ -239,7 +241,7 @@ parser__convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
           ASTHandle ast_handle = ast_get_node_handle ();
           struct AST *str = ast_get_node (ast_handle);
           str->type = AST_STRING;
-          str->str_data.str = n->string;
+          str->d.str_data.str = n->string;
 
           STACK_PUSH (&s, ast_handle);
         }
@@ -258,18 +260,18 @@ parser__convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
 
           /* Fill out information of binary op */
           op = ast_get_node (ast_handle);
-          *op = (struct AST){
-            .type = AST_BINARY_OP,
-            .bop_data = { .left = left, .right = right, .op = n->value }
-          };
+          op->type = AST_BINARY_OP;
+          op->d.bop_data.left = left;
+          op->d.bop_data.right = right;
+          op->d.bop_data.op = n->value;
           /* Insert the operation, instead of the left and right values */
           STACK_PUSH (&s, ast_handle);
         }
     }
-  ASTHandle ret = STACK_FRONT (&s);
+  return_handle = STACK_FRONT (&s);
   STACK_FREE (&s, ASTHandleStack);
   QUEUE_FREE (postfix_q, TokenQueue);
-  return ret;
+  return return_handle;
 }
 
 ASTHandle
@@ -277,21 +279,27 @@ parser__arithmetic (struct Token *t_arr, struct Statement s)
 {
   /* storage necessary to put tokens into a queue/stack
      no more memory should be allocated for this process */
-  QUEUE (TokenQueue)
-  expr_q = QUEUE_STRUCT_INIT (TokenQueue, struct Token *, 10);
-  for (unsigned int i = s.start; i <= s.end; i++)
+  QUEUE (TokenQueue) expr_q = { 0 };
+  QUEUE (TokenQueue) postfix = { 0 };
+  unsigned int i;
+  ASTHandle op;
+
+  QUEUE_STRUCT_INIT (TokenQueue, &expr_q, struct Token *, 10);
+  for (i = s.start; i <= s.end; i++)
     {
       QUEUE_PUSH (&expr_q, t_arr + i);
     }
-  QUEUE (TokenQueue) postfix = parser__convert_infix_to_postfix (&expr_q);
-  ASTHandle op = parser__convert_postfix_to_ast (&postfix, statement_size (s));
+  postfix = parser__convert_infix_to_postfix (&expr_q);
+  op = parser__convert_postfix_to_ast (&postfix, statement_size (s));
   return op;
 }
 
 void parser__debug_print_queue (QUEUE (TokenQueue) * q)
 {
   struct Token *np;
-  for (int i = q->head; i <= q->tail; i++)
+  int i;
+
+  for (i = q->head; i <= q->tail; i++)
     {
       np = q->mem[i];
       if (np->value < 128)
@@ -325,12 +333,11 @@ parser__possible_identifier (struct Token *t_arr, struct Statement s)
   ASTHandle node = 0;
   if (statement_size (s) == 1 && t_arr[s.start].value == TOK_IDENTIFIER)
     {
+      struct AST *n = NULL;
       node = ast_get_node_handle ();
-      struct AST *n = ast_get_node (node);
-      *n = (struct AST){ .type = AST_IDENTIFIER,
-                         .id_data = {
-                             .id = t_arr[s.start].string,
-                         } };
+      n = ast_get_node (node);
+      n->type = AST_IDENTIFIER;
+      n->d.id_data.id = t_arr[s.start].string;
     }
   return node;
 }
@@ -341,12 +348,11 @@ parser__possible_string (struct Token *t_arr, struct Statement s)
   ASTHandle node = 0;
   if (statement_size (s) == 1 && t_arr[s.start].value == TOK_STRING)
     {
+      struct AST *n = NULL;
       node = ast_get_node_handle ();
-      struct AST *n = ast_get_node (node);
-      *n = (struct AST){ .type = AST_STRING,
-                         .str_data = {
-                             .str = t_arr[s.start].string,
-                         } };
+      n = ast_get_node (node);
+      n->type = AST_STRING;
+      n->d.str_data.str = t_arr[s.start].string;
     }
   return node;
 }
@@ -359,18 +365,18 @@ parser__possible_assignment (struct Token *t_arr, struct Statement s)
   if (statement_size (s) >= 3 && t_arr[s.start].value == TOK_IDENTIFIER
       && t_arr[s.start + 1].value == '=' && t_arr[s.start + 2].value != '=')
     {
+      struct Statement sub_statement = { 0 };
+      struct AST ast;
+      struct AST *n = NULL;
       node = ast_get_node_handle ();
 
-      struct Statement sub_statement = {
-        .start = s.start + 2,
-        .end = s.end,
-      };
-      struct AST ast = { .type = AST_ASSIGNMENT,
-                         .asgn_data = {
-                             .var = t_arr[s.start].string,
-                             .expr = parse__statement (t_arr, sub_statement),
-                         } };
-      struct AST *n = ast_get_node (node);
+      sub_statement.start = s.start + 2;
+      sub_statement.end = s.end;
+      ast.type = AST_ASSIGNMENT;
+      ast.d.asgn_data.var = t_arr[s.start].string;
+      ast.d.asgn_data.expr = parse__statement (t_arr, sub_statement);
+      
+      n = ast_get_node (node);
       *n = ast;
     }
   return node;

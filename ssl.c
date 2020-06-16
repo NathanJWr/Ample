@@ -16,7 +16,7 @@
 */
 #include "ncl.h"
 #include "ssl.h"
-// Calls free on the base pointer of the ssl string
+/* Calls free on the base pointer of the ssl string */
 void
 ssl_free (char *str)
 {
@@ -37,9 +37,9 @@ ssl_strlen (char *str)
       return 0;
     }
 }
-// Create a ssl string from a cstring
+/* Create a ssl string from a cstring */
 char *
-ssl_strcpy (char *restrict dest, const char *restrict str)
+ssl_strcpy (char *__restrict dest, const char *__restrict str)
 {
   struct _SSLString *s = NULL;
   if (dest)
@@ -62,8 +62,8 @@ ssl_strcpy (char *restrict dest, const char *restrict str)
   return s->string;
 }
 
-// Resize an ssl string to a desired size
-// Pointer to string may change, required to capture return value
+/* Resize an ssl string to a desired size
+ * Pointer to string may change, required to capture return value */
 char *
 ssl_resize (char *str, uint32_t size)
 {
@@ -71,11 +71,11 @@ ssl_resize (char *str, uint32_t size)
   uint32_t orig_length = n->length;
   char *cp = NULL;
 
-  // Create a copy of the original string
+  /* Create a copy of the original string */
   cp = ssl_strcpy (cp, n->string);
 
-  // Reallocate memory to fit the new, bigger size specified
-  n = ncl_realloc (n, sizeof (struct _SSLString) + size);
+  /* Reallocate memory to fit the new, bigger size specified */
+  n = ncl_realloc (n, sizeof (struct _SSLString) - 1 + size);
   if (n)
     {
       n->size = size;
@@ -93,7 +93,7 @@ ssl_resize (char *str, uint32_t size)
 }
 
 char *
-ssl_strcat (char *restrict dest, char *restrict src)
+ssl_strcat (char *__restrict dest, char *__restrict src)
 {
   uint32_t size = 0;
   struct _SSLString *d = SSL_BASE_POINTER (dest);
@@ -102,7 +102,7 @@ ssl_strcat (char *restrict dest, char *restrict src)
   assert (dest);
   assert (src);
 
-  // Resize the dest string to fit both src and dest
+  /* Resize the dest string to fit both src and dest */
   size = d->size + s->size;
   dest = ssl_resize (dest, size);
   d = SSL_BASE_POINTER (dest);
@@ -128,7 +128,7 @@ ssl_addchar (char *str, char c)
   else
     {
       struct _SSLString *s
-          = calloc (1, sizeof (struct _SSLString) + 2 * sizeof (char));
+          = calloc (1, sizeof (struct _SSLString) - 1 +  (2 * sizeof (char)));
       s->string[0] = c;
       s->length = 1;
       s->size = 2;

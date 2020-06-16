@@ -53,4 +53,5 @@ void interpreter__add_obj_mapping(const char *var_name, AmpObject *obj);
  * Debug Functions
  * *************** */
 void debug__interpreter_print_all_vars();
-#endif // INTERPRETER_H_
+#endif
+

@@ -45,8 +45,8 @@ unsigned int statement_size(struct Statement s);
 
 /* Returns a statement struct containing the start and
    end index of the next statement in the token array */
-struct Statement parse__get_statement(struct Token *restrict tokens,
-                                      unsigned int *restrict index);
+struct Statement parse__get_statement(struct Token *__restrict__ tokens,
+                                      unsigned int *__restrict__ index);
 /* Parsers *any* statement or substatement */
 ASTHandle parse__statement(struct Token *t_arr, struct Statement s);
 
@@ -87,4 +87,4 @@ ASTHandle parser__convert_postfix_to_ast(QUEUE(TokenQueue) * infix_q,
     Debug output
    ============== */
 void parser__debug_print_queue(QUEUE(TokenQueue) * q);
-#endif // PARSER_H_
+#endif

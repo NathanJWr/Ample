@@ -51,11 +51,9 @@ AmpObject *
 amp_object_create_integer (int val)
 {
   AmpObject_Int *a = malloc (sizeof (AmpObject_Int));
-  *a = (AmpObject_Int) {
-    .type = AMP_OBJ_INT,
-    .refcount = 1,
-    .dealloc = amp_object_destroy_basic,
-    .val = val,
-  };
+  a->type = AMP_OBJ_INT;
+  a->refcount = 1;
+  a->dealloc = amp_object_destroy_basic;
+  a->val = val;
   return AMP_OBJECT (a);
 }

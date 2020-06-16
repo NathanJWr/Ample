@@ -19,7 +19,7 @@
 typedef enum AmpObjectType
 {
   AMP_OBJ_INT,
-  AMP_OBJ_STR,
+  AMP_OBJ_STR
 } AmpObjectType;
 
 #define AMP_OBJECT_HEADER                                                      \
@@ -35,4 +35,5 @@ typedef struct AmpObject
 void obj_inc_refcount (AmpObject *obj);
 void obj_dec_refcount (AmpObject *obj);
 void amp_object_destroy_basic (AmpObject *obj);
-#endif // AMP_OBJECT_H_
+#endif
+

@@ -104,7 +104,8 @@ void
 token_free_all (struct Token *tokens)
 {
   uint32_t count = ARRAY_COUNT (tokens);
-  for (uint32_t i = 0; i < count; i++)
+  uint32_t i;
+  for (i = 0; i < count; i++)
     {
       if (tokens[i].string)
         ssl_free (tokens[i].string);

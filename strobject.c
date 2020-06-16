@@ -21,24 +21,26 @@ AmpObject *
 amp_string_concat (AmpObject *this, AmpObject *str)
 {
   unsigned int size = strlen (AMP_STRING (this)->string);
-  size += strlen (AMP_STRING (str)->string);
+  AmpObject* obj = NULL;
+  char *s = NULL;
 
-  char s[size + 1];
-  s[0] = '\0';
+  size += strlen (AMP_STRING (str)->string);
+  s = calloc (1, size+1);
   strcat (s, AMP_STRING (this)->string);
   strcat (s, AMP_STRING (str)->string);
-  return amp_object_create_string (s);
+
+  obj = amp_object_create_string (s);
+  free (s);
+  return obj;
 }
 
 AmpObject *
 amp_object_create_string (const char *str)
 {
-  AmpObject_Str *a = malloc (sizeof (AmpObject_Str) + strlen (str) + 1);
-  *a = (AmpObject_Str){
-    .type = AMP_OBJ_STR,
-    .refcount = 1,
-    .dealloc = amp_object_destroy_basic,
-  };
+  AmpObject_Str *a = malloc (sizeof (AmpObject_Str) - 1 + strlen (str) + 1);
+  a->type = AMP_OBJ_STR;
+  a->refcount = 1;
+  a->dealloc = amp_object_destroy_basic;
   strcpy (a->string, str);
   return AMP_OBJECT (a);
 }

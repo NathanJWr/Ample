@@ -31,32 +31,35 @@
 #define QUEUE(name) struct Queue##name
 
 #define QUEUE__DEFAULT_CAPACITY 1
-#define QUEUE_STRUCT_INIT(name, type, initial_capacity)                        \
-  (struct Queue##name) {                                                       \
-    .capacity = initial_capacity, .size = 0, .head = 0, .tail = -1,            \
-    .mem = malloc(initial_capacity * sizeof(type)),                            \
-  }
+#define QUEUE_STRUCT_INIT(name, q_ptr, type, initial_capacity)                 \
+  (q_ptr)->capacity = initial_capacity;                                        \
+  (q_ptr)->size = 0;                                                           \
+  (q_ptr)->head = 0;                                                           \
+  (q_ptr)->tail = -1;                                                          \
+  (q_ptr)->mem = malloc(initial_capacity * sizeof(type))
+
 #define QUEUE_FREE(queue_p, name)                                              \
   free((queue_p)->mem);                                                        \
   memset((queue_p), 0, sizeof(QUEUE(name)))
 
 #define QUEUE_RESIZE(queue_p, new_capacity)                                    \
   do {                                                                         \
+    void *mem = NULL;                                                          \
     /* this is probably super expensive, but it keeps the start of the array   \
      * memory usable */                                                        \
     if ((queue_p)->head > 0) {                                                 \
+      int i;                                                                   \
       /* move the array so it starts at index 0 */                             \
       size_t size = (queue_p)->size;                                           \
       /* using a for loop here because you can't memcpy regions that may       \
        * overlap */                                                            \
-      for (int i = 0; i < size; i++) {                                         \
+      for (i = 0; i < size; i++) {                                             \
         (queue_p)->mem[i] = (queue_p)->mem[(queue_p)->head + i];               \
       }                                                                        \
       (queue_p)->head = 0;                                                     \
       (queue_p)->tail = size - 1;                                              \
     }                                                                          \
-    void *mem =                                                                \
-        realloc((queue_p)->mem, new_capacity * sizeof(*(queue_p)->mem));       \
+    mem = realloc((queue_p)->mem, new_capacity * sizeof(*(queue_p)->mem));     \
     assert(mem);                                                               \
     (queue_p)->capacity = new_capacity;                                        \
     (queue_p)->mem = mem;                                                      \
@@ -83,4 +86,4 @@
 
 #define QUEUE_EMPTY(queue_p) ((queue_p)->size == 0)
 
-#endif // QUEUE_H_
+#endif

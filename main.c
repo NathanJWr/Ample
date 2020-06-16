@@ -25,12 +25,16 @@
 char *
 read_whole_file (FILE *f)
 {
+  long fsize;
+  char* file;
+  size_t size_read;
+
   fseek (f, 0, SEEK_END);
-  long fsize = ftell (f);
+  fsize = ftell (f);
   fseek (f, 0, SEEK_SET);
 
-  char *file = malloc (fsize + 1);
-  size_t size_read = fread (file, 1, fsize, f);
+  file = malloc (fsize + 1);
+  size_read = fread (file, 1, fsize, f);
   assert (size_read == fsize);
 
   file[fsize] = '\0';
@@ -42,15 +46,18 @@ main (int argc, char **argv)
 {
   if (argc > 1)
     {
+      struct Token *tokens;
+      ASTHandle ast_head;
       FILE *f = fopen (argv[1], "r");
       char *file = read_whole_file (f);
       fclose (f);
 
-      struct Token *tokens = lex_all (file);
-      ASTHandle ast_head = parse_tokens (tokens);
+      tokens = lex_all (file);
+      ast_head = parse_tokens (tokens);
       interpreter_start (ast_head);
       ast_free_buffer ();
       token_free_all (tokens);
       free (file);
     }
+  return 0;
 }

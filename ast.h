@@ -24,7 +24,7 @@ enum ASTType {
   AST_IDENTIFIER,
   AST_SCOPE,
   AST_BINARY_OP,
-  AST_ASSIGNMENT,
+  AST_ASSIGNMENT
 };
 /* declare here so sub-ast types can have pointers to the general struct */
 struct AST;
@@ -55,14 +55,14 @@ struct AssignmentAST {
 };
 struct AST {
   enum ASTType type;
-  union {
+  union data {
     struct ScopeAST scope_data;
     struct IntegerAST int_data;
     struct IdentifierAST id_data;
     struct BinaryOpAST bop_data;
     struct StringAST str_data;
     struct AssignmentAST asgn_data;
-  };
+  } d;
 };
 
 unsigned int ast_get_node_handle();
@@ -70,4 +70,4 @@ struct AST *ast_get_node(unsigned int index);
 
 /* call this AFTER the ast is done being used */
 void ast_free_buffer();
-#endif // AST_H_
+#endif

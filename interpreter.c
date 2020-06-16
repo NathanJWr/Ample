@@ -44,21 +44,23 @@ interpreter__add_obj_mapping (const char *var_name, AmpObject *obj)
 void
 interpreter_start (ASTHandle head)
 {
+  struct AST *h = NULL;
+  unsigned int i = 0;
   /* initialize all variable maps */
   DictObjVars_init (&varmap, hash_string, string_compare, 1);
-  struct AST *h = ast_get_node (head);
+  h = ast_get_node (head);
   if (h->type == AST_SCOPE)
     {
-      for (unsigned int i = 0; i < ARRAY_COUNT (h->scope_data.statements); i++)
+      for (i = 0; i < ARRAY_COUNT (h->d.scope_data.statements); i++)
         {
-          interpreter__evaluate_statement (h->scope_data.statements[i]);
+          interpreter__evaluate_statement (h->d.scope_data.statements[i]);
         }
     }
 
   /* end of the program */
   debug__interpreter_print_all_vars ();
   /* all variables have reached the end of their scope */
-  for (int i = 0; i < varmap.capacity; i++)
+  for (i = 0; i < varmap.capacity; i++)
     {
       if (varmap.map[i] != 0)
         {
@@ -107,14 +109,14 @@ interpreter__get_or_generate_amp_object (ASTHandle handle)
   switch (node->type)
     {
     case AST_IDENTIFIER:
-      obj = interpreter__get_amp_object (node->id_data.id);
+      obj = interpreter__get_amp_object (node->d.id_data.id);
       obj_inc_refcount (obj);
       break;
     case AST_INTEGER:
-      obj = amp_object_create_integer (node->int_data.value);
+      obj = amp_object_create_integer (node->d.int_data.value);
       break;
     case AST_STRING:
-      obj = amp_object_create_string (node->str_data.str);
+      obj = amp_object_create_string (node->d.str_data.str);
       break;
     default:
       assert (false);
@@ -170,8 +172,8 @@ interpreter__evaluate_binary_op (ASTHandle handle)
 
   if (node->type == AST_BINARY_OP)
     {
-      ASTHandle right_handle = node->bop_data.right;
-      ASTHandle left_handle = node->bop_data.left;
+      ASTHandle right_handle = node->d.bop_data.right;
+      ASTHandle left_handle = node->d.bop_data.left;
       struct AST *right_node = ast_get_node (right_handle);
       struct AST *left_node = ast_get_node (left_handle);
       AmpObject *left = NULL, *right = NULL;
@@ -189,7 +191,7 @@ interpreter__evaluate_binary_op (ASTHandle handle)
           exit (1);
         }
 
-      if (right_node->type != AST_BINARY_OP)
+      if (left_node->type != AST_BINARY_OP)
         {
           left = interpreter__get_or_generate_amp_object (left_handle);
         }
@@ -208,10 +210,10 @@ interpreter__evaluate_binary_op (ASTHandle handle)
           switch (right->type)
             {
             case AMP_OBJ_INT:
-              obj = interpreter__integer_operation (node->bop_data.op, right, left);
+              obj = interpreter__integer_operation (node->d.bop_data.op, right, left);
               break;
             case AMP_OBJ_STR:
-              obj = interpreter__string_operation (node->bop_data.op, right, left);
+              obj = interpreter__string_operation (node->d.bop_data.op, right, left);
               break;
             default:
               printf ("Type does not support binary operations\n");
@@ -249,28 +251,28 @@ void
 interpreter__evaluate_assignment (ASTHandle statement)
 {
   struct AST *s = ast_get_node (statement);
-  struct AST *expr = ast_get_node (s->asgn_data.expr);
+  struct AST *expr = ast_get_node (s->d.asgn_data.expr);
   if (expr->type == AST_INTEGER)
     {
-      int val = expr->int_data.value;
+      int val = expr->d.int_data.value;
       AmpObject *obj = amp_object_create_integer (val);
-      interpreter__add_obj_mapping (s->asgn_data.var, obj);
+      interpreter__add_obj_mapping (s->d.asgn_data.var, obj);
     }
   else if (expr->type == AST_BINARY_OP)
     {
-      AmpObject *obj = interpreter__evaluate_binary_op (s->asgn_data.expr);
-      interpreter__add_obj_mapping (s->asgn_data.var, obj);
+      AmpObject *obj = interpreter__evaluate_binary_op (s->d.asgn_data.expr);
+      interpreter__add_obj_mapping (s->d.asgn_data.var, obj);
     }
   else if (expr->type == AST_STRING)
     {
-      const char *val = expr->str_data.str;
+      const char *val = expr->d.str_data.str;
       AmpObject *obj = amp_object_create_string (val);
-      interpreter__add_obj_mapping (s->asgn_data.var, obj);
+      interpreter__add_obj_mapping (s->d.asgn_data.var, obj);
     }
   else if (expr->type == AST_IDENTIFIER)
     {
-      const char *var = s->asgn_data.var;
-      const char *expr_var = expr->id_data.id;
+      const char *var = s->d.asgn_data.var;
+      const char *expr_var = expr->d.id_data.id;
       interpreter__duplicate_variable (expr_var, var);
     }
 }
@@ -278,7 +280,8 @@ interpreter__evaluate_assignment (ASTHandle statement)
 void
 debug__interpreter_print_all_vars ()
 {
-  for (unsigned int i = 0; i < varmap.capacity; i++)
+  unsigned int i;
+  for (i = 0; i < varmap.capacity; i++)
     {
       DictEntryHandle h = varmap.map[i];
       if (h != 0)

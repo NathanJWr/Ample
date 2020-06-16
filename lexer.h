@@ -23,7 +23,7 @@ typedef enum {
   TOK_IDENTIFIER = 127,
   TOK_INTEGER = 128,
   TOK_BOOL = 129,
-  TOK_STRING = 130,
+  TOK_STRING = 130
 } TValue;
 struct Token {
   TValue value;
@@ -33,4 +33,4 @@ struct Token {
 void token_free_all(struct Token *tokens);
 struct Token *lex_all(char *fb);
 
-#endif // LEXER_H_
+#endif

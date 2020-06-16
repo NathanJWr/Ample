@@ -33,11 +33,12 @@ ast_get_node (unsigned int index)
 void
 ast_free_buffer ()
 {
-  for (unsigned int i = 0; i < ARRAY_COUNT (ast_buffer); i++)
+  unsigned int i = 0;
+  for (i = 0; i < ARRAY_COUNT (ast_buffer); i++)
     {
       if (ast_buffer[i].type == AST_SCOPE)
         {
-          ARRAY_FREE (ast_buffer[i].scope_data.statements);
+          ARRAY_FREE (ast_buffer[i].d.scope_data.statements);
         }
     }
   ARRAY_FREE (ast_buffer);

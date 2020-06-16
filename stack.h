@@ -29,11 +29,11 @@
     type *mem; /* array that holds the type specified */                       \
   }
 
-#define STACK_STRUCT_INIT(name, type, initial_capacity)                        \
-  (STACK(name)) {                                                              \
-    .capacity = initial_capacity, .size = 0, .tail = -1,                       \
-    .mem = malloc(initial_capacity * sizeof(type)),                            \
-  }
+#define STACK_STRUCT_INIT(name, stack_ptr, type, initial_capacity)             \
+  (stack_ptr)->capacity = initial_capacity;                                    \
+  (stack_ptr)->size = 0;                                                       \
+  (stack_ptr)->tail = -1;                                                      \
+  (stack_ptr)->mem = malloc(initial_capacity * sizeof(type));
 
 #define STACK_FREE(stack_p, name)                                              \
   free((stack_p)->mem);                                                        \
@@ -65,4 +65,4 @@
 
 #define STACK_EMPTY(stack_p) ((stack_p)->size == 0)
 
-#endif // STACK_H_
+#endif
