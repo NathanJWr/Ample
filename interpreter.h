@@ -26,26 +26,23 @@ void interpreter_start(ASTHandle head);
 /* ******************
    Internal Functions
    ****************** */
+/* top level evaluate function that will call more specific
+ * evaluations depending on a node's type */
 void interpreter__evaluate_statement(ASTHandle statement);
+/* evaluates an ast node of type AST_BINARY_OP */
 AmpObject *interpreter__evaluate_binary_op(ASTHandle handle);
+/* evaluates an ast node of type  AST_ASSIGNMENT */
 void interpreter__evaluate_assignment(ASTHandle statement);
+/* removes a dict entry and decrements the refcount of the amp object
+ * that it's associated with */
 void interpreter__erase_variable_if_exists(const char *var);
+/* creates a new dict entry pointing to an existing AmpObject and
+ * incrementing that objects refcount */
 void interpreter__duplicate_variable(const char *var, const char *assign);
-
 /* Returns an amp object that already exists as a variable */
 AmpObject *interpreter__get_amp_object(const char *var);
 /* Returns an amp object that will be created if none exist already */
 AmpObject *interpreter__get_or_generate_amp_object(ASTHandle handle);
-/* Assumes left and right are AMP_OBJ_INT and will attempt to conduct an
- * operation based on op variable. Returns a newly created amp object with the
- * result of the operation */
-AmpObject *interpreter__integer_operation(TValue op, AmpObject *right,
-                                          AmpObject *left);
-/* Assumes left and right are AMP_OBJ_STR and will attempt to conduct an
- * operation based on op variable. Returns a newly created amp object with the
- * result of the operation */
-AmpObject *interpreter__string_operation(TValue op, AmpObject *right,
-                                         AmpObject *left);
 /* Add an object to the variable map for easy storage/access */
 void interpreter__add_obj_mapping(const char *var_name, AmpObject *obj);
 
@@ -54,4 +51,3 @@ void interpreter__add_obj_mapping(const char *var_name, AmpObject *obj);
  * *************** */
 void debug__interpreter_print_all_vars();
 #endif
-
