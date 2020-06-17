@@ -52,7 +52,7 @@ ssl_strcpy (char *__restrict dest, const char *__restrict str)
   else
     {
       uint32_t size = strlen (str) + 1;
-      s = calloc (1, size + sizeof (struct _SSLString));
+      s = calloc (1, size + offsetof (struct _SSLString, string));
       s->size = size;
       s->length = strlen (str);
 
@@ -75,7 +75,7 @@ ssl_resize (char *str, uint32_t size)
   cp = ssl_strcpy (cp, n->string);
 
   /* Reallocate memory to fit the new, bigger size specified */
-  n = ncl_realloc (n, sizeof (struct _SSLString) - 1 + size);
+  n = ncl_realloc (n, offsetof (struct _SSLString, string) + size);
   if (n)
     {
       n->size = size;
@@ -128,7 +128,7 @@ ssl_addchar (char *str, char c)
   else
     {
       struct _SSLString *s
-          = calloc (1, sizeof (struct _SSLString) - 1 +  (2 * sizeof (char)));
+          = calloc (1, offsetof (struct _SSLString, string) +  (2 * sizeof (char)));
       s->string[0] = c;
       s->length = 1;
       s->size = 2;

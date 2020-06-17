@@ -31,7 +31,7 @@ struct Array_Buffer {
                            offsetof(struct Array_Buffer, buffer)))
 
 #define ARRAY_ALLOCATION_SIZE(arr_ptr, size)                                   \
-  ((sizeof(struct Array_Buffer)) - 1 + (sizeof(*arr_ptr) * size))
+  ((offsetof (struct Array_Buffer, buffer) + (sizeof(*arr_ptr) * size)))
 #define ARR_DEFAULT_INIT_SIZE 10
 
 #define ARRAY_RESIZE(arr_ptr, size)                                            \
