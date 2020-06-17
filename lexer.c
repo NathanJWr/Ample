@@ -59,6 +59,10 @@ lex_all (char *fb)
             {
               token.value = TOK_BOOL;
             }
+          else if (0 == strncmp ("if", id, ssl_strlen (id)))
+            {
+              token.value = TOK_IF;
+            }
           else
             {
               token.value = TOK_IDENTIFIER;

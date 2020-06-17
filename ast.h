@@ -53,6 +53,10 @@ struct AssignmentAST {
   char *var;
   ASTHandle expr;
 };
+struct IfAST {
+  ASTHandle expr;
+  struct ScopeAST if_true;
+};
 struct AST {
   enum ASTType type;
   union data {
@@ -62,6 +66,7 @@ struct AST {
     struct BinaryOpAST bop_data;
     struct StringAST str_data;
     struct AssignmentAST asgn_data;
+    struct IfAST if_data;
   } d;
 };
 

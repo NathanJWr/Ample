@@ -68,6 +68,10 @@ ASTHandle
 parse__statement (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
+  node = parser__possible_if_statement (t_arr, s);
+  if (node)
+    return node;
+
   node = parser__possible_assignment (t_arr, s);
   if (node)
     return node;
@@ -90,6 +94,18 @@ parse__statement (struct Token *t_arr, struct Statement s)
 
   return 0;
 }
+ASTHandle
+parser__possible_if_statement (struct Token *t_arr, struct Statement s)
+{
+  ASTHandle node = 0;
+  if (t_arr[s.start].value == TOK_IF)
+    {
+      /* statement inside parens should evaluate to a bool */
+      /* there should be exactly 1 expression inside if parens */
+
+    }
+}
+
 ASTHandle
 parser__possible_integer (struct Token *t_arr, struct Statement s)
 {

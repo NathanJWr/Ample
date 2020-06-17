@@ -59,6 +59,7 @@ ASTHandle parser__possible_identifier(struct Token *t_arr, struct Statement s);
 ASTHandle parser__possible_arithmetic(struct Token *t_arr, struct Statement s);
 ASTHandle parser__possible_string(struct Token *t_arr, struct Statement s);
 ASTHandle parser__possible_assignment(struct Token *t_arr, struct Statement s);
+ASTHandle parser__possible_if_statement (struct Token *t_arr, struct Statement s);
 
 /* ===================
     Arithmetic helpers
