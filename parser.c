@@ -106,7 +106,8 @@ parse__statement (struct Token *t_arr, struct Statement s)
   if (node)
     return node;
 
-  printf ("Invalid statement\n");
+  printf ("Invalid statement: \n");
+  parser__debug_print_statement (t_arr, s);
   exit (1);
 }
 ASTHandle
@@ -165,18 +166,27 @@ parser__possible_if_statement (struct Token *t_arr, struct Statement s)
 ASTHandle
 parser__scope(struct Token* t_arr, struct Statement s)
 {
+  ASTHandle handle = ast_get_node_handle ();
+  struct AST *scope = ast_get_node (handle);
   unsigned int index = s.start + 1; /* skip '{' */
+  ASTHandle *statements = NULL;
   while (t_arr[index].value != '}')
     {
       struct Statement s = parse__get_statement(t_arr, &index);
+      ASTHandle statement = parse__statement (t_arr, s);
+      ARRAY_PUSH (statements, statement);
     }
+  scope->d.scope_data.statements = statements;
+  return handle;
 }
 
 ASTHandle
 parser__possible_integer (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
-  if (statement_size (s) == 1 && t_arr[s.start].value == TOK_INTEGER)
+  if (statement_size (s) <= 2 && 
+      t_arr[s.start].value == TOK_INTEGER &&
+      t_arr[s.start + 1].value == STATEMENT_DELIM)
     { /* INTEGER literal */
       struct AST *n;
 
