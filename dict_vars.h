@@ -14,6 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
+#ifndef DICT_VARS_H_
+#define DICT_VARS_H_
 #include "hash.h"
 #include "ampobject.h"
 DICT_DECLARE (ObjVars, const char *, AmpObject *);
+#endif

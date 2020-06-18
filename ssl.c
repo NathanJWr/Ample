@@ -46,7 +46,8 @@ ssl_strcpy (char *__restrict dest, const char *__restrict str)
     {
       dest = ssl_resize (dest, strlen (str) + 1);
       s = SSL_BASE_POINTER (dest);
-      strlcpy (s->string, str, s->size);
+      strncpy (s->string, str, s->size);
+      s->string[s->size - 1] = '\0';
       s->length += strlen (str);
     }
   else
@@ -56,8 +57,8 @@ ssl_strcpy (char *__restrict dest, const char *__restrict str)
       s->size = size;
       s->length = strlen (str);
 
-      explicit_bzero(s->string, size);
-      strlcpy (s->string, str, size);
+      strncpy (s->string, str, size);
+      s->string[size - 1] = '\0';
     }
   return s->string;
 }
@@ -80,8 +81,8 @@ ssl_resize (char *str, uint32_t size)
     {
       n->size = size;
       n->length = orig_length;
-      explicit_bzero (n->string, size);
-      strlcpy (n->string, cp, size);
+      strncpy (n->string, cp, size);
+      n->string[size-1] = '\0';
       ssl_free (cp);
       return n->string;
     }
@@ -107,8 +108,8 @@ ssl_strcat (char *__restrict dest, char *__restrict src)
   dest = ssl_resize (dest, size);
   d = SSL_BASE_POINTER (dest);
   d->length += s->length;
-  strlcat (dest, src, size);
-
+  strncat (dest, src, size);
+  dest[size-1] = '\0';
   return dest;
 }
 

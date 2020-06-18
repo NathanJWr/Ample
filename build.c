@@ -1,0 +1,13 @@
+#include "ampobject.c"
+#include "ast.c"
+#include "dict_vars.c"
+#include "hash.c"
+#include "interpreter.c"
+#include "intobject.c"
+#include "lexer.c"
+#include "ncl.c"
+#include "parser.c"
+#include "ssl.c"
+#include "strobject.c"
+
+#include "main.c"

@@ -51,14 +51,22 @@ parse__get_statement (struct Token *__restrict tokens,
 {
   unsigned int i = *index;
   struct Statement s = { 0 };
-  while (i < ARRAY_COUNT (tokens) && tokens[i].value != STATEMENT_DELIM)
+
+  unsigned int scoped = 0;
+  while (i < ARRAY_COUNT (tokens))
     {
+      if (tokens[i].value == '{')
+        scoped++;
+      if (tokens[i].value == '}')
+        scoped--;
+      if ((tokens[i].value == STATEMENT_DELIM || tokens[i].value == '}') && scoped == 0)
+        break;
       i++;
     }
 
   /* fill in statement info */
   s.start = *index;
-  s.end = i - 1; /* don't care about the DELIM so the end if offset by 1 */
+  s.end = i; /* don't care about the DELIM so the end if offset by 1 */
 
   *index = i + 1; /* offset by one to skip past the DELIM */
   return s;
@@ -92,7 +100,31 @@ parse__statement (struct Token *t_arr, struct Statement s)
   if (node)
     return node;
 
-  return 0;
+  node = parser__possible_bool (t_arr, s);
+  if (node)
+    return node;
+
+  printf ("Invalid statement\n");
+  exit (1);
+}
+ASTHandle
+parser__possible_bool(struct Token* t_arr, struct Statement s)
+{
+  ASTHandle node = 0;
+  if (statement_size(s) == 1 && t_arr[s.start].value == TOK_BOOL)
+    {
+      struct AST *n = NULL;
+      const struct Token *tok = &t_arr[s.start];
+      node = ast_get_node_handle ();
+      n = ast_get_node (node);
+
+      n->type = AST_BOOL;
+      if (0 == strncmp (tok->string, "true", 4))
+        n->d.bool_data.value = true;
+      else if (0 == strncmp (tok->string, "false", 5))
+        n->d.bool_data.value = false;
+    }
+  return node;
 }
 ASTHandle
 parser__possible_if_statement (struct Token *t_arr, struct Statement s)
@@ -102,7 +134,39 @@ parser__possible_if_statement (struct Token *t_arr, struct Statement s)
     {
       /* statement inside parens should evaluate to a bool */
       /* there should be exactly 1 expression inside if parens */
+      struct AST *n = NULL;
+      ASTHandle expr = 0;
+      struct Statement paren_statement;
+      struct Statement scope_statement;
+      unsigned int i = s.start + 2; /* skip over the '(' character */
+      while (t_arr[i].value != ')')
+        i++;
+      paren_statement.start = s.start + 2;
+      paren_statement.end = i-1;
+      expr = parse__statement (t_arr, paren_statement); 
 
+      /* create if ast node */
+      node = ast_get_node_handle();
+      n = ast_get_node (node);
+      n->type = AST_IF;
+      n->d.if_data.expr = expr;
+
+      /* find the start of the if scope */
+      while (t_arr[i].value != '{')
+        i++;
+      scope_statement.start = i-1;
+      scope_statement.end = s.end;
+      n->d.if_data.scope_if_true = parser__scope (t_arr, scope_statement);
+    }
+  return node;
+}
+ASTHandle
+parser__scope(struct Token* t_arr, struct Statement s)
+{
+  unsigned int index = s.start + 1; /* skip '{' */
+  while (t_arr[index].value = '}')
+    {
+      struct Statement s = parse__get_statement(t_arr, &index);
     }
 }
 
@@ -391,7 +455,7 @@ parser__possible_assignment (struct Token *t_arr, struct Statement s)
       ast.type = AST_ASSIGNMENT;
       ast.d.asgn_data.var = t_arr[s.start].string;
       ast.d.asgn_data.expr = parse__statement (t_arr, sub_statement);
-      
+
       n = ast_get_node (node);
       *n = ast;
     }

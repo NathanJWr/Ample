@@ -45,8 +45,8 @@ unsigned int statement_size(struct Statement s);
 
 /* Returns a statement struct containing the start and
    end index of the next statement in the token array */
-struct Statement parse__get_statement(struct Token *__restrict__ tokens,
-                                      unsigned int *__restrict__ index);
+struct Statement parse__get_statement(struct Token *__restrict tokens,
+                                      unsigned int *__restrict index);
 /* Parsers *any* statement or substatement */
 ASTHandle parse__statement(struct Token *t_arr, struct Statement s);
 
@@ -60,6 +60,8 @@ ASTHandle parser__possible_arithmetic(struct Token *t_arr, struct Statement s);
 ASTHandle parser__possible_string(struct Token *t_arr, struct Statement s);
 ASTHandle parser__possible_assignment(struct Token *t_arr, struct Statement s);
 ASTHandle parser__possible_if_statement (struct Token *t_arr, struct Statement s);
+ASTHandle parser__possible_bool (struct Token *t_arr, struct Statement s);
+ASTHandle parser__scope (struct Token *t_arr, struct Statement s);
 
 /* ===================
     Arithmetic helpers

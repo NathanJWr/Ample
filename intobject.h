@@ -14,6 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
+#ifndef INT_OBJECT_H_
+#define INT_OBJECT_H_
 #include "ampobject.h"
 
 typedef struct AmpObject_Int {
@@ -27,3 +29,4 @@ AmpObject *amp_integer_add(AmpObject *this, AmpObject *val);
 AmpObject *amp_integer_sub(AmpObject *this, AmpObject *val);
 AmpObject *amp_integer_div(AmpObject *this, AmpObject *val);
 AmpObject *amp_integer_mul(AmpObject *this, AmpObject *val);
+#endif

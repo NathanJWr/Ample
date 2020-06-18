@@ -17,6 +17,7 @@
 #ifndef AST_H_
 #define AST_H_
 #include "lexer.h"
+#include <stdbool.h>
 typedef unsigned int ASTHandle;
 enum ASTType {
   AST_INTEGER,
@@ -24,7 +25,9 @@ enum ASTType {
   AST_IDENTIFIER,
   AST_SCOPE,
   AST_BINARY_OP,
-  AST_ASSIGNMENT
+  AST_ASSIGNMENT,
+  AST_IF,
+  AST_BOOL
 };
 /* declare here so sub-ast types can have pointers to the general struct */
 struct AST;
@@ -55,7 +58,10 @@ struct AssignmentAST {
 };
 struct IfAST {
   ASTHandle expr;
-  struct ScopeAST if_true;
+  ASTHandle scope_if_true;
+};
+struct BoolAST {
+  bool value;
 };
 struct AST {
   enum ASTType type;
@@ -67,6 +73,7 @@ struct AST {
     struct StringAST str_data;
     struct AssignmentAST asgn_data;
     struct IfAST if_data;
+    struct BoolAST bool_data;
   } d;
 };
 

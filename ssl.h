@@ -17,7 +17,6 @@
 #ifndef SSL_H_
 #define SSL_H_
 #include <assert.h>
-#include <bsd/string.h>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>

@@ -3,3 +3,8 @@ build
 tags
 *.out
 *.lock
+*.exe
+*.ilk
+*.obj
+*.pdb
+.vs

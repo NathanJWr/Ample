@@ -35,9 +35,9 @@ read_whole_file (FILE *f)
 
   file = malloc (fsize + 1);
   size_read = fread (file, 1, fsize, f);
-  assert (size_read == fsize);
+  assert (size_read <= fsize);
 
-  file[fsize] = '\0';
+  file[size_read] = '\0';
   return file;
 }
 
