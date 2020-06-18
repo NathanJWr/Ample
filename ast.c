@@ -18,7 +18,7 @@
 #include "array.h"
 #include "ast.h"
 static struct AST *ast_buffer;
-unsigned int
+size_t
 ast_get_node_handle ()
 {
   struct AST a = { 0 };
@@ -26,7 +26,7 @@ ast_get_node_handle ()
   return ARRAY_COUNT (ast_buffer) - 1;
 }
 struct AST *
-ast_get_node (unsigned int index)
+ast_get_node (ASTHandle index)
 {
   return &ast_buffer[index];
 }

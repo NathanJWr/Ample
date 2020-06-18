@@ -28,7 +28,7 @@
 #define DICT_MAX_LOAD_FACTOR (1)
 #define DICT_GROWTH_FACTOR (2)
 
-typedef uint32_t DictEntryHandle;
+typedef size_t DictEntryHandle;
 
 #define DICT(name) struct Dict##name
 #define DICT_ENTRY(name) struct DictEntry##name
@@ -41,8 +41,8 @@ typedef uint32_t DictEntryHandle;
     DictEntryHandle next;                                                      \
   };                                                                           \
   DICT(name) {                                                                 \
-    uint32_t capacity;                                                         \
-    uint32_t count;                                                            \
+    size_t capacity;                                                         \
+    size_t count;                                                            \
     uint64_t (*hash_function)(key_type key);                                   \
     bool (*key_compare)(key_type key, key_type input);                         \
     DICT_ENTRY(name) * mem; /* flat array of all entries */                    \
@@ -118,8 +118,8 @@ typedef uint32_t DictEntryHandle;
     void DICT_FUNCTION(name, grow)(DICT(name) * dict) {                        \
       /* create a new dict that will have a greater capcaity */                \
       DICT(name) new_dict = {0};                                               \
-      uint32_t new_capacity = dict->capacity * DICT_GROWTH_FACTOR;             \
-      uint32_t i;                                                              \
+      size_t new_capacity = dict->capacity * DICT_GROWTH_FACTOR;             \
+      size_t i;                                                              \
       DICT_FUNCTION(name, init)                                                \
       (&new_dict, dict->hash_function, dict->key_compare, new_capacity);       \
       /* Need to rehash all entries because the capacity changed */            \

@@ -29,8 +29,8 @@ ASTHandle
 parse_tokens (struct Token *tokens)
 {
   unsigned int index = 0;
-  unsigned int head = ast_get_node_handle ();
-  unsigned int *statements = NULL;
+  ASTHandle head = ast_get_node_handle ();
+  ASTHandle *statements = NULL;
   struct AST *h;
 
   while (index < ARRAY_COUNT (tokens))
@@ -238,8 +238,8 @@ parser__equal_precedence (struct Token *left, struct Token *right)
 QUEUE (TokenQueue)
 parser__convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
 {
-  STACK (TokenStack) s = { 0 };
-  QUEUE (TokenQueue) q = { 0 };
+  STACK (TokenStack) s;
+  QUEUE (TokenQueue) q;
   STACK_STRUCT_INIT (TokenStack, &s, struct Token *, 10);
   QUEUE_STRUCT_INIT (TokenQueue, &q, struct Token *, 10);
   while (!QUEUE_EMPTY (expr_q))

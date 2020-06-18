@@ -45,7 +45,7 @@ void
 interpreter_start (ASTHandle head)
 {
   struct AST *h = NULL;
-  unsigned int i = 0;
+  size_t i = 0;
   /* initialize all variable maps */
   DictObjVars_init (&varmap, hash_string, string_compare, 1);
   h = ast_get_node (head);
@@ -84,6 +84,15 @@ interpreter__evaluate_statement (ASTHandle statement)
     {
       interpreter__evaluate_binary_op (statement);
     }
+  else if (s->type == AST_IF)
+    {
+      interpreter__evaluate_if (statement);
+    }
+}
+
+void
+interpreter__evaluate_if (ASTHandle statement)
+{
 }
 
 AmpObject *

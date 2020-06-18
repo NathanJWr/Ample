@@ -48,7 +48,7 @@
     /* this is probably super expensive, but it keeps the start of the array   \
      * memory usable */                                                        \
     if ((queue_p)->head > 0) {                                                 \
-      int i;                                                                   \
+      size_t i;                                                                \
       /* move the array so it starts at index 0 */                             \
       size_t size = (queue_p)->size;                                           \
       /* using a for loop here because you can't memcpy regions that may       \
@@ -57,7 +57,7 @@
         (queue_p)->mem[i] = (queue_p)->mem[(queue_p)->head + i];               \
       }                                                                        \
       (queue_p)->head = 0;                                                     \
-      (queue_p)->tail = size - 1;                                              \
+      (queue_p)->tail = (int) size - 1;                                        \
     }                                                                          \
     mem = realloc((queue_p)->mem, new_capacity * sizeof(*(queue_p)->mem));     \
     assert(mem);                                                               \

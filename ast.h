@@ -18,7 +18,7 @@
 #define AST_H_
 #include "lexer.h"
 #include <stdbool.h>
-typedef unsigned int ASTHandle;
+typedef size_t ASTHandle;
 enum ASTType {
   AST_INTEGER,
   AST_STRING,
@@ -33,7 +33,7 @@ enum ASTType {
 struct AST;
 
 struct ScopeAST {
-  unsigned int *statements; /* sb array */
+  ASTHandle *statements; /* sb array */
 };
 
 struct IntegerAST {
@@ -77,8 +77,8 @@ struct AST {
   } d;
 };
 
-unsigned int ast_get_node_handle();
-struct AST *ast_get_node(unsigned int index);
+size_t ast_get_node_handle();
+struct AST *ast_get_node(ASTHandle index);
 
 /* call this AFTER the ast is done being used */
 void ast_free_buffer();

@@ -24,7 +24,7 @@ ssl_free (char *str)
 }
 
 /* Gets the strlen of an ssl string */
-uint32_t
+size_t
 ssl_strlen (char *str)
 {
   if (str)
@@ -52,7 +52,7 @@ ssl_strcpy (char *__restrict dest, const char *__restrict str)
     }
   else
     {
-      uint32_t size = strlen (str) + 1;
+      size_t size = strlen (str) + 1;
       s = calloc (1, size + offsetof (struct _SSLString, string));
       s->size = size;
       s->length = strlen (str);
@@ -66,10 +66,10 @@ ssl_strcpy (char *__restrict dest, const char *__restrict str)
 /* Resize an ssl string to a desired size
  * Pointer to string may change, required to capture return value */
 char *
-ssl_resize (char *str, uint32_t size)
+ssl_resize (char *str, size_t size)
 {
   struct _SSLString *n = SSL_BASE_POINTER (str);
-  uint32_t orig_length = n->length;
+  size_t orig_length = n->length;
   char *cp = NULL;
 
   /* Create a copy of the original string */
@@ -96,7 +96,7 @@ ssl_resize (char *str, uint32_t size)
 char *
 ssl_strcat (char *__restrict dest, char *__restrict src)
 {
-  uint32_t size = 0;
+  size_t size = 0;
   struct _SSLString *d = SSL_BASE_POINTER (dest);
   struct _SSLString *s = SSL_BASE_POINTER (src);
 

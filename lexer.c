@@ -107,8 +107,8 @@ lex_all (char *fb)
 void
 token_free_all (struct Token *tokens)
 {
-  uint32_t count = ARRAY_COUNT (tokens);
-  uint32_t i;
+  size_t count = ARRAY_COUNT (tokens);
+  size_t i;
   for (i = 0; i < count; i++)
     {
       if (tokens[i].string)

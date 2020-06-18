@@ -21,7 +21,7 @@
 AmpObject *
 amp_string_concat (AmpObject *this, AmpObject *str)
 {
-  unsigned int size = strlen (AMP_STRING (this)->string);
+  size_t size = strlen (AMP_STRING (this)->string);
   AmpObject* obj = NULL;
   char *s = NULL;
 

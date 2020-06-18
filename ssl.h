@@ -22,8 +22,8 @@
 #include <string.h>
 #include <stddef.h>
 struct _SSLString {
-  uint32_t size;
-  uint32_t length;
+  size_t size;
+  size_t length;
   char string[1];
 };
 
@@ -32,8 +32,8 @@ struct _SSLString {
 
 #define DEFAULT_RESIZE(size) size * 2
 void ssl_free(char *str);
-uint32_t ssl_strlen(char *str);
-char *ssl_resize(char *str, uint32_t size);
+size_t ssl_strlen(char *str);
+char *ssl_resize(char *str, size_t size);
 char *ssl_strcpy(char *dest, const char *str);
 char *ssl_strcat(char *dest, char *src);
 char *ssl_addchar(char *str, char c);

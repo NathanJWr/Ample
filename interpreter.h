@@ -33,6 +33,8 @@ void interpreter__evaluate_statement(ASTHandle statement);
 AmpObject *interpreter__evaluate_binary_op(ASTHandle handle);
 /* evaluates an ast node of type  AST_ASSIGNMENT */
 void interpreter__evaluate_assignment(ASTHandle statement);
+/* evaluates an ast node of type AST_IF */
+void interpreter__evaluate_if(ASTHandle statement);
 /* removes a dict entry and decrements the refcount of the amp object
  * that it's associated with */
 void interpreter__erase_variable_if_exists(const char *var);
