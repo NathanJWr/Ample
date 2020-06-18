@@ -139,6 +139,7 @@ parser__possible_if_statement (struct Token *t_arr, struct Statement s)
       /* there should be exactly 1 expression inside if parens */
       struct AST *n = NULL;
       ASTHandle expr = 0;
+	  ASTHandle scope_if_true = 0;
       struct Statement paren_statement;
       struct Statement scope_statement;
       unsigned int i = s.start + 2; /* skip over the '(' character */
@@ -150,16 +151,18 @@ parser__possible_if_statement (struct Token *t_arr, struct Statement s)
 
       /* create if ast node */
       node = ast_get_node_handle();
-      n = ast_get_node (node);
-      n->type = AST_IF;
-      n->d.if_data.expr = expr;
-
+ 
       /* find the start of the if scope */
       while (t_arr[i].value != '{')
         i++;
       scope_statement.start = i;
       scope_statement.end = s.end;
-      n->d.if_data.scope_if_true = parser__scope (t_arr, scope_statement);
+      scope_if_true = parser__scope (t_arr, scope_statement);
+	  
+      n = ast_get_node (node);
+      n->d.if_data.scope_if_true = scope_if_true;
+      n->d.if_data.expr = expr;
+      n->type = AST_IF;
     }
   return node;
 }
@@ -167,7 +170,7 @@ ASTHandle
 parser__scope(struct Token* t_arr, struct Statement s)
 {
   ASTHandle handle = ast_get_node_handle ();
-  struct AST *scope = ast_get_node (handle);
+  struct AST *scope = NULL;
   unsigned int index = s.start + 1; /* skip '{' */
   ASTHandle *statements = NULL;
   while (t_arr[index].value != '}')
@@ -176,6 +179,9 @@ parser__scope(struct Token* t_arr, struct Statement s)
       ASTHandle statement = parse__statement (t_arr, s);
       ARRAY_PUSH (statements, statement);
     }
+  
+  scope = ast_get_node (handle);
+  scope->type = AST_SCOPE;
   scope->d.scope_data.statements = statements;
   return handle;
 }
