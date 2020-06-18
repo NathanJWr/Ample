@@ -68,6 +68,8 @@ parse__get_statement (struct Token *__restrict tokens,
   s.start = *index;
   s.end = i; /* don't care about the DELIM so the end if offset by 1 */
 
+  printf ("Parsed statement\n");
+  parser__debug_print_statement (tokens, s);
   *index = i + 1; /* offset by one to skip past the DELIM */
   return s;
 }
@@ -154,7 +156,7 @@ parser__possible_if_statement (struct Token *t_arr, struct Statement s)
       /* find the start of the if scope */
       while (t_arr[i].value != '{')
         i++;
-      scope_statement.start = i-1;
+      scope_statement.start = i;
       scope_statement.end = s.end;
       n->d.if_data.scope_if_true = parser__scope (t_arr, scope_statement);
     }
@@ -164,7 +166,7 @@ ASTHandle
 parser__scope(struct Token* t_arr, struct Statement s)
 {
   unsigned int index = s.start + 1; /* skip '{' */
-  while (t_arr[index].value = '}')
+  while (t_arr[index].value != '}')
     {
       struct Statement s = parse__get_statement(t_arr, &index);
     }
@@ -460,4 +462,16 @@ parser__possible_assignment (struct Token *t_arr, struct Statement s)
       *n = ast;
     }
   return node;
+}
+void
+parser__debug_print_statement(struct Token* t_arr, struct Statement s)
+{
+  unsigned int i;
+  for (i = s.start; i <= s.end; i++)
+    {
+      if (t_arr[i].value <= 125)
+        printf ("Token %d: %c\n", i - s.start, t_arr[i].value);
+      else
+        printf ("Token %d: %s\n", i - s.start, t_arr[i].string);
+    }
 }

@@ -90,4 +90,5 @@ ASTHandle parser__convert_postfix_to_ast(QUEUE(TokenQueue) * infix_q,
     Debug output
    ============== */
 void parser__debug_print_queue(QUEUE(TokenQueue) * q);
+void parser__debug_print_statement(struct Token* t_arr, struct Statement s);
 #endif
