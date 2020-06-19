@@ -18,6 +18,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "interpreter.h"
+#include "mem_debug.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,5 +60,6 @@ main (int argc, char **argv)
       token_free_all (tokens);
       free (file);
     }
+  mem_debug_print_info ();
   return 0;
 }

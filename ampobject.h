@@ -36,7 +36,7 @@ typedef struct AmpObjectInfo {
 #define AMP_OBJECT_HEADER                                                      \
   unsigned int refcount;                                                       \
   AmpObjectInfo *info;                                                         \
-  void (*dealloc)()
+  void (*dealloc)(AmpObject *)
 
 struct AmpObject {
   AMP_OBJECT_HEADER;

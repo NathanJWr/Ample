@@ -1,6 +1,12 @@
 #ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+
+
+#include "mem_debug.c"
+#include "mem_debug.h"
+
+
 #include "ampobject.c"
 #include "ast.c"
 #include "dict_vars.c"
@@ -12,5 +18,6 @@
 #include "parser.c"
 #include "ssl.c"
 #include "strobject.c"
+
 
 #include "main.c"
