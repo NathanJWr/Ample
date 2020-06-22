@@ -69,7 +69,6 @@ parse__get_statement (struct Token *__restrict tokens,
   s.end = i; /* don't care about the DELIM so the end if offset by 1 */
 
   printf ("Parsed statement\n");
-  parser__debug_print_statement (tokens, s);
   *index = i + 1; /* offset by one to skip past the DELIM */
   return s;
 }

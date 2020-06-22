@@ -44,18 +44,12 @@ interpreter__add_obj_mapping (const char *var_name, AmpObject *obj)
 void
 interpreter_start (ASTHandle head)
 {
-  struct AST *h = NULL;
   size_t i = 0;
   /* initialize all variable maps */
-  DictObjVars_init (&varmap, hash_string, string_compare, 1);
-  h = ast_get_node (head);
-  if (h->type == AST_SCOPE)
-    {
-      for (i = 0; i < ARRAY_COUNT (h->d.scope_data.statements); i++)
-        {
-          interpreter__evaluate_statement (h->d.scope_data.statements[i]);
-        }
-    }
+  DictObjVars_init (&varmap, hash_string, string_compare, 10);
+
+  /* evaluate the global scope */
+  interpreter__evaluate_scope (head);
 
   /* end of the program */
   debug__interpreter_print_all_vars ();
@@ -317,4 +311,12 @@ debug__interpreter_print_all_vars ()
             }
         }
     }
+}
+
+AmpObject *
+debug__interpreter_get_variable_object (const char *var)
+{
+  AmpObject *obj = NULL;
+  DictObjVars_get (&varmap, var, &obj);
+  return obj;
 }

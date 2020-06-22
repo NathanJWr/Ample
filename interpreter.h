@@ -47,9 +47,15 @@ AmpObject *interpreter__get_amp_object(const char *var);
 AmpObject *interpreter__get_or_generate_amp_object(ASTHandle handle);
 /* Add an object to the variable map for easy storage/access */
 void interpreter__add_obj_mapping(const char *var_name, AmpObject *obj);
+/* Increments through a scope ast node's list of statements 
+ * and evaulates them */
+void interpreter__evaluate_scope (ASTHandle scope_handle);
+/* evaluates a statement if the resulting evaluation is a bool */
+bool interpreter__evaluate_statement_to_bool (ASTHandle statement_handle);
 
 /* ***************
  * Debug Functions
  * *************** */
 void debug__interpreter_print_all_vars();
+AmpObject *debug__interpreter_get_variable_object (const char *var);
 #endif
