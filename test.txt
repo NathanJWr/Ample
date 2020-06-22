@@ -1,9 +1,6 @@
 val = true;
+global_string = "This is a global string";
 if (val)
 {
-    a = 10 + 10;
-    b = 5 + 5;
+  local_string = global_string + " copy that is in a scope";
 }
-b = 100;
-c = "HELLLLLLLLLLLLLLLLLLLLOOOOOOOOOOOOOOOOOOO";
-d = true;

@@ -276,7 +276,7 @@ interpreter__duplicate_variable (const char *var, const char *assign, DICT (ObjV
   local_found = DictObjVars_get (local_variables, var, &obj);
   if (!local_found)
     global_found = DictObjVars_get (&global_variables, var, &obj);
-  if (local_found || global_found)
+  if (!local_found && !global_found)
     {
       printf ("Variable %s does not exist\n", var);
       exit (1);

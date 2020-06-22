@@ -430,7 +430,9 @@ ASTHandle
 parser__possible_identifier (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
-  if (statement_size (s) == 1 && t_arr[s.start].value == TOK_IDENTIFIER)
+  if ((statement_size (s) == 1 && t_arr[s.start].value == TOK_IDENTIFIER) ||
+      (statement_size (s) == 2 && t_arr[s.start].value == TOK_IDENTIFIER &&
+       t_arr[s.start + 1].value == STATEMENT_DELIM))
     {
       struct AST *n = NULL;
       node = ast_get_node_handle ();
