@@ -65,10 +65,12 @@ main (int argc, char **argv)
       interpreter_start (ast_head);
       printf ("Memory after interpreting...\n");
       mem_debug_print_info ();
-      interpreter_cleanup ();
 
       ast_free_buffer ();
       token_free_all (tokens);
+
+      printf ("Memory after program completion...\n");
+      mem_debug_print_info ();
     }
   return 0;
 }

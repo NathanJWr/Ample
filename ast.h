@@ -17,6 +17,7 @@
 #ifndef AST_H_
 #define AST_H_
 #include "lexer.h"
+#include "dict_vars.h"
 #include <stdbool.h>
 typedef size_t ASTHandle;
 enum ASTType {
@@ -34,6 +35,7 @@ struct AST;
 
 struct ScopeAST {
   ASTHandle *statements; /* sb array */
+  DICT(ObjVars) local_variables;
 };
 
 struct IntegerAST {

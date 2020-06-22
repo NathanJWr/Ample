@@ -23,60 +23,42 @@
 #include "strobject.h"
 
 #include <assert.h>
-static DICT(ObjVars) varmap;
+static DICT(ObjVars) global_variables;
 
 void
-interpreter__erase_variable_if_exists (const char *var)
+interpreter__erase_variable_if_exists (const char *var, DICT (ObjVars) *local_variables)
 {
 
   AmpObject *obj = NULL;
-  bool success = DictObjVars_get_and_erase (&varmap, var, &obj);
+  bool success = DictObjVars_get_and_erase (local_variables, var, &obj);
   if (success)
     obj_dec_refcount (obj);
 }
 
 void
-interpreter__add_obj_mapping (const char *var_name, AmpObject *obj)
+interpreter__add_obj_mapping (const char *var_name, AmpObject *obj, DICT (ObjVars) *local_variables)
 {
-  interpreter__erase_variable_if_exists (var_name);
-  DictObjVars_insert (&varmap, var_name, obj);
+  interpreter__erase_variable_if_exists (var_name, local_variables);
+  DictObjVars_insert (local_variables, var_name, obj);
 }
 
 void
 interpreter_start (ASTHandle head)
 {
   /* initialize all variable maps */
-  DictObjVars_init (&varmap, hash_string, string_compare, 10);
+  DictObjVars_init (&global_variables, hash_string, string_compare, 10);
 
   /* evaluate the global scope */
-  interpreter__evaluate_scope (head);
+  interpreter__evaluate_scope (head, true);
 }
 
 void
-interpreter_cleanup ()
-{
-  size_t i = 0;
-  debug__interpreter_print_all_vars ();
-  /* all variables have reached the end of their scope */
-  for (i = 0; i < varmap.capacity; i++)
-    {
-      if (varmap.map[i] != 0)
-        {
-          AmpObject *val
-              = DictObjVars_get_entry_pointer (&varmap, varmap.map[i])->val;
-          obj_dec_refcount (val);
-        }
-    }
-  DictObjVars_free (&varmap);
-}
-
-void
-interpreter__evaluate_statement (ASTHandle statement)
+interpreter__evaluate_statement (ASTHandle statement, DICT (ObjVars) *local_variables)
 {
   struct AST *s = ast_get_node (statement);
   if (s->type == AST_ASSIGNMENT)
     {
-      interpreter__evaluate_assignment (statement);
+      interpreter__evaluate_assignment (statement, local_variables);
     }
   else if (s->type == AST_BINARY_OP)
     {
@@ -119,16 +101,39 @@ interpreter__evaulate_statement_to_bool (ASTHandle statement_handle)
 }
 
 void
-interpreter__evaluate_scope (ASTHandle scope_handle)
+interpreter__evaluate_scope (ASTHandle scope_handle, bool in_global_scope)
 {
   struct AST *scope = ast_get_node (scope_handle);
   if (scope->type == AST_SCOPE)
     {
-      unsigned int i;
+      DICT(ObjVars) *local_variables = NULL;
+      if (in_global_scope)
+        {
+          local_variables = &global_variables;
+        }
+      else
+        {
+          local_variables = &scope->d.scope_data.local_variables;
+          DictObjVars_init (local_variables, hash_string, string_compare, 10);
+        }
+      size_t i;
       for (i = 0; i < ARRAY_COUNT (scope->d.scope_data.statements); i++)
         {
-          interpreter__evaluate_statement (scope->d.scope_data.statements[i]);
+          interpreter__evaluate_statement (scope->d.scope_data.statements[i], local_variables);
         }
+
+      debug__interpreter_print_all_vars (local_variables);
+      /* local variables have reached the end of their scope */
+      for (i = 0; i < local_variables->capacity; i++)
+        {
+          if (local_variables->map[i] != 0)
+            {
+              AmpObject *val
+                  = DictObjVars_get_entry_pointer (local_variables, local_variables->map[i])->val;
+              obj_dec_refcount (val);
+            }
+        }
+      DictObjVars_free (local_variables);
     }
   else
     {
@@ -151,7 +156,7 @@ interpreter__evaluate_if (ASTHandle statement)
       is_expr_true = interpreter__evaulate_statement_to_bool (expr_node->d.if_data.expr);
 
       if (is_expr_true)
-        interpreter__evaluate_scope (expr_node->d.if_data.scope_if_true);
+        interpreter__evaluate_scope (expr_node->d.if_data.scope_if_true, false);
     }
 }
 
@@ -159,7 +164,7 @@ AmpObject *
 interpreter__get_amp_object (const char *var)
 {
   AmpObject *obj = NULL;
-  bool success = DictObjVars_get (&varmap, var, &obj);
+  bool success = DictObjVars_get (&global_variables, var, &obj);
   if (!success)
     {
       printf ("Variable \"%s\" does not exist\n", var);
@@ -264,22 +269,25 @@ interpreter__evaluate_binary_op (ASTHandle handle)
 }
 
 void
-interpreter__duplicate_variable (const char *var, const char *assign)
+interpreter__duplicate_variable (const char *var, const char *assign, DICT (ObjVars) *local_variables)
 {
   AmpObject *obj = NULL;
-  bool success = DictObjVars_get (&varmap, var, &obj);
-  if (!success)
+  bool local_found, global_found;
+  local_found = DictObjVars_get (local_variables, var, &obj);
+  if (!local_found)
+    global_found = DictObjVars_get (&global_variables, var, &obj);
+  if (local_found || global_found)
     {
       printf ("Variable %s does not exist\n", var);
       exit (1);
     }
   /* new variable will be referencing the same memory */
   obj_inc_refcount (obj);
-  DictObjVars_insert (&varmap, assign, obj);
+  DictObjVars_insert (&global_variables, assign, obj);
 }
 
 void
-interpreter__evaluate_assignment (ASTHandle statement)
+interpreter__evaluate_assignment (ASTHandle statement, DICT (ObjVars) *local_variables)
 {
   struct AST *s = ast_get_node (statement);
   struct AST *expr = ast_get_node (s->d.asgn_data.expr);
@@ -287,43 +295,44 @@ interpreter__evaluate_assignment (ASTHandle statement)
     {
       int val = expr->d.int_data.value;
       AmpObject *obj = amp_object_create_integer (val);
-      interpreter__add_obj_mapping (s->d.asgn_data.var, obj);
+      interpreter__add_obj_mapping (s->d.asgn_data.var, obj, local_variables);
     }
   else if (expr->type == AST_BINARY_OP)
     {
       AmpObject *obj = interpreter__evaluate_binary_op (s->d.asgn_data.expr);
-      interpreter__add_obj_mapping (s->d.asgn_data.var, obj);
+      interpreter__add_obj_mapping (s->d.asgn_data.var, obj, local_variables);
     }
   else if (expr->type == AST_STRING)
     {
       const char *val = expr->d.str_data.str;
       AmpObject *obj = amp_object_create_string (val);
-      interpreter__add_obj_mapping (s->d.asgn_data.var, obj);
+      interpreter__add_obj_mapping (s->d.asgn_data.var, obj, local_variables);
     }
   else if (expr->type == AST_BOOL)
     {
       bool val = expr->d.bool_data.value;
       AmpObject *obj = amp_object_create_bool (val);
-      interpreter__add_obj_mapping (s->d.asgn_data.var, obj);
+      interpreter__add_obj_mapping (s->d.asgn_data.var, obj, local_variables);
     }
   else if (expr->type == AST_IDENTIFIER)
     {
       const char *var = s->d.asgn_data.var;
       const char *expr_var = expr->d.id_data.id;
-      interpreter__duplicate_variable (expr_var, var);
+      interpreter__duplicate_variable (expr_var, var, local_variables);
     }
 }
 
 void
-debug__interpreter_print_all_vars ()
+debug__interpreter_print_all_vars (DICT (ObjVars) *vars)
 {
+  printf ("DEBUG output of variable map...\n");
   unsigned int i;
-  for (i = 0; i < varmap.capacity; i++)
+  for (i = 0; i < vars->capacity; i++)
     {
-      DictEntryHandle h = varmap.map[i];
+      DictEntryHandle h = vars->map[i];
       if (h != 0)
         {
-          const DICT_ENTRY (ObjVars) *e = &varmap.mem[h];
+          const DICT_ENTRY (ObjVars) *e = &vars->mem[h];
           AmpObject *obj = e->val;
           switch (obj->info->type)
             {
@@ -346,6 +355,6 @@ AmpObject *
 debug__interpreter_get_variable_object (const char *var)
 {
   AmpObject *obj = NULL;
-  DictObjVars_get (&varmap, var, &obj);
+  DictObjVars_get (&global_variables, var, &obj);
   return obj;
 }
