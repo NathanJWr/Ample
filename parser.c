@@ -113,7 +113,10 @@ ASTHandle
 parser__possible_bool(struct Token* t_arr, struct Statement s)
 {
   ASTHandle node = 0;
-  if (statement_size(s) == 1 && t_arr[s.start].value == TOK_BOOL)
+  if ((statement_size(s) >= 2 &&
+      t_arr[s.start].value == TOK_BOOL &&
+      t_arr[s.start + 1].value == STATEMENT_DELIM) ||
+      (statement_size (s) == 1 && t_arr[s.start].value == TOK_BOOL))
     {
       struct AST *n = NULL;
       const struct Token *tok = &t_arr[s.start];

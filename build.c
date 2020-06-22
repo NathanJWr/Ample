@@ -13,6 +13,7 @@
 #include "hash.c"
 #include "interpreter.c"
 #include "intobject.c"
+#include "boolobject.c"
 #include "lexer.c"
 #include "ncl.c"
 #include "parser.c"

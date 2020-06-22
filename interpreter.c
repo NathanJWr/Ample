@@ -19,6 +19,7 @@
 #include "array.h"
 #include "dict_vars.h"
 #include "intobject.h"
+#include "boolobject.h"
 #include "strobject.h"
 
 #include <assert.h>
@@ -281,6 +282,12 @@ interpreter__evaluate_assignment (ASTHandle statement)
       AmpObject *obj = amp_object_create_string (val);
       interpreter__add_obj_mapping (s->d.asgn_data.var, obj);
     }
+  else if (expr->type == AST_BOOL)
+    {
+      bool val = expr->d.bool_data.value;
+      AmpObject *obj = amp_object_create_bool (val);
+      interpreter__add_obj_mapping (s->d.asgn_data.var, obj);
+    }
   else if (expr->type == AST_IDENTIFIER)
     {
       const char *var = s->d.asgn_data.var;
@@ -307,6 +314,10 @@ debug__interpreter_print_all_vars ()
               break;
             case AMP_OBJ_STR:
               printf ("Str Variable: %s\n\tValue: %s\n", e->key, AMP_STRING (obj)->string);
+              break;
+            case AMP_OBJ_BOOL:
+              printf ("Bool Variable %s\n\tValue: %s\n", e->key, 
+                  AMP_BOOL (obj)->val ? "true" : "false");
               break;
             }
         }

@@ -16,7 +16,7 @@
 */
 #ifndef AMP_OBJECT_H_
 #define AMP_OBJECT_H_
-typedef enum AmpObjectType { AMP_OBJ_INT, AMP_OBJ_STR } AmpObjectType;
+typedef enum AmpObjectType { AMP_OBJ_INT, AMP_OBJ_STR, AMP_OBJ_BOOL } AmpObjectType;
 
 struct AmpObject;
 typedef struct AmpObject AmpObject;
