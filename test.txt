@@ -4,3 +4,4 @@ if (true)
     b = 5 + 5;
 }
 b = 100;
+c = "HELLLLLLLLLLLLLLLLLLLLOOOOOOOOOOOOOOOOOOO";
