@@ -90,9 +90,56 @@ interpreter__evaluate_statement (ASTHandle statement)
     }
 }
 
+bool
+interpreter__evaulate_statement_to_bool (ASTHandle statement_handle)
+{
+  struct AST *expr = ast_get_node (statement_handle);
+  if (expr->type == AST_BOOL)
+    {
+      return expr->d.bool_data.value;   
+    }
+  else
+    {
+      printf ("Expression does not evaluate to a bool\n");
+      exit (1);
+    }
+}
+
+void
+interpreter__evaluate_scope (ASTHandle scope_handle)
+{
+  struct AST *scope = ast_get_node (scope_handle);
+  if (scope->type == AST_SCOPE)
+    {
+      unsigned int i;
+      for (i = 0; i < ARRAY_COUNT (scope->d.scope_data.statements); i++)
+        {
+          interpreter__evaluate_statement (scope->d.scope_data.statements[i]);
+        }
+    }
+  else
+    {
+      printf ("Expression is not a scope\n");
+      exit (1);
+    }
+}
+
 void
 interpreter__evaluate_if (ASTHandle statement)
 {
+  struct AST *if_node = ast_get_node (statement);
+  if (if_node->type == AST_IF)
+    {
+      /* run different scopes depending on the if's true or false */
+      struct AST *expr_node = ast_get_node (statement);
+      bool is_expr_true;
+
+      /* expr_node should evaluate to a bool */
+      is_expr_true = interpreter__evaulate_statement_to_bool (expr_node->d.if_data.expr);
+
+      if (is_expr_true)
+        interpreter__evaluate_scope (expr_node->d.if_data.scope_if_true);
+    }
 }
 
 AmpObject *
