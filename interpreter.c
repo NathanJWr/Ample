@@ -93,6 +93,21 @@ interpreter__evaulate_statement_to_bool (ASTHandle statement_handle)
     {
       return expr->d.bool_data.value;   
     }
+  else if (expr->type == AST_IDENTIFIER)
+    {
+      /* assume we are given a pre-existing variable */
+      char *identifier_str = expr->d.id_data.id;
+      AmpObject *obj = interpreter__get_amp_object (identifier_str);
+      if (obj->info->type == AMP_OBJ_BOOL)
+        {
+          return AMP_BOOL (obj)->val;
+        }
+      else
+        {
+          printf ("Variable \"%s\" is not of type bool\n", identifier_str);
+          exit (1);
+        }
+    }
   else
     {
       printf ("Expression does not evaluate to a bool\n");

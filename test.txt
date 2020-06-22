@@ -1,4 +1,5 @@
-if (true)
+val = true;
+if (val)
 {
     a = 10 + 10;
     b = 5 + 5;

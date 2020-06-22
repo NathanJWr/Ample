@@ -57,8 +57,7 @@ ssl_strcpy (char *__restrict dest, const char *__restrict str)
       s->size = size;
       s->length = strlen (str);
 
-      strncpy (s->string, str, size);
-      s->string[size - 1] = '\0';
+      strcpy (s->string, str);
     }
   return s->string;
 }
