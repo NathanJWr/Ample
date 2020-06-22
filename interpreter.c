@@ -45,14 +45,17 @@ interpreter__add_obj_mapping (const char *var_name, AmpObject *obj)
 void
 interpreter_start (ASTHandle head)
 {
-  size_t i = 0;
   /* initialize all variable maps */
   DictObjVars_init (&varmap, hash_string, string_compare, 10);
 
   /* evaluate the global scope */
   interpreter__evaluate_scope (head);
+}
 
-  /* end of the program */
+void
+interpreter_cleanup ()
+{
+  size_t i = 0;
   debug__interpreter_print_all_vars ();
   /* all variables have reached the end of their scope */
   for (i = 0; i < varmap.capacity; i++)

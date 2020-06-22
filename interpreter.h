@@ -22,6 +22,7 @@
    External functions
    ****************** */
 void interpreter_start(ASTHandle head);
+void interpreter_cleanup ();
 
 /* ******************
    Internal Functions
