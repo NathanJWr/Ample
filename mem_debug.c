@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <string.h>
+#include <stddef.h>
 #include <stdio.h>
 static size_t total_allocated;
 static size_t currently_allocated;
@@ -7,6 +9,7 @@ typedef struct MemInfo {
   size_t allocation_size;
   char mem[1];
 } MemInfo;
+
 void*
 debug_malloc (size_t size, const char *file, int line)
 {
@@ -24,7 +27,7 @@ debug_malloc (size_t size, const char *file, int line)
 void
 debug_free (void *ptr, const char *file, int line)
 {
-  MemInfo *info = ((char*) ptr) - offsetof (MemInfo, mem);
+  MemInfo *info = (MemInfo *) (((char*) ptr) - offsetof (MemInfo, mem));
   currently_allocated -= info->allocation_size;
   free (info);
 }
@@ -32,8 +35,17 @@ debug_free (void *ptr, const char *file, int line)
 void *
 debug_realloc (void *ptr, size_t size, const char *file, int line)
 {
-  void *actual_ptr = (char*) ptr - offsetof (MemInfo, mem);
-  MemInfo *new_ptr = realloc (actual_ptr, offsetof (MemInfo, mem) + size);
+  MemInfo *info = (MemInfo *) ((char*) ptr - offsetof (MemInfo, mem));
+  MemInfo *new_ptr = NULL;
+  
+  /* remove old size and add new size */
+  total_allocated -= info->allocation_size;
+  total_allocated += size;
+  currently_allocated -= info->allocation_size;
+  currently_allocated += size;
+  
+  new_ptr = realloc (info, offsetof (MemInfo, mem) + size);
+  new_ptr->allocation_size = size;
   return new_ptr->mem;
 }
 
@@ -48,6 +60,6 @@ debug_calloc (size_t nmemb, size_t size, const char *file, int line)
 void
 mem_debug_print_info ()
 {
-  printf ("Total allocated memory: %zd bytes\n", total_allocated);
-  printf ("Currently allocated memory: %zd bytes\n", currently_allocated);
+  printf ("Total allocated memory: %ld bytes\n", total_allocated);
+  printf ("Currently allocated memory: %ld bytes\n", currently_allocated);
 }

@@ -8,3 +8,5 @@ tags
 *.obj
 *.pdb
 .vs
+ample
+*.sln

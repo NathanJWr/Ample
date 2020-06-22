@@ -187,6 +187,8 @@ interpreter__evaluate_binary_op (ASTHandle handle)
                         break;
               case '/': obj = right->info->ops.div (right, left);
                         break;
+              default: printf ("Invalid binary operation\n");
+                       exit (1);
             }
           obj_dec_refcount (left);
           obj_dec_refcount (right);

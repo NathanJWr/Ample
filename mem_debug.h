@@ -1,5 +1,5 @@
-#ifndef MEM_DEBUG_H_
-#define MEM_DEBUG_H_
+#ifdef MEM_DEBUG
+#define MEM_DEBUG
 void *debug_malloc(size_t size, const char *file, int line);
 void debug_free(void *ptr, const char *file, int line);
 void *debug_realloc(void *ptr, size_t size, const char *file, int line);
