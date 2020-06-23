@@ -26,7 +26,7 @@
 char *
 read_whole_file (FILE *f)
 {
-  long fsize;
+  size_t fsize;
   char* file;
   size_t size_read;
 

@@ -74,8 +74,7 @@ STACK_DECLARATION(ASTHandleStack, ASTHandle);
 QUEUE(TokenQueue) convert_infix_to_postfix(QUEUE(TokenQueue) * expr_q);
 /* converts a postfix expression gotten from convert_infix_to_postfix into an
  * ast */
-ASTHandle convert_postfix_to_ast(QUEUE(TokenQueue) * infix_q,
-                                         unsigned int expr_size);
+ASTHandle convert_postfix_to_ast(QUEUE(TokenQueue) * infix_q);
 
 /* ==============
     Debug output

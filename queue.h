@@ -48,13 +48,14 @@
     /* this is probably super expensive, but it keeps the start of the array   \
      * memory usable */                                                        \
     if ((queue_p)->head > 0) {                                                 \
-      size_t i;                                                                \
+      size_t queue_index;                                                      \
       /* move the array so it starts at index 0 */                             \
       size_t size = (queue_p)->size;                                           \
       /* using a for loop here because you can't memcpy regions that may       \
        * overlap */                                                            \
-      for (i = 0; i < size; i++) {                                             \
-        (queue_p)->mem[i] = (queue_p)->mem[(queue_p)->head + i];               \
+      for (queue_index = 0; queue_index < size; queue_index++) {               \
+        (queue_p)->mem[queue_index] =                                          \
+          (queue_p)->mem[(queue_p)->head + queue_index];                       \
       }                                                                        \
       (queue_p)->head = 0;                                                     \
       (queue_p)->tail = (int) size - 1;                                        \
@@ -66,7 +67,7 @@
   } while (0)
 
 #define QUEUE_PUSH(queue_p, entry)                                             \
-  if ((queue_p)->tail + 1 >= (queue_p)->capacity) {                            \
+  if ((queue_p)->tail + 1 >= (int) (queue_p)->capacity) {                      \
     QUEUE_RESIZE(queue_p, (queue_p)->capacity * 2);                            \
   }                                                                            \
   (queue_p)->tail++;                                                           \

@@ -272,7 +272,8 @@ void
 interpreter_duplicate_variable (const char *var, const char *assign, DICT (ObjVars) *local_variables)
 {
   AmpObject *obj = NULL;
-  bool32 local_found, global_found;
+  bool32 local_found = false;
+  bool32 global_found = false;
   local_found = DictObjVars_get (local_variables, var, &obj);
   if (!local_found)
     global_found = DictObjVars_get (&global_variables, var, &obj);

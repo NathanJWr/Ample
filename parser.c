@@ -177,8 +177,8 @@ parse_scope(struct Token* t_arr, struct Statement s)
   ASTHandle *statements = NULL;
   while (t_arr[index].value != '}')
     {
-      struct Statement s = get_statement(t_arr, &index);
-      ASTHandle statement = parse_statement (t_arr, s);
+      struct Statement statement_indexes = get_statement(t_arr, &index);
+      ASTHandle statement = parse_statement (t_arr, statement_indexes);
       ARRAY_PUSH (statements, statement);
     }
   
@@ -307,10 +307,9 @@ convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
   return q;
 }
 ASTHandle
-convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
-                                unsigned int expr_size)
+convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q)
 {
-  STACK (ASTHandleStack) s = { 0 };
+  STACK (ASTHandleStack) s;
   ASTHandle return_handle;
   STACK_STRUCT_INIT (ASTHandleStack, &s, ASTHandle, 10);
   while (!QUEUE_EMPTY (postfix_q))
@@ -390,7 +389,7 @@ parser__arithmetic (struct Token *t_arr, struct Statement s)
       QUEUE_PUSH (&expr_q, t_arr + i);
     }
   postfix = convert_infix_to_postfix (&expr_q);
-  op = convert_postfix_to_ast (&postfix, statement_size (s));
+  op = convert_postfix_to_ast (&postfix);
   return op;
 }
 
@@ -469,7 +468,7 @@ parse_possible_assignment (struct Token *t_arr, struct Statement s)
   if (statement_size (s) >= 3 && t_arr[s.start].value == TOK_IDENTIFIER
       && t_arr[s.start + 1].value == '=' && t_arr[s.start + 2].value != '=')
     {
-      struct Statement sub_statement = { 0 };
+      struct Statement sub_statement;
       struct AST ast;
       struct AST *n = NULL;
       node = ast_get_node_handle ();

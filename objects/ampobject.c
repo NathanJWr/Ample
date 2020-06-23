@@ -41,7 +41,8 @@ AmpObjectDecrementRefcount (AmpObject *obj)
 
 AmpObject *AmpObjectUnsupportedOperation (AmpObject *this, AmpObject *var)
 {
-  printf ("unsupported operation for variable of type %d\n", this->info->type);
+  printf ("unsupported operation for variable of type %d operating on type %d\n",
+           this->info->type, var->info->type);
   exit (1);
 }
 

@@ -39,7 +39,7 @@ debug_malloc (size_t size, const char *file, int line)
 }
 
 void
-debug_free (void *ptr, const char *file, int line)
+debug_free (void *ptr)
 {
   MemInfo *info = (MemInfo *) (((char*) ptr) - offsetof (MemInfo, mem));
   currently_allocated -= info->allocation_size;
@@ -49,7 +49,7 @@ debug_free (void *ptr, const char *file, int line)
 }
 
 void *
-debug_realloc (void *ptr, size_t size, const char *file, int line)
+debug_realloc (void *ptr, size_t size)
 {
   MemInfo *info = (MemInfo *) ((char*) ptr - offsetof (MemInfo, mem));
   MemInfo *new_ptr = NULL;
@@ -66,7 +66,6 @@ debug_realloc (void *ptr, size_t size, const char *file, int line)
   new_ptr->file = malloc (strlen (file) + 1);
   strcpy (new_ptr->file, file);
   */
-  new_ptr->line = line;
   new_ptr->allocation_size = size;
   allocations[new_ptr->unique_id] = new_ptr;
   return new_ptr->mem;
@@ -84,8 +83,8 @@ void
 mem_debug_print_info ()
 {
   size_t i;
-  printf ("Total allocated memory: %ld bytes\n", total_allocated);
-  printf ("Currently allocated memory: %ld bytes\n", currently_allocated);
+  printf ("Total allocated memory: %u bytes\n", (unsigned int) total_allocated);
+  printf ("Currently allocated memory: %u bytes\n", (unsigned int) currently_allocated);
   for (i = 0; i < unique_id_counter; i++)
     {
       if (allocations[i])
