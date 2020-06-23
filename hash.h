@@ -17,8 +17,6 @@
 #ifndef HASH_H_
 #define HASH_H_
 #include "array.h"
-#include <inttypes.h>
-#include <stdbool.h>
 /* USAGE:
    This file has two user facing macros: DICT_DECLARE and DICT_IMPL
    DICT_DECLARE creates the header definitions and structures necessary
@@ -43,14 +41,14 @@ typedef size_t DictEntryHandle;
   DICT(name) {                                                                 \
     size_t capacity;                                                         \
     size_t count;                                                            \
-    uint64_t (*hash_function)(key_type key);                                   \
-    bool (*key_compare)(key_type key, key_type input);                         \
+    size_t (*hash_function)(key_type key);                                   \
+    bool32 (*key_compare)(key_type key, key_type input);                         \
     DICT_ENTRY(name) * mem; /* flat array of all entries */                    \
     DictEntryHandle *map;   /* actual map structure */                         \
   };                                                                           \
   void DICT_FUNCTION(name, init)(                                              \
-      DICT(name) * dict, uint64_t(*hash_function)(key_type key),               \
-      bool (*key_compare)(key_type key, key_type input),                       \
+      DICT(name) * dict, size_t(*hash_function)(key_type key),               \
+      bool32 (*key_compare)(key_type key, key_type input),                       \
       size_t initial_capacity);                                                \
   void DICT_FUNCTION(name, free)(DICT(name) * dict);                           \
   DictEntryHandle DICT_FUNCTION(name, get_entry_handle)(DICT(name) * dict);    \
@@ -60,16 +58,16 @@ typedef size_t DictEntryHandle;
   void DICT_FUNCTION(name, grow)(DICT(name) * dict);                           \
   void DICT_FUNCTION(name, insert)(DICT(name) * dict, key_type key,            \
                                    val_type val);                              \
-  bool DICT_FUNCTION(name, get)(DICT(name) * dict, key_type key,               \
+  bool32 DICT_FUNCTION(name, get)(DICT(name) * dict, key_type key,               \
                                 val_type * val);                               \
-  bool DICT_FUNCTION(name, erase)(DICT(name) * dict, key_type key);            \
-  bool DICT_FUNCTION(name, get_and_erase)(DICT(name) * dict, key_type key,     \
+  bool32 DICT_FUNCTION(name, erase)(DICT(name) * dict, key_type key);            \
+  bool32 DICT_FUNCTION(name, get_and_erase)(DICT(name) * dict, key_type key,     \
                                           val_type * val)
 
 #define DICT_IMPL(name, key_type, val_type)                                    \
     void DICT_FUNCTION(name, init)(                                            \
-        DICT(name) * dict, uint64_t(*hash_function)(key_type key),             \
-        bool (*key_compare)(key_type key, key_type input),                     \
+        DICT(name) * dict, size_t(*hash_function)(key_type key),             \
+        bool32 (*key_compare)(key_type key, key_type input),                     \
         size_t initial_capacity) {                                             \
       (dict)->capacity = initial_capacity;                                     \
       (dict)->count = 0;                                                       \
@@ -100,7 +98,7 @@ typedef size_t DictEntryHandle;
     void DICT_FUNCTION(name, grow)(DICT(name) * dict);                         \
     void DICT_FUNCTION(name, insert)(DICT(name) * dict, key_type key,          \
                                      val_type val) {                           \
-      uint64_t hash = dict->hash_function(key) % dict->capacity;               \
+      size_t hash = dict->hash_function(key) % dict->capacity;               \
       DictEntryHandle handle = DICT_FUNCTION(name, get_entry_handle)(dict);    \
       DICT_ENTRY(name) *e =                                                    \
           DICT_FUNCTION(name, get_entry_pointer)(dict, handle);                \
@@ -137,9 +135,9 @@ typedef size_t DictEntryHandle;
       DICT_FUNCTION(name, free)(dict);                                         \
       *dict = new_dict;                                                        \
     }                                                                          \
-    bool DICT_FUNCTION(name, get)(DICT(name) * dict, key_type key,             \
+    bool32 DICT_FUNCTION(name, get)(DICT(name) * dict, key_type key,             \
                                   val_type * val) {                            \
-      uint64_t hash = dict->hash_function(key) % dict->capacity;               \
+      size_t hash = dict->hash_function(key) % dict->capacity;               \
       DictEntryHandle handle = dict->map[hash];                                \
       while (handle != 0) {                                                    \
         DICT_ENTRY(name) *e =                                                  \
@@ -152,8 +150,8 @@ typedef size_t DictEntryHandle;
       }                                                                        \
       return false;                                                            \
     }                                                                          \
-    bool DICT_FUNCTION(name, erase)(DICT(name) * dict, key_type key) {         \
-      uint64_t hash = dict->hash_function(key) % dict->capacity;               \
+    bool32 DICT_FUNCTION(name, erase)(DICT(name) * dict, key_type key) {         \
+      size_t hash = dict->hash_function(key) % dict->capacity;               \
       DictEntryHandle handle = dict->map[hash];                                \
       DICT_ENTRY(name) *e = NULL;                                              \
       DICT_ENTRY(name) *prev = NULL;                                           \
@@ -180,9 +178,9 @@ typedef size_t DictEntryHandle;
       }                                                                        \
       return false;                                                            \
     }                                                                          \
-    bool DICT_FUNCTION(name, get_and_erase)(DICT(name) * dict, key_type key,   \
+    bool32 DICT_FUNCTION(name, get_and_erase)(DICT(name) * dict, key_type key,   \
                                             val_type * val) {                  \
-      uint64_t hash = dict->hash_function(key) % dict->capacity;               \
+      size_t hash = dict->hash_function(key) % dict->capacity;               \
       DictEntryHandle handle = dict->map[hash];                                \
       DICT_ENTRY(name) *e = NULL;                                              \
       DICT_ENTRY(name) *prev = NULL;                                           \
@@ -211,8 +209,8 @@ typedef size_t DictEntryHandle;
       return false;                                                            \
     }                                                                          \
 
-uint64_t hash_string(const char *s);
-bool string_compare(const char *key, const char *input);
-bool int_compare(int key, int input);
+size_t hash_string(const char *s);
+bool32 string_compare(const char *key, const char *input);
+bool32 int_compare(int key, int input);
 void hash_insert_string_key(const char *key, int value);
 #endif

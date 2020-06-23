@@ -18,7 +18,6 @@
 #define AST_H_
 #include "lexer.h"
 #include "dict_vars.h"
-#include <stdbool.h>
 typedef size_t ASTHandle;
 enum ASTType {
   AST_INTEGER,
@@ -63,7 +62,7 @@ struct IfAST {
   ASTHandle scope_if_true;
 };
 struct BoolAST {
-  bool value;
+  bool32 value;
 };
 struct AST {
   enum ASTType type;

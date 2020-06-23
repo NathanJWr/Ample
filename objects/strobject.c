@@ -17,7 +17,6 @@
 #include "strobject.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 AmpObject *
 amp_string_concat (AmpObject *this, AmpObject *str)
 {
@@ -36,7 +35,7 @@ amp_string_concat (AmpObject *this, AmpObject *str)
 }
 
 static AmpObjectInfo str_info;
-static bool str_info_initialized;
+static bool32 str_info_initialized;
 AmpObject *
 amp_object_create_string (const char *str)
 {

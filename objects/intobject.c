@@ -16,7 +16,6 @@
 */
 #include "intobject.h"
 #include <stdlib.h>
-#include <stdbool.h>
 AmpObject *
 amp_integer_add (AmpObject *this, AmpObject *val)
 {
@@ -49,7 +48,7 @@ amp_integer_mul (AmpObject *this, AmpObject *val)
 }
 
 static AmpObjectInfo int_info;
-static bool int_info_initialized;
+static bool32 int_info_initialized;
 AmpObject *
 amp_object_create_integer (int val)
 {

@@ -2,6 +2,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+typedef unsigned int bool32;
+enum bool_values { false = 0, true = 1 };
 #define MEM_DEBUG
 #include "mem_debug.c"
 #include "mem_debug.h"

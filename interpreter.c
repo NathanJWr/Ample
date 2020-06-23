@@ -30,7 +30,7 @@ interpreter__erase_variable_if_exists (const char *var, DICT (ObjVars) *local_va
 {
 
   AmpObject *obj = NULL;
-  bool success = DictObjVars_get_and_erase (local_variables, var, &obj);
+  bool32 success = DictObjVars_get_and_erase (local_variables, var, &obj);
   if (success)
     obj_dec_refcount (obj);
 }
@@ -70,8 +70,8 @@ interpreter__evaluate_statement (ASTHandle statement, DICT (ObjVars) *local_vari
     }
 }
 
-bool
-interpreter__evaulate_statement_to_bool (ASTHandle statement_handle)
+bool32
+interpreter__evaulate_statement_to_bool32 (ASTHandle statement_handle)
 {
   struct AST *expr = ast_get_node (statement_handle);
   if (expr->type == AST_BOOL)
@@ -101,12 +101,13 @@ interpreter__evaulate_statement_to_bool (ASTHandle statement_handle)
 }
 
 void
-interpreter__evaluate_scope (ASTHandle scope_handle, bool in_global_scope)
+interpreter__evaluate_scope (ASTHandle scope_handle, bool32 in_global_scope)
 {
   struct AST *scope = ast_get_node (scope_handle);
   if (scope->type == AST_SCOPE)
     {
       DICT(ObjVars) *local_variables = NULL;
+      size_t i;
       if (in_global_scope)
         {
           local_variables = &global_variables;
@@ -116,7 +117,6 @@ interpreter__evaluate_scope (ASTHandle scope_handle, bool in_global_scope)
           local_variables = &scope->d.scope_data.local_variables;
           DictObjVars_init (local_variables, hash_string, string_compare, 10);
         }
-      size_t i;
       for (i = 0; i < ARRAY_COUNT (scope->d.scope_data.statements); i++)
         {
           interpreter__evaluate_statement (scope->d.scope_data.statements[i], local_variables);
@@ -150,10 +150,10 @@ interpreter__evaluate_if (ASTHandle statement)
     {
       /* run different scopes depending on the if's true or false */
       struct AST *expr_node = ast_get_node (statement);
-      bool is_expr_true;
+      bool32 is_expr_true;
 
-      /* expr_node should evaluate to a bool */
-      is_expr_true = interpreter__evaulate_statement_to_bool (expr_node->d.if_data.expr);
+      /* expr_node should evaluate to a bool32 */
+      is_expr_true = interpreter__evaulate_statement_to_bool32 (expr_node->d.if_data.expr);
 
       if (is_expr_true)
         interpreter__evaluate_scope (expr_node->d.if_data.scope_if_true, false);
@@ -164,7 +164,7 @@ AmpObject *
 interpreter__get_amp_object (const char *var)
 {
   AmpObject *obj = NULL;
-  bool success = DictObjVars_get (&global_variables, var, &obj);
+  bool32 success = DictObjVars_get (&global_variables, var, &obj);
   if (!success)
     {
       printf ("Variable \"%s\" does not exist\n", var);
@@ -272,7 +272,7 @@ void
 interpreter__duplicate_variable (const char *var, const char *assign, DICT (ObjVars) *local_variables)
 {
   AmpObject *obj = NULL;
-  bool local_found, global_found;
+  bool32 local_found, global_found;
   local_found = DictObjVars_get (local_variables, var, &obj);
   if (!local_found)
     global_found = DictObjVars_get (&global_variables, var, &obj);
@@ -310,7 +310,7 @@ interpreter__evaluate_assignment (ASTHandle statement, DICT (ObjVars) *local_var
     }
   else if (expr->type == AST_BOOL)
     {
-      bool val = expr->d.bool_data.value;
+      bool32 val = expr->d.bool_data.value;
       AmpObject *obj = amp_object_create_bool (val);
       interpreter__add_obj_mapping (s->d.asgn_data.var, obj, local_variables);
     }
@@ -325,8 +325,8 @@ interpreter__evaluate_assignment (ASTHandle statement, DICT (ObjVars) *local_var
 void
 debug__interpreter_print_all_vars (DICT (ObjVars) *vars)
 {
+  size_t i;
   printf ("DEBUG output of variable map...\n");
-  unsigned int i;
   for (i = 0; i < vars->capacity; i++)
     {
       DictEntryHandle h = vars->map[i];

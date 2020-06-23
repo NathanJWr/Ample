@@ -49,9 +49,9 @@ AmpObject *interpreter__get_or_generate_amp_object(ASTHandle handle);
 void interpreter__add_obj_mapping(const char *var_name, AmpObject *obj, DICT (ObjVars) *local_variables);
 /* Increments through a scope ast node's list of statements 
  * and evaulates them */
-void interpreter__evaluate_scope (ASTHandle scope_handle, bool in_global_scope);
-/* evaluates a statement if the resulting evaluation is a bool */
-bool interpreter__evaluate_statement_to_bool (ASTHandle statement_handle);
+void interpreter__evaluate_scope (ASTHandle scope_handle, bool32 in_global_scope);
+/* evaluates a statement if the resulting evaluation is a bool32 */
+bool32 interpreter__evaluate_statement_to_bool (ASTHandle statement_handle);
 
 /* ***************
  * Debug Functions

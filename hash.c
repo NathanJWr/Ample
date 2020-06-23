@@ -16,11 +16,11 @@
 */
 #include "hash.h"
 #include "ssl.h"
-uint64_t
+size_t
 hash_string (const char *s)
 {
   const unsigned char *us = (const unsigned char *)s;
-  uint64_t h = 0;
+  size_t h = 0;
   while (*us != '\0')
     {
       h += h * HASH_MULTIPLIER + *us;
@@ -28,13 +28,13 @@ hash_string (const char *s)
     }
   return h;
 }
-bool
+bool32
 string_compare (const char *key, const char *input)
 {
   return (0 == strcmp (key, input));
 }
 
-bool
+bool32
 int_compare (int key, int input)
 {
   return (key == input);

@@ -205,13 +205,13 @@ parser__possible_integer (struct Token *t_arr, struct Statement s)
   return node;
 }
 
-bool
+bool32
 parser__is_arithmetic_op (TValue v)
 {
   return (v == '+' || v == '-' || v == '/' || v == '*');
 }
 
-bool
+bool32
 parser__greater_precedence (struct Token *left, struct Token *right)
 {
   if ('*' == left->value)
@@ -226,7 +226,7 @@ parser__greater_precedence (struct Token *left, struct Token *right)
     }
   return false;
 }
-bool
+bool32
 parser__equal_precedence (struct Token *left, struct Token *right)
 {
   if (('+' == left->value || '-' == left->value)

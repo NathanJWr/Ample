@@ -20,7 +20,6 @@
 #include "lexer.h"
 #include "queue.h"
 #include "stack.h"
-#include <stdbool.h>
 #define STATEMENT_DELIM ';'
 /* ****************
     External functions
@@ -66,11 +65,11 @@ ASTHandle parser__scope (struct Token *t_arr, struct Statement s);
 /* ===================
     Arithmetic helpers
    =================== */
-bool parser__is_arithmetic_op(TValue v);
+bool32 parser__is_arithmetic_op(TValue v);
 /* true if left is of greater operator precedence than right */
-bool parser__greater_precedence(struct Token *left, struct Token *right);
+bool32 parser__greater_precedence(struct Token *left, struct Token *right);
 /* true if left is of equal operator precedence than right */
-bool parser__equal_precedence(struct Token *left, struct Token *right);
+bool32 parser__equal_precedence(struct Token *left, struct Token *right);
 
 /* ==================
     Arithmetic parsing

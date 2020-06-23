@@ -19,8 +19,8 @@
 #include "ampobject.h"
 typedef struct AmpObject_Bool {
   AMP_OBJECT_HEADER;
-  bool val;
+  bool32 val;
 } AmpObject_Bool;
 #define AMP_BOOL(obj) ((AmpObject_Bool *)(obj))
-AmpObject *amp_object_create_bool (bool val);
+AmpObject *amp_object_create_bool (bool32 val);
 #endif
