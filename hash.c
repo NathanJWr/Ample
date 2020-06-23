@@ -28,6 +28,17 @@ hash_string (const char *s)
     }
   return h;
 }
+
+size_t
+hash_sizet(size_t x)
+{
+  x = ((x >> 16) ^ x) * 0x45d9f3b;
+  x = ((x >> 16) ^ x) * 0x45d9f3b;
+  x = (x >> 16) ^ x;
+  return x;
+}
+
+
 bool32
 string_compare (const char *key, const char *input)
 {
@@ -36,6 +47,12 @@ string_compare (const char *key, const char *input)
 
 bool32
 int_compare (int key, int input)
+{
+  return (key == input);
+}
+
+bool32
+sizet_compare (size_t key, size_t input)
 {
   return (key == input);
 }

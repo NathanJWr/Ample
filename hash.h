@@ -210,7 +210,10 @@ typedef size_t DictEntryHandle;
     }                                                                          \
 
 size_t hash_string(const char *s);
+size_t hash_sizet (size_t num);
+bool32 sizet_compare (size_t key, size_t input);
 bool32 string_compare(const char *key, const char *input);
 bool32 int_compare(int key, int input);
+
 void hash_insert_string_key(const char *key, int value);
 #endif
