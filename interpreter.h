@@ -16,7 +16,7 @@
 */
 #ifndef INTERPRETER_H_
 #define INTERPRETER_H_
-#include "ampobject.h"
+#include "objects/ampobject.h"
 #include "ast.h"
 /* ******************
    External functions

@@ -15,12 +15,12 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "interpreter.h"
-#include "ampobject.h"
 #include "array.h"
 #include "dict_vars.h"
-#include "intobject.h"
-#include "boolobject.h"
-#include "strobject.h"
+#include "objects/ampobject.h"
+#include "objects/intobject.h"
+#include "objects/boolobject.h"
+#include "objects/strobject.h"
 
 #include <assert.h>
 static DICT(ObjVars) global_variables;

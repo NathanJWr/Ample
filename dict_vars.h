@@ -17,6 +17,6 @@
 #ifndef DICT_VARS_H_
 #define DICT_VARS_H_
 #include "hash.h"
-#include "ampobject.h"
+#include "objects/ampobject.h"
 DICT_DECLARE (ObjVars, const char *, AmpObject *);
 #endif
