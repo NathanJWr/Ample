@@ -18,18 +18,18 @@
 static AmpObjectInfo bool_info;
 static bool32 bool_info_initialized;
 AmpObject *
-amp_object_create_bool (bool32 val)
+AmpBoolCreate (bool32 val)
 {
   AmpObject_Bool *obj = NULL;
   if (!bool_info_initialized)
     {
       bool_info.type = AMP_OBJ_BOOL;
-      initiailize_ops_to_unsupported (&bool_info.ops);
+      AmpObjectInitializeOperationsToUnsupported (&bool_info.ops);
     }
   obj = malloc (sizeof (AmpObject_Bool));
   obj->info = &bool_info;
   obj->refcount = 1;
-  obj->dealloc = amp_object_destroy_basic;
+  obj->dealloc = AmpObjectDestroyBasic;
   obj->val = val;
 
   return AMP_OBJECT (obj);

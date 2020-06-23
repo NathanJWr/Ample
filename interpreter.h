@@ -21,37 +21,37 @@
 /* ******************
    External functions
    ****************** */
-void interpreter_start(ASTHandle head);
+void InterpreterStart(ASTHandle head);
 
 /* ******************
    Internal Functions
    ****************** */
 /* top level evaluate function that will call more specific
  * evaluations depending on a node's type */
-void interpreter__evaluate_statement(ASTHandle statement, DICT (ObjVars) *local_variables);
+void interpreter_evaluate_statement(ASTHandle statement, DICT (ObjVars) *local_variables);
 /* evaluates an ast node of type AST_BINARY_OP */
-AmpObject *interpreter__evaluate_binary_op(ASTHandle handle);
+AmpObject *interpreter_evaluate_binary_op(ASTHandle handle);
 /* evaluates an ast node of type  AST_ASSIGNMENT */
-void interpreter__evaluate_assignment(ASTHandle statement, DICT (ObjVars) *local_variables);
+void interpreter_evaluate_assignment(ASTHandle statement, DICT (ObjVars) *local_variables);
 /* evaluates an ast node of type AST_IF */
-void interpreter__evaluate_if(ASTHandle statement);
+void interpreter_evaluate_if(ASTHandle statement);
 /* removes a dict entry and decrements the refcount of the amp object
  * that it's associated with */
-void interpreter__erase_variable_if_exists(const char *var, DICT (ObjVars) *local_variables);
+void interpreter_erase_variable_if_exists(const char *var, DICT (ObjVars) *local_variables);
 /* creates a new dict entry pointing to an existing AmpObject and
  * incrementing that objects refcount */
-void interpreter__duplicate_variable(const char *var, const char *assign, DICT (ObjVars) *local_variables);
+void interpreter_duplicate_variable(const char *var, const char *assign, DICT (ObjVars) *local_variables);
 /* Returns an amp object that already exists as a variable */
-AmpObject *interpreter__get_amp_object(const char *var);
+AmpObject *interpreter_get_amp_object(const char *var);
 /* Returns an amp object that will be created if none exist already */
-AmpObject *interpreter__get_or_generate_amp_object(ASTHandle handle);
+AmpObject *interpreter_get_or_generate_amp_object(ASTHandle handle);
 /* Add an object to the variable map for easy storage/access */
-void interpreter__add_obj_mapping(const char *var_name, AmpObject *obj, DICT (ObjVars) *local_variables);
+void interpreter_add_obj_mapping(const char *var_name, AmpObject *obj, DICT (ObjVars) *local_variables);
 /* Increments through a scope ast node's list of statements 
  * and evaulates them */
-void interpreter__evaluate_scope (ASTHandle scope_handle, bool32 in_global_scope);
+void interpreter_evaluate_scope (ASTHandle scope_handle, bool32 in_global_scope);
 /* evaluates a statement if the resulting evaluation is a bool32 */
-bool32 interpreter__evaluate_statement_to_bool (ASTHandle statement_handle);
+bool32 interpreter_evaluate_statement_to_bool (ASTHandle statement_handle);
 
 /* ***************
  * Debug Functions

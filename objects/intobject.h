@@ -23,7 +23,7 @@ typedef struct AmpObject_Int {
   int val;
 } AmpObject_Int;
 #define AMP_INTEGER(obj) ((AmpObject_Int *)(obj))
-AmpObject *amp_object_create_integer(int val);
+AmpObject *AmpIntegerCreate(int val);
 
 AmpObject *amp_integer_add(AmpObject *this, AmpObject *val);
 AmpObject *amp_integer_sub(AmpObject *this, AmpObject *val);

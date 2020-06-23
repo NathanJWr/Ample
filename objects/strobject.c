@@ -29,7 +29,7 @@ amp_string_concat (AmpObject *this, AmpObject *str)
   strcat (s, AMP_STRING (this)->string);
   strcat (s, AMP_STRING (str)->string);
 
-  obj = amp_object_create_string (s);
+  obj = AmpStringCreate (s);
   free (s);
   return obj;
 }
@@ -37,14 +37,14 @@ amp_string_concat (AmpObject *this, AmpObject *str)
 static AmpObjectInfo str_info;
 static bool32 str_info_initialized;
 AmpObject *
-amp_object_create_string (const char *str)
+AmpStringCreate (const char *str)
 {
   AmpObject_Str *a = NULL;
   
   if (!str_info_initialized)
     {
       str_info.type = AMP_OBJ_STR;
-      initiailize_ops_to_unsupported (&str_info.ops);
+      AmpObjectInitializeOperationsToUnsupported (&str_info.ops);
       str_info.ops.add = amp_string_concat;
       str_info_initialized = true;
     }
@@ -52,7 +52,7 @@ amp_object_create_string (const char *str)
   a = malloc (sizeof (AmpObject_Str) - 1 + strlen (str) + 1);
   a->refcount = 1;
   a->info = &str_info;
-  a->dealloc = amp_object_destroy_basic;
+  a->dealloc = AmpObjectDestroyBasic;
   strcpy (a->string, str);
   return AMP_OBJECT (a);
 }

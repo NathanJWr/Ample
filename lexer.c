@@ -21,7 +21,7 @@
 #include <stdio.h>
 
 struct Token *
-lex_all (char *fb)
+LexAll (char *fb)
 {
   struct Token *tokens = NULL;
   size_t i = 0;
@@ -105,7 +105,7 @@ lex_all (char *fb)
 }
 
 void
-token_free_all (struct Token *tokens)
+TokenFreeAll (struct Token *tokens)
 {
   size_t count = ARRAY_COUNT (tokens);
   size_t i;

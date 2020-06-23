@@ -31,7 +31,7 @@ struct Token {
   char *string; /* ssl managed string */
 };
 
-void token_free_all(struct Token *tokens);
-struct Token *lex_all(char *fb);
+void TokenFreeAll(struct Token *tokens);
+struct Token *LexAll(char *fb);
 
 #endif

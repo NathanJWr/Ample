@@ -19,18 +19,18 @@
 #include <string.h>
 #include <stdio.h>
 void
-amp_object_destroy_basic (AmpObject *obj)
+AmpObjectDestroyBasic (AmpObject *obj)
 {
   free (obj);
 }
 
 void
-obj_inc_refcount (AmpObject *obj)
+AmpObjectIncrementRefcount (AmpObject *obj)
 {
   obj->refcount++;
 }
 void
-obj_dec_refcount (AmpObject *obj)
+AmpObjectDecrementRefcount (AmpObject *obj)
 {
   obj->refcount--;
   if (obj->refcount == 0)
@@ -39,16 +39,16 @@ obj_dec_refcount (AmpObject *obj)
     }
 }
 
-AmpObject *amp_unssuported_operation(AmpObject *this, AmpObject *var)
+AmpObject *AmpObjectUnsupportedOperation (AmpObject *this, AmpObject *var)
 {
   printf ("unsupported operation for variable of type %d\n", this->info->type);
   exit (1);
 }
 
-void initiailize_ops_to_unsupported (AmpOperations *ops)
+void AmpObjectInitializeOperationsToUnsupported (AmpOperations *ops)
 {
-  ops->add = amp_unssuported_operation;
-  ops->sub = amp_unssuported_operation;
-  ops->div = amp_unssuported_operation;
-  ops->mult = amp_unssuported_operation;
+  ops->add = AmpObjectUnsupportedOperation;
+  ops->sub = AmpObjectUnsupportedOperation;
+  ops->div = AmpObjectUnsupportedOperation;
+  ops->mult = AmpObjectUnsupportedOperation;
 }

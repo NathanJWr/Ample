@@ -20,14 +20,14 @@ AmpObject *
 amp_integer_add (AmpObject *this, AmpObject *val)
 {
   int add = AMP_INTEGER (this)->val + AMP_INTEGER (val)->val;
-  AmpObject *obj = amp_object_create_integer (add);
+  AmpObject *obj = AmpIntegerCreate (add);
   return obj;
 }
 AmpObject *
 amp_integer_sub (AmpObject *this, AmpObject *val)
 {
   int sub = AMP_INTEGER (this)->val - AMP_INTEGER (val)->val;
-  AmpObject *obj = amp_object_create_integer (sub);
+  AmpObject *obj = AmpIntegerCreate (sub);
   return obj;
 }
 
@@ -35,7 +35,7 @@ AmpObject *
 amp_integer_div (AmpObject *this, AmpObject *val)
 {
   int div = AMP_INTEGER (this)->val / AMP_INTEGER (val)->val;
-  AmpObject *obj = amp_object_create_integer (div);
+  AmpObject *obj = AmpIntegerCreate (div);
   return obj;
 }
 
@@ -43,21 +43,21 @@ AmpObject *
 amp_integer_mul (AmpObject *this, AmpObject *val)
 {
   int mult = AMP_INTEGER (this)->val * AMP_INTEGER (val)->val;
-  AmpObject *obj = amp_object_create_integer (mult);
+  AmpObject *obj = AmpIntegerCreate (mult);
   return obj;
 }
 
 static AmpObjectInfo int_info;
 static bool32 int_info_initialized;
 AmpObject *
-amp_object_create_integer (int val)
+AmpIntegerCreate (int val)
 {
   AmpObject_Int *a = NULL;
   /* fill out type info */
   if (!int_info_initialized)
     {
       int_info.type = AMP_OBJ_INT;
-      initiailize_ops_to_unsupported (&int_info.ops);
+      AmpObjectInitializeOperationsToUnsupported (&int_info.ops);
       int_info.ops.add = amp_integer_add;
       int_info.ops.sub = amp_integer_sub;
       int_info.ops.div = amp_integer_div;
@@ -67,7 +67,7 @@ amp_object_create_integer (int val)
   a = malloc (sizeof (AmpObject_Int));
   a->info = &int_info;
   a->refcount = 1;
-  a->dealloc = amp_object_destroy_basic;
+  a->dealloc = AmpObjectDestroyBasic;
   a->val = val;
 
   return AMP_OBJECT (a);

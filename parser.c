@@ -19,6 +19,7 @@
 #include "ast.h"
 #include "lexer.h"
 #include "queue.h"
+
 unsigned int
 statement_size (struct Statement s)
 {
@@ -26,7 +27,7 @@ statement_size (struct Statement s)
 }
 
 ASTHandle
-parse_tokens (struct Token *tokens)
+ParseTokens (struct Token *tokens)
 {
   unsigned int index = 0;
   ASTHandle head = ast_get_node_handle ();
@@ -35,8 +36,8 @@ parse_tokens (struct Token *tokens)
 
   while (index < ARRAY_COUNT (tokens))
     {
-      struct Statement s = parse__get_statement (tokens, &index);
-      ARRAY_PUSH (statements, parse__statement (tokens, s));
+      struct Statement s = get_statement (tokens, &index);
+      ARRAY_PUSH (statements, parse_statement (tokens, s));
     }
 
   h = ast_get_node (head);
@@ -46,7 +47,7 @@ parse_tokens (struct Token *tokens)
 }
 
 struct Statement
-parse__get_statement (struct Token *__restrict tokens,
+get_statement (struct Token *__restrict tokens,
                       unsigned int *__restrict index)
 {
   unsigned int i = *index;
@@ -73,43 +74,43 @@ parse__get_statement (struct Token *__restrict tokens,
 }
 
 ASTHandle
-parse__statement (struct Token *t_arr, struct Statement s)
+parse_statement (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
-  node = parser__possible_if_statement (t_arr, s);
+  node = parse_possible_if_statement (t_arr, s);
   if (node)
     return node;
 
-  node = parser__possible_assignment (t_arr, s);
+  node = parse_possible_assignment (t_arr, s);
   if (node)
     return node;
 
-  node = parser__possible_integer (t_arr, s);
+  node = parse_possible_integer (t_arr, s);
   if (node)
     return node;
 
-  node = parser__possible_identifier (t_arr, s);
+  node = parse_possible_identifier (t_arr, s);
   if (node)
     return node;
 
-  node = parser__possible_arithmetic (t_arr, s);
+  node = parse_possible_arithmetic (t_arr, s);
   if (node)
     return node;
 
-  node = parser__possible_string (t_arr, s);
+  node = parse_possible_string (t_arr, s);
   if (node)
     return node;
 
-  node = parser__possible_bool (t_arr, s);
+  node = parse_possible_bool (t_arr, s);
   if (node)
     return node;
 
   printf ("Invalid statement: \n");
-  parser__debug_print_statement (t_arr, s);
+  debug_print_statement (t_arr, s);
   exit (1);
 }
 ASTHandle
-parser__possible_bool(struct Token* t_arr, struct Statement s)
+parse_possible_bool(struct Token* t_arr, struct Statement s)
 {
   ASTHandle node = 0;
   if ((statement_size(s) >= 2 &&
@@ -131,7 +132,7 @@ parser__possible_bool(struct Token* t_arr, struct Statement s)
   return node;
 }
 ASTHandle
-parser__possible_if_statement (struct Token *t_arr, struct Statement s)
+parse_possible_if_statement (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
   if (t_arr[s.start].value == TOK_IF)
@@ -148,7 +149,7 @@ parser__possible_if_statement (struct Token *t_arr, struct Statement s)
         i++;
       paren_statement.start = s.start + 2;
       paren_statement.end = i-1;
-      expr = parse__statement (t_arr, paren_statement); 
+      expr = parse_statement (t_arr, paren_statement); 
 
       /* create if ast node */
       node = ast_get_node_handle();
@@ -158,7 +159,7 @@ parser__possible_if_statement (struct Token *t_arr, struct Statement s)
         i++;
       scope_statement.start = i;
       scope_statement.end = s.end;
-      scope_if_true = parser__scope (t_arr, scope_statement);
+      scope_if_true = parse_scope (t_arr, scope_statement);
 	  
       n = ast_get_node (node);
       n->d.if_data.scope_if_true = scope_if_true;
@@ -168,7 +169,7 @@ parser__possible_if_statement (struct Token *t_arr, struct Statement s)
   return node;
 }
 ASTHandle
-parser__scope(struct Token* t_arr, struct Statement s)
+parse_scope(struct Token* t_arr, struct Statement s)
 {
   ASTHandle handle = ast_get_node_handle ();
   struct AST *scope = NULL;
@@ -176,8 +177,8 @@ parser__scope(struct Token* t_arr, struct Statement s)
   ASTHandle *statements = NULL;
   while (t_arr[index].value != '}')
     {
-      struct Statement s = parse__get_statement(t_arr, &index);
-      ASTHandle statement = parse__statement (t_arr, s);
+      struct Statement s = get_statement(t_arr, &index);
+      ASTHandle statement = parse_statement (t_arr, s);
       ARRAY_PUSH (statements, statement);
     }
   
@@ -188,7 +189,7 @@ parser__scope(struct Token* t_arr, struct Statement s)
 }
 
 ASTHandle
-parser__possible_integer (struct Token *t_arr, struct Statement s)
+parse_possible_integer (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
   if (statement_size (s) <= 2 && 
@@ -206,13 +207,13 @@ parser__possible_integer (struct Token *t_arr, struct Statement s)
 }
 
 bool32
-parser__is_arithmetic_op (TValue v)
+is_arithmetic_op (TValue v)
 {
   return (v == '+' || v == '-' || v == '/' || v == '*');
 }
 
 bool32
-parser__greater_precedence (struct Token *left, struct Token *right)
+greater_precedence (struct Token *left, struct Token *right)
 {
   if ('*' == left->value)
     {
@@ -227,7 +228,7 @@ parser__greater_precedence (struct Token *left, struct Token *right)
   return false;
 }
 bool32
-parser__equal_precedence (struct Token *left, struct Token *right)
+equal_precedence (struct Token *left, struct Token *right)
 {
   if (('+' == left->value || '-' == left->value)
       && ('+' == right->value || '-' == right->value))
@@ -243,7 +244,7 @@ parser__equal_precedence (struct Token *left, struct Token *right)
 }
 
 QUEUE (TokenQueue)
-parser__convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
+convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
 {
   STACK (TokenStack) s;
   QUEUE (TokenQueue) q;
@@ -258,13 +259,13 @@ parser__convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
         {
           QUEUE_PUSH (&q, n);
         }
-      if (parser__is_arithmetic_op (n->value))
+      if (is_arithmetic_op (n->value))
         {
           if (!STACK_EMPTY (&s))
             {
               struct Token *top_token = STACK_FRONT (&s);
-              while ((parser__greater_precedence (top_token, n))
-                     || ((parser__equal_precedence (top_token, n))
+              while ((greater_precedence (top_token, n))
+                     || ((equal_precedence (top_token, n))
                          && (top_token->value != ')')))
                 {
                   STACK_POP (&s);
@@ -306,7 +307,7 @@ parser__convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
   return q;
 }
 ASTHandle
-parser__convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
+convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
                                 unsigned int expr_size)
 {
   STACK (ASTHandleStack) s = { 0 };
@@ -344,7 +345,7 @@ parser__convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q,
 
           STACK_PUSH (&s, ast_handle);
         }
-      else if (parser__is_arithmetic_op (n->value))
+      else if (is_arithmetic_op (n->value))
         {
           ASTHandle left, right, ast_handle;
           struct AST *op;
@@ -388,12 +389,12 @@ parser__arithmetic (struct Token *t_arr, struct Statement s)
     {
       QUEUE_PUSH (&expr_q, t_arr + i);
     }
-  postfix = parser__convert_infix_to_postfix (&expr_q);
-  op = parser__convert_postfix_to_ast (&postfix, statement_size (s));
+  postfix = convert_infix_to_postfix (&expr_q);
+  op = convert_postfix_to_ast (&postfix, statement_size (s));
   return op;
 }
 
-void parser__debug_print_queue (QUEUE (TokenQueue) * q)
+void debug_print_queue (QUEUE (TokenQueue) * q)
 {
   struct Token *np;
   int i;
@@ -412,14 +413,14 @@ void parser__debug_print_queue (QUEUE (TokenQueue) * q)
 }
 
 ASTHandle
-parser__possible_arithmetic (struct Token *t_arr, struct Statement s)
+parse_possible_arithmetic (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
   if (statement_size (s) >= 2
       && (t_arr[s.start].value == TOK_INTEGER
           || t_arr[s.start].value == TOK_IDENTIFIER
           || t_arr[s.start].value == TOK_STRING)
-      && parser__is_arithmetic_op (t_arr[s.start + 1].value))
+      && is_arithmetic_op (t_arr[s.start + 1].value))
     {
       node = parser__arithmetic (t_arr, s);
     }
@@ -427,7 +428,7 @@ parser__possible_arithmetic (struct Token *t_arr, struct Statement s)
 }
 
 ASTHandle
-parser__possible_identifier (struct Token *t_arr, struct Statement s)
+parse_possible_identifier (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
   if ((statement_size (s) == 1 && t_arr[s.start].value == TOK_IDENTIFIER) ||
@@ -444,7 +445,7 @@ parser__possible_identifier (struct Token *t_arr, struct Statement s)
 }
 
 ASTHandle
-parser__possible_string (struct Token *t_arr, struct Statement s)
+parse_possible_string (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
   if (statement_size (s) >= 2 &&
@@ -461,7 +462,7 @@ parser__possible_string (struct Token *t_arr, struct Statement s)
 }
 
 ASTHandle
-parser__possible_assignment (struct Token *t_arr, struct Statement s)
+parse_possible_assignment (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
   /* VAR = EXPR */
@@ -477,7 +478,7 @@ parser__possible_assignment (struct Token *t_arr, struct Statement s)
       sub_statement.end = s.end;
       ast.type = AST_ASSIGNMENT;
       ast.d.asgn_data.var = t_arr[s.start].string;
-      ast.d.asgn_data.expr = parse__statement (t_arr, sub_statement);
+      ast.d.asgn_data.expr = parse_statement (t_arr, sub_statement);
 
       n = ast_get_node (node);
       *n = ast;
@@ -485,7 +486,7 @@ parser__possible_assignment (struct Token *t_arr, struct Statement s)
   return node;
 }
 void
-parser__debug_print_statement(struct Token* t_arr, struct Statement s)
+debug_print_statement(struct Token* t_arr, struct Statement s)
 {
   unsigned int i;
   for (i = s.start; i <= s.end; i++)

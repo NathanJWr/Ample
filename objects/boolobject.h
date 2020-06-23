@@ -22,5 +22,5 @@ typedef struct AmpObject_Bool {
   bool32 val;
 } AmpObject_Bool;
 #define AMP_BOOL(obj) ((AmpObject_Bool *)(obj))
-AmpObject *amp_object_create_bool (bool32 val);
+AmpObject *AmpBoolCreate (bool32 val);
 #endif

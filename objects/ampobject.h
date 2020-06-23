@@ -29,8 +29,6 @@ typedef struct AmpOperations {
 } AmpOperations;
 typedef struct AmpObjectInfo {
   AmpObjectType type;
-
-  /* if these are not implemented, set to null */
   AmpOperations ops;
 } AmpObjectInfo;
 #define AMP_OBJECT_HEADER                                                      \
@@ -42,10 +40,10 @@ struct AmpObject {
   AMP_OBJECT_HEADER;
 };
 #define AMP_OBJECT(obj) ((AmpObject *)(obj))
-void obj_inc_refcount(AmpObject *obj);
-void obj_dec_refcount(AmpObject *obj);
-void amp_object_destroy_basic(AmpObject *obj);
+void AmpObjectIncrementRefcount(AmpObject *obj);
+void AmpObjectDecrementRefcount(AmpObject *obj);
+void AmpObjectDestroyBasic(AmpObject *obj);
 
-AmpObject *amp_unssuported_operation(AmpObject *, AmpObject *);
-void initiailize_ops_to_unsupported (AmpOperations *ops);
+AmpObject *AmpObjectUnsupportedOperation(AmpObject *, AmpObject *);
+void AmpObjectInitializeOperationsToUnsupported (AmpOperations *ops);
 #endif

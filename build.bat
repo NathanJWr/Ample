@@ -1,1 +1,1 @@
-cl build.c /Z7 /Za /TC
+cl build.c /Z7 /Za /TC /W4
