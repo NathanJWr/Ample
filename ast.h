@@ -27,7 +27,8 @@ enum ASTType {
   AST_BINARY_OP,
   AST_ASSIGNMENT,
   AST_IF,
-  AST_BOOL
+  AST_BOOL,
+  AST_EQUALITY
 };
 /* declare here so sub-ast types can have pointers to the general struct */
 struct AST;
@@ -64,6 +65,10 @@ struct IfAST {
 struct BoolAST {
   bool32 value;
 };
+struct EqualityAST {
+  ASTHandle left;
+  ASTHandle right;
+};
 struct AST {
   enum ASTType type;
   union data {
@@ -75,6 +80,7 @@ struct AST {
     struct AssignmentAST asgn_data;
     struct IfAST if_data;
     struct BoolAST bool_data;
+    struct EqualityAST equality_data;
   } d;
 };
 

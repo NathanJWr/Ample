@@ -80,16 +80,21 @@ debug_calloc (size_t nmemb, size_t size, const char *file, int line)
 }
 
 void
-mem_debug_print_info ()
+MemDebugPrintInfo ()
 {
-  size_t i;
   printf ("Total allocated memory: %u bytes\n", (unsigned int) total_allocated);
   printf ("Currently allocated memory: %u bytes\n", (unsigned int) currently_allocated);
+}
+
+void
+MemDebugPrintLeaks ()
+{
+  size_t i;
   for (i = 0; i < unique_id_counter; i++)
     {
       if (allocations[i])
         {
-          printf ("MEMORY LEAK: File: %s, Line: %d\n", allocations[i]->file, allocations[i]->line);
+          printf ("MEMORY LEAK: %s: %d\n", allocations[i]->file, allocations[i]->line);
         }
     }
 }

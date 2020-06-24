@@ -105,9 +105,51 @@ parse_statement (struct Token *t_arr, struct Statement s)
   if (node)
     return node;
 
+  node = parse_possible_equality (t_arr, s);
+  if (node)
+    return node;
+
   printf ("Invalid statement: \n");
   debug_print_statement (t_arr, s);
   exit (1);
+}
+ASTHandle
+parse_possible_equality (struct Token *t_arr, struct Statement s_indexes)
+{
+  ASTHandle node = 0;
+  /* FORMAT
+   * Left_Expr == Right_Expr */
+  unsigned int i;
+  for (i = s_indexes.start; i < s_indexes.end - 1; i++)
+    {
+      if (t_arr[i].value == '=' && t_arr[i+1].value == '=')
+        {
+          struct Statement left_statement, right_statement;
+          ASTHandle left_handle, right_handle;
+          struct AST *equality_ast;
+
+          /* split the statement into two, left expr and right */
+          left_statement.start = s_indexes.start;
+          left_statement.end = i - 1;
+          right_statement.start = i + 2;
+          right_statement.end = s_indexes.end;
+
+          /* parse the left and right statements into ast nodes */
+          left_handle = parse_statement (t_arr, left_statement);
+          right_handle = parse_statement (t_arr, right_statement);
+
+          /* create a new ast node for the equality statement */
+          node = ast_get_node_handle ();
+          equality_ast = ast_get_node (node);
+          equality_ast->type = AST_EQUALITY;
+          equality_ast->d.equality_data.left = left_handle;
+          equality_ast->d.equality_data.right = right_handle;
+
+          /* don't need to keep moving through the for loop */
+          return node;
+        }
+    }
+  return node;
 }
 ASTHandle
 parse_possible_bool(struct Token* t_arr, struct Statement s)
@@ -192,9 +234,11 @@ ASTHandle
 parse_possible_integer (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
-  if (statement_size (s) <= 2 && 
+  if ((statement_size (s) >= 2 && 
       t_arr[s.start].value == TOK_INTEGER &&
-      t_arr[s.start + 1].value == STATEMENT_DELIM)
+      t_arr[s.start + 1].value == STATEMENT_DELIM) ||
+      (statement_size (s) == 1 &&
+       t_arr[s.start].value == TOK_INTEGER))
     { /* INTEGER literal */
       struct AST *n;
 
@@ -411,15 +455,31 @@ void debug_print_queue (QUEUE (TokenQueue) * q)
     }
 }
 
+bool32
+contains_invalid_arithmetic_token (struct Token *t_arr, struct Statement s)
+{
+  unsigned int i;
+  for (i = s.start; i < s.end; i++)
+    {
+      if (t_arr[i].value == '=')
+        return true;
+    }
+  return false;
+}
+
 ASTHandle
 parse_possible_arithmetic (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
+  /* Expression Format:
+   * a + b ...
+   * (a / b ... */
   if (statement_size (s) >= 2
       && (t_arr[s.start].value == TOK_INTEGER
           || t_arr[s.start].value == TOK_IDENTIFIER
           || t_arr[s.start].value == TOK_STRING)
-      && is_arithmetic_op (t_arr[s.start + 1].value))
+      && is_arithmetic_op (t_arr[s.start + 1].value)
+      && !contains_invalid_arithmetic_token (t_arr, s))
     {
       node = parser__arithmetic (t_arr, s);
     }

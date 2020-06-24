@@ -52,6 +52,7 @@ ASTHandle parse_possible_string(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_assignment(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_if_statement (struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_bool (struct Token *t_arr, struct Statement s);
+ASTHandle parse_possible_equality (struct Token *t_arr, struct Statement s_indexes);
 ASTHandle parse_scope (struct Token *t_arr, struct Statement s);
 
 /* ===================
@@ -62,6 +63,8 @@ bool32 is_arithmetic_op(TValue v);
 bool32 greater_precedence(struct Token *left, struct Token *right);
 /* true if left is of equal operator precedence than right */
 bool32 equal_precedence(struct Token *left, struct Token *right);
+/* checks if there are any tokens that don't make sense in an arithmetic statement */
+bool32 contains_invalid_arithmetic_token (struct Token *t_arr, struct Statement s);
 
 /* ==================
     Arithmetic parsing

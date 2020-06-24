@@ -55,22 +55,23 @@ main (int argc, char **argv)
 
       tokens = LexAll (file);
       printf ("Memory after lexing...\n");
-      mem_debug_print_info ();
+      MemDebugPrintInfo ();
       free (file);
 
       ast_head = ParseTokens (tokens);
       printf ("Memory after parsing...\n");
-      mem_debug_print_info ();
+      MemDebugPrintInfo ();
 
       InterpreterStart (ast_head);
       printf ("Memory after interpreting...\n");
-      mem_debug_print_info ();
+      MemDebugPrintInfo ();
 
       ast_free_buffer ();
       TokenFreeAll (tokens);
 
       printf ("Memory after program completion...\n");
-      mem_debug_print_info ();
+      MemDebugPrintInfo ();
+      MemDebugPrintLeaks ();
     }
   return 0;
 }
