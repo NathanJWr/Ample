@@ -15,6 +15,7 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "intobject.h"
+#include "boolobject.h"
 #include <stdlib.h>
 AmpObject *
 amp_integer_add (AmpObject *this, AmpObject *val)
@@ -47,6 +48,14 @@ amp_integer_mul (AmpObject *this, AmpObject *val)
   return obj;
 }
 
+AmpObject *
+amp_integer_equal (AmpObject *this, AmpObject *val)
+{
+  bool32 value = AMP_INTEGER (this)->val == AMP_INTEGER (val)->val;
+  AmpObject *obj = AmpBoolCreate (value);
+  return obj;
+}
+
 static AmpObjectInfo int_info;
 static bool32 int_info_initialized;
 AmpObject *
@@ -62,6 +71,7 @@ AmpIntegerCreate (int val)
       int_info.ops.sub = amp_integer_sub;
       int_info.ops.div = amp_integer_div;
       int_info.ops.mult = amp_integer_mul;
+      int_info.ops.equal = amp_integer_equal;
     }
 
   a = malloc (sizeof (AmpObject_Int));

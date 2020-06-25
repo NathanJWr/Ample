@@ -68,6 +68,49 @@ interpreter_evaluate_statement (ASTHandle statement, DICT (ObjVars) *local_varia
     {
       interpreter_evaluate_if (statement);
     }
+  else if (s->type == AST_EQUALITY)
+    {
+      AmpObject *ret_bool =
+        interpreter_evaluate_equality (statement, local_variables);
+      AmpObjectDecrementRefcount (ret_bool);
+    }
+}
+
+AmpObject *
+interpreter_evaluate_equality (ASTHandle equality_handle,
+                               DICT (ObjVars) *local_variables)
+{
+  struct AST *equality_ast = ast_get_node (equality_handle);
+  if (equality_ast->type == AST_EQUALITY)
+    {
+      /* get amp objects to work with */
+      AmpObject *left_obj =
+        interpreter_get_or_generate_amp_object
+          (equality_ast->d.equality_data.left);
+      AmpObject *right_obj =
+        interpreter_get_or_generate_amp_object
+          (equality_ast->d.equality_data.right);
+      AmpObject *retval = NULL;
+
+
+      if (left_obj->info->type == right_obj->info->type)
+        {
+          retval = left_obj->info->ops.equal (left_obj, right_obj);
+        }
+      else
+        {
+          printf ("Cannot perform equality operation on different types\n");
+          exit (1);
+        }
+      AmpObjectDecrementRefcount (left_obj);
+      AmpObjectDecrementRefcount (right_obj);
+      return retval;
+    }
+  else
+    {
+      printf ("Statement is not an equality statement\n");
+      exit (1);
+    }
 }
 
 bool32
@@ -191,6 +234,9 @@ interpreter_get_or_generate_amp_object (ASTHandle handle)
       break;
     case AST_STRING:
       obj = AmpStringCreate (node->d.str_data.str);
+      break;
+    case AST_BINARY_OP:
+      obj = interpreter_evaluate_binary_op (handle);
       break;
     default:
       assert (false);

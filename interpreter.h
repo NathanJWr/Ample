@@ -52,6 +52,8 @@ void interpreter_add_obj_mapping(const char *var_name, AmpObject *obj, DICT (Obj
 void interpreter_evaluate_scope (ASTHandle scope_handle, bool32 in_global_scope);
 /* evaluates a statement if the resulting evaluation is a bool32 */
 bool32 interpreter_evaluate_statement_to_bool (ASTHandle statement_handle);
+/* evaluates each side of an equality statement and returns true if the statement is true */
+AmpObject *interpreter_evaluate_equality (ASTHandle equality_handle, DICT (ObjVars) *local_variables);
 
 /* ***************
  * Debug Functions

@@ -52,4 +52,5 @@ void AmpObjectInitializeOperationsToUnsupported (AmpOperations *ops)
   ops->sub = AmpObjectUnsupportedOperation;
   ops->div = AmpObjectUnsupportedOperation;
   ops->mult = AmpObjectUnsupportedOperation;
+  ops->equal = AmpObjectUnsupportedOperation;
 }

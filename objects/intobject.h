@@ -29,4 +29,5 @@ AmpObject *amp_integer_add(AmpObject *this, AmpObject *val);
 AmpObject *amp_integer_sub(AmpObject *this, AmpObject *val);
 AmpObject *amp_integer_div(AmpObject *this, AmpObject *val);
 AmpObject *amp_integer_mul(AmpObject *this, AmpObject *val);
+AmpObject *amp_integer_equal(AmpObject *this, AmpObject *val);
 #endif
