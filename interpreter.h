@@ -30,7 +30,7 @@ void InterpreterStart(ASTHandle head);
  * evaluations depending on a node's type */
 void interpreter_evaluate_statement(ASTHandle statement, DICT (ObjVars) **variable_scope_stack);
 /* evaluates an ast node of type AST_BINARY_OP */
-AmpObject *interpreter_evaluate_binary_op(ASTHandle handle);
+AmpObject *interpreter_evaluate_binary_op(ASTHandle handle, DICT (ObjVars) **variable_scope_stack);
 /* evaluates an ast node of type  AST_ASSIGNMENT */
 void interpreter_evaluate_assignment(ASTHandle statement, DICT (ObjVars) **variable_scope_stack);
 /* evaluates an ast node of type AST_IF */
@@ -40,11 +40,11 @@ void interpreter_evaluate_if(ASTHandle statement, DICT (ObjVars) **variable_scop
 void interpreter_erase_variable_if_exists(const char *var, DICT (ObjVars) *local_variables);
 /* creates a new dict entry pointing to an existing AmpObject and
  * incrementing that objects refcount */
-void interpreter_duplicate_variable(const char *var, const char *assign, DICT (ObjVars) *local_variables);
+void interpreter_duplicate_variable(const char *var, const char *assign, DICT (ObjVars) **variable_scope_stack);
 /* Returns an amp object that already exists as a variable */
-AmpObject *interpreter_get_amp_object(const char *var);
+AmpObject *interpreter_get_amp_object(const char *var, DICT (ObjVars) **variable_scope_stack);
 /* Returns an amp object that will be created if none exist already */
-AmpObject *interpreter_get_or_generate_amp_object(ASTHandle handle);
+AmpObject *interpreter_get_or_generate_amp_object(ASTHandle handle, DICT (ObjVars) **variable_scope_stack);
 /* Add an object to the variable map for easy storage/access */
 void interpreter_add_obj_mapping(const char *var_name, AmpObject *obj, DICT (ObjVars) *local_variables);
 /* Increments through a scope ast node's list of statements 

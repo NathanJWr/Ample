@@ -60,7 +60,7 @@ interpreter_evaluate_statement (ASTHandle statement,
     }
   else if (s->type == AST_BINARY_OP)
     {
-      interpreter_evaluate_binary_op (statement);
+      interpreter_evaluate_binary_op (statement, variable_scope_stack);
     }
   else if (s->type == AST_IF)
     {
@@ -84,10 +84,12 @@ interpreter_evaluate_equality (ASTHandle equality_handle,
       /* get amp objects to work with */
       AmpObject *left_obj =
         interpreter_get_or_generate_amp_object
-          (equality_ast->d.equality_data.left);
+          (equality_ast->d.equality_data.left,
+           variable_scope_stack);
       AmpObject *right_obj =
         interpreter_get_or_generate_amp_object
-          (equality_ast->d.equality_data.right);
+          (equality_ast->d.equality_data.right,
+           variable_scope_stack);
       AmpObject *retval = NULL;
 
 
@@ -124,7 +126,8 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
     {
       /* assume we are given a pre-existing variable */
       char *identifier_str = expr->d.id_data.id;
-      AmpObject *obj = interpreter_get_amp_object (identifier_str);
+      AmpObject *obj = interpreter_get_amp_object (identifier_str,
+                                                   variable_scope_stack);
       if (obj->info->type == AMP_OBJ_BOOL)
         {
           AmpObjectIncrementRefcount (obj);
@@ -171,7 +174,8 @@ interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variable_sc
 
       for (i = 0; i < ARRAY_COUNT (scope->d.scope_data.statements); i++)
         {
-          interpreter_evaluate_statement (scope->d.scope_data.statements[i], new_variable_scope_stack);
+          interpreter_evaluate_statement (scope->d.scope_data.statements[i],
+                                          new_variable_scope_stack);
         }
 
       debug__interpreter_print_all_vars (new_variable_scope_stack[0]);
@@ -181,7 +185,9 @@ interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variable_sc
           if (new_variable_scope_stack[0]->map[i] != 0)
             {
               AmpObject *val
-                  = DictObjVars_get_entry_pointer (new_variable_scope_stack[0], new_variable_scope_stack[0]->map[i])->val;
+                  = DictObjVars_get_entry_pointer 
+                      (new_variable_scope_stack[0], 
+                       new_variable_scope_stack[0]->map[i])->val;
               AmpObjectDecrementRefcount (val);
             }
         }
@@ -219,10 +225,18 @@ interpreter_evaluate_if (ASTHandle statement,
 }
 
 AmpObject *
-interpreter_get_amp_object (const char *var)
+interpreter_get_amp_object (const char *var,
+                            DICT (ObjVars) **variable_scope_stack)
 {
   AmpObject *obj = NULL;
-  bool32 success = DictObjVars_get (&global_variables, var, &obj);
+  bool32 success = false;
+  size_t i;
+  for (i = 0; i < ARRAY_COUNT (variable_scope_stack); i++)
+    {
+      success = DictObjVars_get (variable_scope_stack[i], var, &obj);
+      if (success)
+        break;
+    }
   if (!success)
     {
       printf ("Variable \"%s\" does not exist\n", var);
@@ -234,14 +248,16 @@ interpreter_get_amp_object (const char *var)
 /* returns an owning pointer to an Amp Object
    i.e the object returned will have it's reference counter incremented */
 AmpObject *
-interpreter_get_or_generate_amp_object (ASTHandle handle)
+interpreter_get_or_generate_amp_object (ASTHandle handle,
+                                        DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *node = ast_get_node (handle);
   AmpObject *obj = NULL;
   switch (node->type)
     {
     case AST_IDENTIFIER:
-      obj = interpreter_get_amp_object (node->d.id_data.id);
+      obj = interpreter_get_amp_object (node->d.id_data.id,
+                                        variable_scope_stack);
       AmpObjectIncrementRefcount (obj);
       break;
     case AST_INTEGER:
@@ -251,7 +267,7 @@ interpreter_get_or_generate_amp_object (ASTHandle handle)
       obj = AmpStringCreate (node->d.str_data.str);
       break;
     case AST_BINARY_OP:
-      obj = interpreter_evaluate_binary_op (handle);
+      obj = interpreter_evaluate_binary_op (handle, variable_scope_stack);
       break;
     default:
       assert (false);
@@ -261,7 +277,8 @@ interpreter_get_or_generate_amp_object (ASTHandle handle)
 }
 
 AmpObject *
-interpreter_evaluate_binary_op (ASTHandle handle)
+interpreter_evaluate_binary_op (ASTHandle handle,
+                                DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *node = ast_get_node (handle);
 
@@ -275,11 +292,13 @@ interpreter_evaluate_binary_op (ASTHandle handle)
 
       if (right_node->type != AST_BINARY_OP)
         {
-          right = interpreter_get_or_generate_amp_object (right_handle);
+          right = interpreter_get_or_generate_amp_object (right_handle,
+                                                          variable_scope_stack);
         }
       else if (right_node->type == AST_BINARY_OP)
         {
-          right = interpreter_evaluate_binary_op (right_handle);
+          right = interpreter_evaluate_binary_op (right_handle,
+                                                  variable_scope_stack);
         }
       else
         {
@@ -288,11 +307,13 @@ interpreter_evaluate_binary_op (ASTHandle handle)
 
       if (left_node->type != AST_BINARY_OP)
         {
-          left = interpreter_get_or_generate_amp_object (left_handle);
+          left = interpreter_get_or_generate_amp_object (left_handle,
+                                                         variable_scope_stack);
         }
       else if (left_node->type == AST_BINARY_OP)
         {
-          left = interpreter_evaluate_binary_op (left_handle);
+          left = interpreter_evaluate_binary_op (left_handle,
+                                                 variable_scope_stack);
         }
       else
         {
@@ -330,22 +351,14 @@ interpreter_evaluate_binary_op (ASTHandle handle)
 }
 
 void
-interpreter_duplicate_variable (const char *var, const char *assign, DICT (ObjVars) *local_variables)
+interpreter_duplicate_variable (const char *var, const char *assign,
+                                DICT (ObjVars) **variable_scope_stack)
 {
-  AmpObject *obj = NULL;
-  bool32 local_found = false;
-  bool32 global_found = false;
-  local_found = DictObjVars_get (local_variables, var, &obj);
-  if (!local_found)
-    global_found = DictObjVars_get (&global_variables, var, &obj);
-  if (!local_found && !global_found)
-    {
-      printf ("Variable %s does not exist\n", var);
-      exit (1);
-    }
+  AmpObject *obj = interpreter_get_amp_object (var, variable_scope_stack);
+  DICT (ObjVars) *local_vars = variable_scope_stack[0];
   /* new variable will be referencing the same memory */
   AmpObjectIncrementRefcount (obj);
-  DictObjVars_insert (&global_variables, assign, obj);
+  interpreter_add_obj_mapping (assign, obj, local_vars);
 }
 
 void
@@ -361,7 +374,7 @@ interpreter_evaluate_assignment (ASTHandle statement, DICT (ObjVars) **variable_
     }
   else if (expr->type == AST_BINARY_OP)
     {
-      AmpObject *obj = interpreter_evaluate_binary_op (s->d.asgn_data.expr);
+      AmpObject *obj = interpreter_evaluate_binary_op (s->d.asgn_data.expr, variable_scope_stack);
       interpreter_add_obj_mapping (s->d.asgn_data.var, obj, variable_scope_stack[0]);
     }
   else if (expr->type == AST_STRING)
@@ -380,8 +393,7 @@ interpreter_evaluate_assignment (ASTHandle statement, DICT (ObjVars) **variable_
     {
       const char *var = s->d.asgn_data.var;
       const char *expr_var = expr->d.id_data.id;
-      /* fix this! */
-      interpreter_duplicate_variable (expr_var, var, variable_scope_stack[0]);
+      interpreter_duplicate_variable (expr_var, var, variable_scope_stack);
     }
 }
 
