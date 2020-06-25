@@ -15,6 +15,7 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "strobject.h"
+#include "boolobject.h"
 #include <stdlib.h>
 #include <string.h>
 AmpObject *
@@ -34,6 +35,15 @@ amp_string_concat (AmpObject *this, AmpObject *str)
   return obj;
 }
 
+AmpObject *
+amp_string_equal (AmpObject *this, AmpObject *str)
+{
+  const char *string1 = AMP_STRING (this)->string;
+  const char *string2 = AMP_STRING (str)->string;
+  bool32 equal = 0 == strcmp (string1, string2);
+  return AmpBoolCreate (equal);
+}
+
 static AmpObjectInfo str_info;
 static bool32 str_info_initialized;
 AmpObject *
@@ -46,6 +56,7 @@ AmpStringCreate (const char *str)
       str_info.type = AMP_OBJ_STR;
       AmpObjectInitializeOperationsToUnsupported (&str_info.ops);
       str_info.ops.add = amp_string_concat;
+      str_info.ops.equal = amp_string_equal;
       str_info_initialized = true;
     }
 

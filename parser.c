@@ -507,9 +507,11 @@ ASTHandle
 parse_possible_string (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
-  if (statement_size (s) >= 2 &&
+  if ((statement_size (s) == 1 &&
+       t_arr[s.start].value == TOK_STRING) ||
+      (statement_size (s) >= 2 &&
       t_arr[s.start].value == TOK_STRING &&
-      t_arr[s.start + 1].value == STATEMENT_DELIM)
+      t_arr[s.start + 1].value == STATEMENT_DELIM))
     {
       struct AST *n = NULL;
       node = ast_get_node_handle ();
