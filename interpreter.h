@@ -34,7 +34,7 @@ AmpObject *interpreter_evaluate_binary_op(ASTHandle handle);
 /* evaluates an ast node of type  AST_ASSIGNMENT */
 void interpreter_evaluate_assignment(ASTHandle statement, DICT (ObjVars) *local_variables);
 /* evaluates an ast node of type AST_IF */
-void interpreter_evaluate_if(ASTHandle statement);
+void interpreter_evaluate_if(ASTHandle statement, DICT (ObjVars) *local_variables);
 /* removes a dict entry and decrements the refcount of the amp object
  * that it's associated with */
 void interpreter_erase_variable_if_exists(const char *var, DICT (ObjVars) *local_variables);
@@ -51,7 +51,7 @@ void interpreter_add_obj_mapping(const char *var_name, AmpObject *obj, DICT (Obj
  * and evaulates them */
 void interpreter_evaluate_scope (ASTHandle scope_handle, bool32 in_global_scope);
 /* evaluates a statement if the resulting evaluation is a bool32 */
-bool32 interpreter_evaluate_statement_to_bool (ASTHandle statement_handle);
+bool32 interpreter_evaluate_statement_to_bool (ASTHandle statement_handle, DICT (ObjVars) *local_variables);
 /* evaluates each side of an equality statement and returns true if the statement is true */
 AmpObject *interpreter_evaluate_equality (ASTHandle equality_handle, DICT (ObjVars) *local_variables);
 

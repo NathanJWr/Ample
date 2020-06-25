@@ -53,7 +53,8 @@ InterpreterStart (ASTHandle head)
 }
 
 void
-interpreter_evaluate_statement (ASTHandle statement, DICT (ObjVars) *local_variables)
+interpreter_evaluate_statement (ASTHandle statement,
+                                DICT (ObjVars) *local_variables)
 {
   struct AST *s = ast_get_node (statement);
   if (s->type == AST_ASSIGNMENT)
@@ -66,7 +67,7 @@ interpreter_evaluate_statement (ASTHandle statement, DICT (ObjVars) *local_varia
     }
   else if (s->type == AST_IF)
     {
-      interpreter_evaluate_if (statement);
+      interpreter_evaluate_if (statement, local_variables);
     }
   else if (s->type == AST_EQUALITY)
     {
@@ -114,7 +115,8 @@ interpreter_evaluate_equality (ASTHandle equality_handle,
 }
 
 bool32
-interpreter_evaulate_statement_to_bool32 (ASTHandle statement_handle)
+interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
+                                          DICT (ObjVars) *local_variables)
 {
   struct AST *expr = ast_get_node (statement_handle);
   if (expr->type == AST_BOOL)
@@ -135,6 +137,13 @@ interpreter_evaulate_statement_to_bool32 (ASTHandle statement_handle)
           printf ("Variable \"%s\" is not of type bool\n", identifier_str);
           exit (1);
         }
+    }
+  else if (expr->type == AST_EQUALITY)
+    {
+      AmpObject *obj = interpreter_evaluate_equality (statement_handle, local_variables);
+      bool32 retval = AMP_BOOL (obj)->val;
+      AmpObjectDecrementRefcount (obj);
+      return retval;
     }
   else
     {
@@ -186,7 +195,8 @@ interpreter_evaluate_scope (ASTHandle scope_handle, bool32 in_global_scope)
 }
 
 void
-interpreter_evaluate_if (ASTHandle statement)
+interpreter_evaluate_if (ASTHandle statement,
+                         DICT (ObjVars) *local_variables)
 {
   struct AST *if_node = ast_get_node (statement);
   if (if_node->type == AST_IF)
@@ -196,7 +206,9 @@ interpreter_evaluate_if (ASTHandle statement)
       bool32 is_expr_true;
 
       /* expr_node should evaluate to a bool32 */
-      is_expr_true = interpreter_evaulate_statement_to_bool32 (expr_node->d.if_data.expr);
+      is_expr_true = 
+        interpreter_evaluate_statement_to_bool32 (expr_node->d.if_data.expr,
+                                                  local_variables);
 
       if (is_expr_true)
         interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true, false);
