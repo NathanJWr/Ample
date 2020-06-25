@@ -35,7 +35,7 @@ struct AST;
 
 struct ScopeAST {
   ASTHandle *statements; /* sb array */
-  DICT(ObjVars) local_variables;
+  DICT(ObjVars) *variable_scope_stack;
 };
 
 struct IntegerAST {

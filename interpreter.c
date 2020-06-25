@@ -45,21 +45,18 @@ interpreter_add_obj_mapping (const char *var_name, AmpObject *obj, DICT (ObjVars
 void
 InterpreterStart (ASTHandle head)
 {
-  /* initialize all variable maps */
-  DictObjVars_init (&global_variables, hash_string, string_compare, 10);
-
   /* evaluate the global scope */
-  interpreter_evaluate_scope (head, true);
+  interpreter_evaluate_scope (head, NULL);
 }
 
 void
 interpreter_evaluate_statement (ASTHandle statement,
-                                DICT (ObjVars) *local_variables)
+                                DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *s = ast_get_node (statement);
   if (s->type == AST_ASSIGNMENT)
     {
-      interpreter_evaluate_assignment (statement, local_variables);
+      interpreter_evaluate_assignment (statement, variable_scope_stack);
     }
   else if (s->type == AST_BINARY_OP)
     {
@@ -67,19 +64,19 @@ interpreter_evaluate_statement (ASTHandle statement,
     }
   else if (s->type == AST_IF)
     {
-      interpreter_evaluate_if (statement, local_variables);
+      interpreter_evaluate_if (statement, variable_scope_stack);
     }
   else if (s->type == AST_EQUALITY)
     {
       AmpObject *ret_bool =
-        interpreter_evaluate_equality (statement, local_variables);
+        interpreter_evaluate_equality (statement, variable_scope_stack);
       AmpObjectDecrementRefcount (ret_bool);
     }
 }
 
 AmpObject *
 interpreter_evaluate_equality (ASTHandle equality_handle,
-                               DICT (ObjVars) *local_variables)
+                               DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *equality_ast = ast_get_node (equality_handle);
   if (equality_ast->type == AST_EQUALITY)
@@ -116,7 +113,7 @@ interpreter_evaluate_equality (ASTHandle equality_handle,
 
 AmpObject *
 interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
-                                          DICT (ObjVars) *local_variables)
+                                          DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *expr = ast_get_node (statement_handle);
   if (expr->type == AST_BOOL)
@@ -141,7 +138,7 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
     }
   else if (expr->type == AST_EQUALITY)
     {
-      AmpObject *obj = interpreter_evaluate_equality (statement_handle, local_variables);
+      AmpObject *obj = interpreter_evaluate_equality (statement_handle, variable_scope_stack);
       return obj;
     }
   else
@@ -152,39 +149,44 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
 }
 
 void
-interpreter_evaluate_scope (ASTHandle scope_handle, bool32 in_global_scope)
+interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *scope = ast_get_node (scope_handle);
   if (scope->type == AST_SCOPE)
     {
-      DICT(ObjVars) *local_variables = NULL;
+      /* set up the scope's variable stacks */
+      DICT(ObjVars) local_variables;
+      DICT(ObjVars) **new_variable_scope_stack = NULL;
       size_t i;
-      if (in_global_scope)
+      DictObjVars_init (&local_variables, hash_string, string_compare, 10);
+      /* the local variables will be at index 0 */
+      ARRAY_PUSH (new_variable_scope_stack, &local_variables);
+      if (variable_scope_stack)
         {
-          local_variables = &global_variables;
-        }
-      else
-        {
-          local_variables = &scope->d.scope_data.local_variables;
-          DictObjVars_init (local_variables, hash_string, string_compare, 10);
-        }
-      for (i = 0; i < ARRAY_COUNT (scope->d.scope_data.statements); i++)
-        {
-          interpreter_evaluate_statement (scope->d.scope_data.statements[i], local_variables);
+          for (i = 0; i < ARRAY_COUNT (variable_scope_stack); i++)
+            {
+              ARRAY_PUSH (new_variable_scope_stack, variable_scope_stack[i]); 
+            }
         }
 
-      debug__interpreter_print_all_vars (local_variables);
-      /* local variables have reached the end of their scope */
-      for (i = 0; i < local_variables->capacity; i++)
+      for (i = 0; i < ARRAY_COUNT (scope->d.scope_data.statements); i++)
         {
-          if (local_variables->map[i] != 0)
+          interpreter_evaluate_statement (scope->d.scope_data.statements[i], new_variable_scope_stack);
+        }
+
+      debug__interpreter_print_all_vars (new_variable_scope_stack[0]);
+      /* local variables have reached the end of their scope */
+      for (i = 0; i < new_variable_scope_stack[0]->capacity; i++)
+        {
+          if (new_variable_scope_stack[0]->map[i] != 0)
             {
               AmpObject *val
-                  = DictObjVars_get_entry_pointer (local_variables, local_variables->map[i])->val;
+                  = DictObjVars_get_entry_pointer (new_variable_scope_stack[0], new_variable_scope_stack[0]->map[i])->val;
               AmpObjectDecrementRefcount (val);
             }
         }
-      DictObjVars_free (local_variables);
+      DictObjVars_free (new_variable_scope_stack[0]);
+      ARRAY_FREE (new_variable_scope_stack);
     }
   else
     {
@@ -195,7 +197,7 @@ interpreter_evaluate_scope (ASTHandle scope_handle, bool32 in_global_scope)
 
 void
 interpreter_evaluate_if (ASTHandle statement,
-                         DICT (ObjVars) *local_variables)
+                         DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *if_node = ast_get_node (statement);
   if (if_node->type == AST_IF)
@@ -207,10 +209,10 @@ interpreter_evaluate_if (ASTHandle statement,
       /* expr_node should evaluate to a bool32 */
       is_expr_true = 
         interpreter_evaluate_statement_to_bool32 (expr_node->d.if_data.expr,
-                                                  local_variables);
+                                                  variable_scope_stack);
 
       if (AMP_BOOL (is_expr_true)->val)
-        interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true, false);
+        interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true, variable_scope_stack);
 
       AmpObjectDecrementRefcount (is_expr_true);
     }
@@ -347,7 +349,7 @@ interpreter_duplicate_variable (const char *var, const char *assign, DICT (ObjVa
 }
 
 void
-interpreter_evaluate_assignment (ASTHandle statement, DICT (ObjVars) *local_variables)
+interpreter_evaluate_assignment (ASTHandle statement, DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *s = ast_get_node (statement);
   struct AST *expr = ast_get_node (s->d.asgn_data.expr);
@@ -355,30 +357,31 @@ interpreter_evaluate_assignment (ASTHandle statement, DICT (ObjVars) *local_vari
     {
       int val = expr->d.int_data.value;
       AmpObject *obj = AmpIntegerCreate (val);
-      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, local_variables);
+      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, variable_scope_stack[0]);
     }
   else if (expr->type == AST_BINARY_OP)
     {
       AmpObject *obj = interpreter_evaluate_binary_op (s->d.asgn_data.expr);
-      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, local_variables);
+      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, variable_scope_stack[0]);
     }
   else if (expr->type == AST_STRING)
     {
       const char *val = expr->d.str_data.str;
       AmpObject *obj = AmpStringCreate (val);
-      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, local_variables);
+      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, variable_scope_stack[0]);
     }
   else if (expr->type == AST_BOOL)
     {
       bool32 val = expr->d.bool_data.value;
       AmpObject *obj = AmpBoolCreate (val);
-      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, local_variables);
+      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, variable_scope_stack[0]);
     }
   else if (expr->type == AST_IDENTIFIER)
     {
       const char *var = s->d.asgn_data.var;
       const char *expr_var = expr->d.id_data.id;
-      interpreter_duplicate_variable (expr_var, var, local_variables);
+      /* fix this! */
+      interpreter_duplicate_variable (expr_var, var, variable_scope_stack[0]);
     }
 }
 
