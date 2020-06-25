@@ -114,14 +114,14 @@ interpreter_evaluate_equality (ASTHandle equality_handle,
     }
 }
 
-bool32
+AmpObject *
 interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
                                           DICT (ObjVars) *local_variables)
 {
   struct AST *expr = ast_get_node (statement_handle);
   if (expr->type == AST_BOOL)
     {
-      return expr->d.bool_data.value;   
+      return AmpBoolCreate (expr->d.bool_data.value);
     }
   else if (expr->type == AST_IDENTIFIER)
     {
@@ -130,7 +130,8 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
       AmpObject *obj = interpreter_get_amp_object (identifier_str);
       if (obj->info->type == AMP_OBJ_BOOL)
         {
-          return AMP_BOOL (obj)->val;
+          AmpObjectIncrementRefcount (obj);
+          return obj;
         }
       else
         {
@@ -141,9 +142,7 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
   else if (expr->type == AST_EQUALITY)
     {
       AmpObject *obj = interpreter_evaluate_equality (statement_handle, local_variables);
-      bool32 retval = AMP_BOOL (obj)->val;
-      AmpObjectDecrementRefcount (obj);
-      return retval;
+      return obj;
     }
   else
     {
@@ -203,15 +202,17 @@ interpreter_evaluate_if (ASTHandle statement,
     {
       /* run different scopes depending on the if's true or false */
       struct AST *expr_node = ast_get_node (statement);
-      bool32 is_expr_true;
+      AmpObject *is_expr_true;
 
       /* expr_node should evaluate to a bool32 */
       is_expr_true = 
         interpreter_evaluate_statement_to_bool32 (expr_node->d.if_data.expr,
                                                   local_variables);
 
-      if (is_expr_true)
+      if (AMP_BOOL (is_expr_true)->val)
         interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true, false);
+
+      AmpObjectDecrementRefcount (is_expr_true);
     }
 }
 
