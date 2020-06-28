@@ -1,6 +1,6 @@
 TODO:
-  * interpreter_get_or_generate_amp_object SHOULD use local variables
-  * String objects should support equality
+  * add else to if statements
+  * add else if to if statements
 
 Implemented so far:
   * Reference Counted Variables
@@ -11,5 +11,6 @@ Implemented so far:
     - String concatenation
     - Integer Binary Operations
   * If statements
-    - arguments can include raw booleans (true, false), and boolean objects
+    - arguments can include raw booleans (true, false), boolean objects,
+      or statements that will return boolean objects (i.e. equality)
 
