@@ -15,6 +15,7 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "interpreter.h"
+#include "bool.h"
 #include "array.h"
 #include "dict_vars.h"
 #include "objects/ampobject.h"
@@ -351,11 +352,13 @@ interpreter_evaluate_binary_op (ASTHandle handle,
 }
 
 void
-interpreter_duplicate_variable (const char *var, const char *assign,
-                                DICT (ObjVars) **variable_scope_stack)
+interpreter_duplicate_variable (const char *var,
+                                const char *assign,
+                                DICT (ObjVars) **variable_scope_stack,
+                                size_t scope_stack_index)
 {
   AmpObject *obj = interpreter_get_amp_object (var, variable_scope_stack);
-  DICT (ObjVars) *local_vars = variable_scope_stack[0];
+  DICT (ObjVars) *local_vars = variable_scope_stack[scope_stack_index];
   /* new variable will be referencing the same memory */
   AmpObjectIncrementRefcount (obj);
   interpreter_add_obj_mapping (assign, obj, local_vars);
@@ -366,34 +369,62 @@ interpreter_evaluate_assignment (ASTHandle statement, DICT (ObjVars) **variable_
 {
   struct AST *s = ast_get_node (statement);
   struct AST *expr = ast_get_node (s->d.asgn_data.expr);
+  size_t i;
+  AmpObject *parent_obj = NULL;
+  bool32 exists_in_parent_scope = false;
+  const char *var = s->d.asgn_data.var;
+  size_t scope_stack_index = 0;
+  /* make sure that the variable doesn't already exist in a parent scope */
+  for (i = 1; i < ARRAY_COUNT (variable_scope_stack); i++)
+    {
+      exists_in_parent_scope = DictObjVars_get (variable_scope_stack[i],
+                                                var,
+                                                &parent_obj);
+      if (exists_in_parent_scope)
+        {
+          scope_stack_index = i;
+          break;
+        }
+    }
   if (expr->type == AST_INTEGER)
     {
       int val = expr->d.int_data.value;
       AmpObject *obj = AmpIntegerCreate (val);
-      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, variable_scope_stack[0]);
+      interpreter_add_obj_mapping (var,
+                                   obj,
+                                   variable_scope_stack[scope_stack_index]);
     }
   else if (expr->type == AST_BINARY_OP)
     {
-      AmpObject *obj = interpreter_evaluate_binary_op (s->d.asgn_data.expr, variable_scope_stack);
-      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, variable_scope_stack[0]);
+      AmpObject *obj = interpreter_evaluate_binary_op (s->d.asgn_data.expr,
+                                                       variable_scope_stack);
+      interpreter_add_obj_mapping (var,
+                                   obj,
+                                   variable_scope_stack[scope_stack_index]);
     }
   else if (expr->type == AST_STRING)
     {
       const char *val = expr->d.str_data.str;
       AmpObject *obj = AmpStringCreate (val);
-      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, variable_scope_stack[0]);
+      interpreter_add_obj_mapping (var,
+                                   obj,
+                                   variable_scope_stack[scope_stack_index]);
     }
   else if (expr->type == AST_BOOL)
     {
       bool32 val = expr->d.bool_data.value;
       AmpObject *obj = AmpBoolCreate (val);
-      interpreter_add_obj_mapping (s->d.asgn_data.var, obj, variable_scope_stack[0]);
+      interpreter_add_obj_mapping (var,
+                                   obj,
+                                   variable_scope_stack[scope_stack_index]);
     }
   else if (expr->type == AST_IDENTIFIER)
     {
-      const char *var = s->d.asgn_data.var;
       const char *expr_var = expr->d.id_data.id;
-      interpreter_duplicate_variable (expr_var, var, variable_scope_stack);
+      interpreter_duplicate_variable (expr_var,
+                                      var,
+                                      variable_scope_stack,
+                                      scope_stack_index);
     }
 }
 

@@ -17,6 +17,7 @@
 #ifndef BOOL_OBJECT_H_
 #define BOOL_OBJECT_H_
 #include "ampobject.h"
+#include "bool.h"
 typedef struct AmpObject_Bool {
   AMP_OBJECT_HEADER;
   bool32 val;

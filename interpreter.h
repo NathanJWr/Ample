@@ -40,7 +40,7 @@ void interpreter_evaluate_if(ASTHandle statement, DICT (ObjVars) **variable_scop
 void interpreter_erase_variable_if_exists(const char *var, DICT (ObjVars) *local_variables);
 /* creates a new dict entry pointing to an existing AmpObject and
  * incrementing that objects refcount */
-void interpreter_duplicate_variable(const char *var, const char *assign, DICT (ObjVars) **variable_scope_stack);
+void interpreter_duplicate_variable(const char *var, const char *assign, DICT (ObjVars) **variable_scope_stack, size_t scope_stack_index);
 /* Returns an amp object that already exists as a variable */
 AmpObject *interpreter_get_amp_object(const char *var, DICT (ObjVars) **variable_scope_stack);
 /* Returns an amp object that will be created if none exist already */
