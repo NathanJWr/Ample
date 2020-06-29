@@ -220,6 +220,9 @@ interpreter_evaluate_if (ASTHandle statement,
 
       if (AMP_BOOL (is_expr_true)->val)
         interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true, variable_scope_stack);
+      else if (AMP_BOOL(is_expr_true)->val == false && expr_node->d.if_data.scope_if_false)
+        interpreter_evaluate_scope (expr_node->d.if_data.scope_if_false, variable_scope_stack);
+
 
       AmpObjectDecrementRefcount (is_expr_true);
     }
