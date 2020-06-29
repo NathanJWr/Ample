@@ -62,6 +62,7 @@ struct AssignmentAST {
 struct IfAST {
   ASTHandle expr;
   ASTHandle scope_if_true;
+  ASTHandle scope_if_false;
 };
 struct BoolAST {
   bool32 value;

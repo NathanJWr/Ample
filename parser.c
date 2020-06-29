@@ -26,17 +26,17 @@ statement_size (struct Statement s)
   return s.end - s.start + 1;
 }
 
+unsigned int global_statement_index;
 ASTHandle
 ParseTokens (struct Token *tokens)
 {
-  unsigned int index = 0;
   ASTHandle head = ast_get_node_handle ();
   ASTHandle *statements = NULL;
   struct AST *h;
 
-  while (index < ARRAY_COUNT (tokens))
+  while (global_statement_index < ARRAY_COUNT (tokens))
     {
-      struct Statement s = get_statement (tokens, &index);
+      struct Statement s = get_statement (tokens, &global_statement_index);
       ARRAY_PUSH (statements, parse_statement (tokens, s));
     }
 
@@ -183,9 +183,12 @@ parse_possible_if_statement (struct Token *t_arr, struct Statement s)
       /* there should be exactly 1 expression inside if parens */
       struct AST *n = NULL;
       ASTHandle expr = 0;
-	  ASTHandle scope_if_true = 0;
+	    ASTHandle scope_if_true = 0;
+      ASTHandle scope_if_false = 0;
       struct Statement paren_statement;
       struct Statement scope_statement;
+      unsigned int next_statement_index = s.end + 1;
+      struct Statement next_statement;
       unsigned int i = s.start + 2; /* skip over the '(' character */
       while (t_arr[i].value != ')')
         i++;
@@ -203,8 +206,29 @@ parse_possible_if_statement (struct Token *t_arr, struct Statement s)
       scope_statement.end = s.end;
       scope_if_true = parse_scope (t_arr, scope_statement);
 	  
+      /* if there subsequent if else statements, add them to the ast node */
+      do 
+        {
+          next_statement = get_statement (t_arr, &next_statement_index);
+          if (t_arr[next_statement.start].value == TOK_ELSE)
+            {
+              struct Statement else_statement;
+              /* we just want the scope part */
+              else_statement.start = next_statement.start + 1;
+              else_statement.end = next_statement.end;
+              scope_if_false = parse_scope (t_arr, else_statement);           
+
+              /* update the original statement index so the parser
+              * can skip the trailing parts of if */
+              global_statement_index = next_statement_index;
+            }
+        }
+      while (t_arr[next_statement.start].value == TOK_ELSE);
+
+    
       n = ast_get_node (node);
       n->d.if_data.scope_if_true = scope_if_true;
+      n->d.if_data.scope_if_false = scope_if_false;
       n->d.if_data.expr = expr;
       n->type = AST_IF;
     }
@@ -213,10 +237,14 @@ parse_possible_if_statement (struct Token *t_arr, struct Statement s)
 ASTHandle
 parse_scope(struct Token* t_arr, struct Statement s)
 {
-  ASTHandle handle = ast_get_node_handle ();
+  ASTHandle handle = 0; 
   struct AST *scope = NULL;
   unsigned int index = s.start + 1; /* skip '{' */
   ASTHandle *statements = NULL;
+
+  assert (t_arr[s.start].value == '{');
+
+  handle = ast_get_node_handle ();
   while (t_arr[index].value != '}')
     {
       struct Statement statement_indexes = get_statement(t_arr, &index);

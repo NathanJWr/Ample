@@ -24,7 +24,8 @@ typedef enum {
   TOK_INTEGER = 128,
   TOK_BOOL = 129,
   TOK_STRING = 130,
-  TOK_IF = 131
+  TOK_IF = 131,
+  TOK_ELSE = 132
 } TValue;
 struct Token {
   TValue value;
