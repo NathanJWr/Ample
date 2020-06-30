@@ -60,7 +60,8 @@ get_statement (struct Token *__restrict tokens,
         scoped++;
       if (tokens[i].value == '}')
         scoped--;
-      if ((tokens[i].value == STATEMENT_DELIM || tokens[i].value == '}') && scoped == 0)
+      if ((tokens[i].value == STATEMENT_DELIM || tokens[i].value == '}') && 
+           scoped == 0)
         break;
       i++;
     }
@@ -255,7 +256,14 @@ parse_scope(struct Token* t_arr, struct Statement s)
   while (t_arr[index].value != '}')
     {
       struct Statement statement_indexes = get_statement(t_arr, &index);
-      ASTHandle statement = parse_statement (t_arr, statement_indexes);
+      ASTHandle statement;
+      /* this kind of sucks that we have to test for things we
+       * should ignore, but complicating the get_statement logic
+       * to accomodate for if and else statements being one statement
+       * instead of two is not worth it */
+      if (t_arr[statement_indexes.start].value == TOK_ELSE)
+        continue;
+      statement = parse_statement (t_arr, statement_indexes);
       ARRAY_PUSH (statements, statement);
     }
   
@@ -334,7 +342,9 @@ convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
       struct Token *n = QUEUE_FRONT (expr_q);
       QUEUE_POP (expr_q);
 
-      if (n->value == TOK_INTEGER || n->value == TOK_IDENTIFIER || n->value == TOK_STRING)
+      if (n->value == TOK_INTEGER ||
+          n->value == TOK_IDENTIFIER ||
+          n->value == TOK_STRING)
         {
           QUEUE_PUSH (&q, n);
         }

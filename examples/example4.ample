@@ -1,0 +1,17 @@
+# This example is to test if an else statement
+# will run correctly
+if (10 == 20) { # evaluates to false
+  a = 10;
+} else {
+  # this is the statement
+  # that should run
+  a = 20;
+
+  # a nested if else block!
+  if (false) {
+    b = "true";
+  } else {
+    b = "false";
+  }
+}
+
