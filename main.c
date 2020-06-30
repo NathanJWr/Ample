@@ -14,11 +14,11 @@
     You should have received a copy of the GNU General Public License
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "mem_debug.h"
 #include "ast.h"
 #include "lexer.h"
 #include "parser.h"
 #include "interpreter.h"
-#include "mem_debug.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

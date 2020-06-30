@@ -17,8 +17,8 @@
 #ifndef AST_H_
 #define AST_H_
 #include "lexer.h"
-#include "dict_vars.h"
 #include "bool.h"
+#include "dict_vars.h"
 typedef size_t ASTHandle;
 enum ASTType {
   AST_INTEGER,

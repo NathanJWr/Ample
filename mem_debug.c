@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "array.h"
+#include "mem_debug_public.h"
 
 static size_t total_allocated;
 static size_t currently_allocated;

@@ -210,17 +210,24 @@ parse_possible_if_statement (struct Token *t_arr, struct Statement s)
       do 
         {
           next_statement = get_statement (t_arr, &next_statement_index);
-          if (t_arr[next_statement.start].value == TOK_ELSE)
+	        if (next_statement.start < ARRAY_COUNT (t_arr))
             {
-              struct Statement else_statement;
-              /* we just want the scope part */
-              else_statement.start = next_statement.start + 1;
-              else_statement.end = next_statement.end;
-              scope_if_false = parse_scope (t_arr, else_statement);           
+              if (t_arr[next_statement.start].value == TOK_ELSE)
+                {
+                  struct Statement else_statement;
+                  /* we just want the scope part */
+                  else_statement.start = next_statement.start + 1;
+                  else_statement.end = next_statement.end;
+                  scope_if_false = parse_scope (t_arr, else_statement);           
 
-              /* update the original statement index so the parser
-              * can skip the trailing parts of if */
-              global_statement_index = next_statement_index;
+                  /* update the original statement index so the parser
+                  * can skip the trailing parts of if */
+                  global_statement_index = next_statement_index;
+                }
+	          }
+          else
+            {
+              break;
             }
         }
       while (t_arr[next_statement.start].value == TOK_ELSE);
