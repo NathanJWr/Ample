@@ -98,6 +98,13 @@ LexAll (char *fb)
           token.string = str;
           token.value = TOK_STRING;
         }
+      else if (c == '#')
+        {
+          /* comment, so skip the entire line */
+          while (c != '\n')
+            c = fb[i++];
+          continue;
+        }
       else
         { /* Any other kind of ASCII token */
           token.value = c;
