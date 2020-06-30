@@ -1,5 +1,4 @@
 TODO:
-  * add else to if statements
   * add else if to if statements
 
 Implemented so far:
