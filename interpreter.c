@@ -27,7 +27,8 @@
 static DICT(ObjVars) global_variables;
 
 void
-interpreter_erase_variable_if_exists (const char *var, DICT (ObjVars) *local_variables)
+interpreter_erase_variable_if_exists (const char *var,
+                                      DICT (ObjVars) *local_variables)
 {
 
   AmpObject *obj = NULL;
@@ -37,7 +38,9 @@ interpreter_erase_variable_if_exists (const char *var, DICT (ObjVars) *local_var
 }
 
 void
-interpreter_add_obj_mapping (const char *var_name, AmpObject *obj, DICT (ObjVars) *local_variables)
+interpreter_add_obj_mapping (const char *var_name,
+                             AmpObject *obj,
+                             DICT (ObjVars) *local_variables)
 {
   interpreter_erase_variable_if_exists (var_name, local_variables);
   DictObjVars_insert (local_variables, var_name, obj);
@@ -142,7 +145,8 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
     }
   else if (expr->type == AST_EQUALITY)
     {
-      AmpObject *obj = interpreter_evaluate_equality (statement_handle, variable_scope_stack);
+      AmpObject *obj = interpreter_evaluate_equality (statement_handle,
+                                                      variable_scope_stack);
       return obj;
     }
   else
@@ -153,7 +157,8 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
 }
 
 void
-interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variable_scope_stack)
+interpreter_evaluate_scope (ASTHandle scope_handle,
+                            DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *scope = ast_get_node (scope_handle);
   if (scope->type == AST_SCOPE)
@@ -219,9 +224,12 @@ interpreter_evaluate_if (ASTHandle statement,
                                                   variable_scope_stack);
 
       if (AMP_BOOL (is_expr_true)->val)
-        interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true, variable_scope_stack);
-      else if (AMP_BOOL(is_expr_true)->val == false && expr_node->d.if_data.scope_if_false)
-        interpreter_evaluate_scope (expr_node->d.if_data.scope_if_false, variable_scope_stack);
+        interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true,
+                                    variable_scope_stack);
+      else if (AMP_BOOL(is_expr_true)->val == false &&
+               expr_node->d.if_data.scope_if_false)
+        interpreter_evaluate_scope (expr_node->d.if_data.scope_if_false,
+                                    variable_scope_stack);
 
 
       AmpObjectDecrementRefcount (is_expr_true);
@@ -368,7 +376,8 @@ interpreter_duplicate_variable (const char *var,
 }
 
 void
-interpreter_evaluate_assignment (ASTHandle statement, DICT (ObjVars) **variable_scope_stack)
+interpreter_evaluate_assignment (ASTHandle statement,
+                                 DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *s = ast_get_node (statement);
   struct AST *expr = ast_get_node (s->d.asgn_data.expr);
@@ -447,7 +456,7 @@ debug__interpreter_print_all_vars (DICT (ObjVars) *vars)
             {
             case AMP_OBJ_INT:
               printf ("Int Variable: %s\n\tValue: %f\n",
-                      e->key, AMP_INTEGER (obj)->val);
+                      e->key, AMP_NUMBER (obj)->val);
               break;
             case AMP_OBJ_STR:
               printf ("Str Variable: %s\n\tValue: %s\n",

@@ -22,14 +22,14 @@
 AmpObject *
 amp_integer_add (AmpObject *this, AmpObject *val)
 {
-  double add = AMP_INTEGER (this)->val + AMP_INTEGER (val)->val;
+  double add = AMP_NUMBER (this)->val + AMP_NUMBER (val)->val;
   AmpObject *obj = AmpNumberCreate (add);
   return obj;
 }
 AmpObject *
 amp_integer_sub (AmpObject *this, AmpObject *val)
 {
-  double sub = AMP_INTEGER (this)->val - AMP_INTEGER (val)->val;
+  double sub = AMP_NUMBER (this)->val - AMP_NUMBER (val)->val;
   AmpObject *obj = AmpNumberCreate (sub);
   return obj;
 }
@@ -37,7 +37,7 @@ amp_integer_sub (AmpObject *this, AmpObject *val)
 AmpObject *
 amp_integer_div (AmpObject *this, AmpObject *val)
 {
-  double div = AMP_INTEGER (this)->val / AMP_INTEGER (val)->val;
+  double div = AMP_NUMBER (this)->val / AMP_NUMBER (val)->val;
   AmpObject *obj = AmpNumberCreate (div);
   return obj;
 }
@@ -45,7 +45,7 @@ amp_integer_div (AmpObject *this, AmpObject *val)
 AmpObject *
 amp_integer_mul (AmpObject *this, AmpObject *val)
 {
-  double mult = AMP_INTEGER (this)->val * AMP_INTEGER (val)->val;
+  double mult = AMP_NUMBER (this)->val * AMP_NUMBER (val)->val;
   AmpObject *obj = AmpNumberCreate (mult);
   return obj;
 }
@@ -55,8 +55,8 @@ amp_integer_equal (AmpObject *this, AmpObject *val)
 {
   bool32 equal;
   AmpObject *obj;
-  double val1 = AMP_INTEGER (this)->val;
-  double val2 = AMP_INTEGER (val)->val;
+  double val1 = AMP_NUMBER (this)->val;
+  double val2 = AMP_NUMBER (val)->val;
 
   equal = fabs (val1 - val2) < DBL_EPSILON;
   obj = AmpBoolCreate (equal);

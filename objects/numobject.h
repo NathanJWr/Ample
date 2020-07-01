@@ -22,7 +22,7 @@ typedef struct AmpObject_Num {
   AMP_OBJECT_HEADER;
   double val;
 } AmpObject_Num;
-#define AMP_INTEGER(obj) ((AmpObject_Num *)(obj))
+#define AMP_NUMBER(obj) ((AmpObject_Num *)(obj))
 AmpObject *AmpNumberCreate(double val);
 
 AmpObject *amp_number_add(AmpObject *this, AmpObject *val);
