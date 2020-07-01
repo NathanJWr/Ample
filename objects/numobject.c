@@ -17,6 +17,8 @@
 #include "numobject.h"
 #include "boolobject.h"
 #include <stdlib.h>
+#include <math.h>
+#include <float.h>
 AmpObject *
 amp_integer_add (AmpObject *this, AmpObject *val)
 {
@@ -51,8 +53,13 @@ amp_integer_mul (AmpObject *this, AmpObject *val)
 AmpObject *
 amp_integer_equal (AmpObject *this, AmpObject *val)
 {
-  bool32 value = AMP_INTEGER (this)->val == AMP_INTEGER (val)->val;
-  AmpObject *obj = AmpBoolCreate (value);
+  bool32 equal;
+  AmpObject *obj;
+  double val1 = AMP_INTEGER (this)->val;
+  double val2 = AMP_INTEGER (val)->val;
+
+  equal = fabs (val1 - val2) < DBL_EPSILON;
+  obj = AmpBoolCreate (equal);
   return obj;
 }
 
