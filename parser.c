@@ -288,7 +288,7 @@ parse_possible_integer (struct Token *t_arr, struct Statement s)
       node = ast_get_node_handle ();
       n = ast_get_node (node);
       n->type = AST_INTEGER;
-      n->d.int_data.value = atoi (t_arr[s.start].string);
+      n->d.int_data.value = atof (t_arr[s.start].string);
     }
   return node;
 }
@@ -411,7 +411,7 @@ convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q)
           ASTHandle ast_handle = ast_get_node_handle ();
           struct AST *integer_ast = ast_get_node (ast_handle);
           integer_ast->type = AST_INTEGER;
-          integer_ast->d.int_data.value = atoi (n->string);
+          integer_ast->d.int_data.value = atof (n->string);
 
           STACK_PUSH (&s, ast_handle);
         }

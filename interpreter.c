@@ -19,7 +19,7 @@
 #include "array.h"
 #include "dict_vars.h"
 #include "objects/ampobject.h"
-#include "objects/intobject.h"
+#include "objects/numobject.h"
 #include "objects/boolobject.h"
 #include "objects/strobject.h"
 
@@ -265,7 +265,7 @@ interpreter_get_or_generate_amp_object (ASTHandle handle,
       AmpObjectIncrementRefcount (obj);
       break;
     case AST_INTEGER:
-      obj = AmpIntegerCreate (node->d.int_data.value);
+      obj = AmpNumberCreate (node->d.int_data.value);
       break;
     case AST_STRING:
       obj = AmpStringCreate (node->d.str_data.str);
@@ -391,8 +391,8 @@ interpreter_evaluate_assignment (ASTHandle statement, DICT (ObjVars) **variable_
     }
   if (expr->type == AST_INTEGER)
     {
-      int val = expr->d.int_data.value;
-      AmpObject *obj = AmpIntegerCreate (val);
+      double val = expr->d.int_data.value;
+      AmpObject *obj = AmpNumberCreate (val);
       interpreter_add_obj_mapping (var,
                                    obj,
                                    variable_scope_stack[scope_stack_index]);
@@ -446,14 +446,16 @@ debug__interpreter_print_all_vars (DICT (ObjVars) *vars)
           switch (obj->info->type)
             {
             case AMP_OBJ_INT:
-              printf ("Int Variable: %s\n\tValue: %d\n", e->key, AMP_INTEGER (obj)->val);
+              printf ("Int Variable: %s\n\tValue: %f\n",
+                      e->key, AMP_INTEGER (obj)->val);
               break;
             case AMP_OBJ_STR:
-              printf ("Str Variable: %s\n\tValue: %s\n", e->key, AMP_STRING (obj)->string);
+              printf ("Str Variable: %s\n\tValue: %s\n",
+                      e->key, AMP_STRING (obj)->string);
               break;
             case AMP_OBJ_BOOL:
               printf ("Bool Variable %s\n\tValue: %s\n", e->key, 
-                  AMP_BOOL (obj)->val ? "true" : "false");
+                      AMP_BOOL (obj)->val ? "true" : "false");
               break;
             }
         }

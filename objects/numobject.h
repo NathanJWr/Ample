@@ -18,16 +18,16 @@
 #define INT_OBJECT_H_
 #include "ampobject.h"
 
-typedef struct AmpObject_Int {
+typedef struct AmpObject_Num {
   AMP_OBJECT_HEADER;
-  int val;
-} AmpObject_Int;
-#define AMP_INTEGER(obj) ((AmpObject_Int *)(obj))
-AmpObject *AmpIntegerCreate(int val);
+  double val;
+} AmpObject_Num;
+#define AMP_INTEGER(obj) ((AmpObject_Num *)(obj))
+AmpObject *AmpNumberCreate(double val);
 
-AmpObject *amp_integer_add(AmpObject *this, AmpObject *val);
-AmpObject *amp_integer_sub(AmpObject *this, AmpObject *val);
-AmpObject *amp_integer_div(AmpObject *this, AmpObject *val);
-AmpObject *amp_integer_mul(AmpObject *this, AmpObject *val);
-AmpObject *amp_integer_equal(AmpObject *this, AmpObject *val);
+AmpObject *amp_number_add(AmpObject *this, AmpObject *val);
+AmpObject *amp_number_sub(AmpObject *this, AmpObject *val);
+AmpObject *amp_number_div(AmpObject *this, AmpObject *val);
+AmpObject *amp_number_mul(AmpObject *this, AmpObject *val);
+AmpObject *amp_number_equal(AmpObject *this, AmpObject *val);
 #endif

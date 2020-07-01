@@ -40,7 +40,7 @@ struct ScopeAST {
 };
 
 struct IntegerAST {
-  int value;
+  double value;
 };
 
 struct StringAST {

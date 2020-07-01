@@ -14,37 +14,37 @@
     You should have received a copy of the GNU General Public License
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "intobject.h"
+#include "numobject.h"
 #include "boolobject.h"
 #include <stdlib.h>
 AmpObject *
 amp_integer_add (AmpObject *this, AmpObject *val)
 {
-  int add = AMP_INTEGER (this)->val + AMP_INTEGER (val)->val;
-  AmpObject *obj = AmpIntegerCreate (add);
+  double add = AMP_INTEGER (this)->val + AMP_INTEGER (val)->val;
+  AmpObject *obj = AmpNumberCreate (add);
   return obj;
 }
 AmpObject *
 amp_integer_sub (AmpObject *this, AmpObject *val)
 {
-  int sub = AMP_INTEGER (this)->val - AMP_INTEGER (val)->val;
-  AmpObject *obj = AmpIntegerCreate (sub);
+  double sub = AMP_INTEGER (this)->val - AMP_INTEGER (val)->val;
+  AmpObject *obj = AmpNumberCreate (sub);
   return obj;
 }
 
 AmpObject *
 amp_integer_div (AmpObject *this, AmpObject *val)
 {
-  int div = AMP_INTEGER (this)->val / AMP_INTEGER (val)->val;
-  AmpObject *obj = AmpIntegerCreate (div);
+  double div = AMP_INTEGER (this)->val / AMP_INTEGER (val)->val;
+  AmpObject *obj = AmpNumberCreate (div);
   return obj;
 }
 
 AmpObject *
 amp_integer_mul (AmpObject *this, AmpObject *val)
 {
-  int mult = AMP_INTEGER (this)->val * AMP_INTEGER (val)->val;
-  AmpObject *obj = AmpIntegerCreate (mult);
+  double mult = AMP_INTEGER (this)->val * AMP_INTEGER (val)->val;
+  AmpObject *obj = AmpNumberCreate (mult);
   return obj;
 }
 
@@ -59,9 +59,9 @@ amp_integer_equal (AmpObject *this, AmpObject *val)
 static AmpObjectInfo int_info;
 static bool32 int_info_initialized;
 AmpObject *
-AmpIntegerCreate (int val)
+AmpNumberCreate (double val)
 {
-  AmpObject_Int *a = NULL;
+  AmpObject_Num *a = NULL;
   /* fill out type info */
   if (!int_info_initialized)
     {
@@ -74,7 +74,7 @@ AmpIntegerCreate (int val)
       int_info.ops.equal = amp_integer_equal;
     }
 
-  a = malloc (sizeof (AmpObject_Int));
+  a = malloc (sizeof (AmpObject_Num));
   a->info = &int_info;
   a->refcount = 1;
   a->dealloc = AmpObjectDestroyBasic;

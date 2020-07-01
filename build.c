@@ -8,7 +8,7 @@
 
 
 #include "objects/ampobject.c"
-#include "objects/intobject.c"
+#include "objects/numobject.c"
 #include "objects/strobject.c"
 #include "objects/boolobject.c"
 

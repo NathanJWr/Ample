@@ -72,11 +72,11 @@ LexAll (char *fb)
               token.value = TOK_IDENTIFIER;
             }
         }
-      else if (isdigit (c) && c != '0')
+      else if (isdigit (c))
         { /* INTEGER */
           char *num = ssl_addchar (NULL, c);
           c = fb[i++];
-          while (isdigit (c))
+          while (isdigit (c) || c == '.')
             {
               num = ssl_addchar (num, c);
               c = fb[i++];
