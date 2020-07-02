@@ -41,7 +41,9 @@ struct Array_Buffer {
     arr_ptr = (void *)bp->buffer;                                              \
   } while (0)
 
-#define ARRAY_FREE(arr_ptr) free(ARR_BASE_POINTER(arr_ptr))
+#define ARRAY_FREE(arr_ptr)                                                    \
+  if (arr_ptr)                                                                 \
+    free(ARR_BASE_POINTER(arr_ptr))
 
 #define ARRAY_PUSH(arr_ptr, item)                                              \
   if (arr_ptr == NULL) {                                                       \
@@ -61,7 +63,13 @@ struct Array_Buffer {
     arr_ptr[buff->count++] = item;                                             \
   }
 
-#define ARRAY_COUNT(arr_ptr) ARR_BASE_POINTER((char *)arr_ptr)->count
+size_t ARRAY_COUNT(void *arr)
+{
+  if (arr)
+    return ARR_BASE_POINTER ((char*) arr)->count;
+  else
+    return 0;
+}
 
 #define ARRAY_ADD(arr_ptr, count)                                              \
   if (arr_ptr == NULL) {                                                       \

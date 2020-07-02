@@ -49,13 +49,15 @@ AmpObject *interpreter_get_or_generate_amp_object(ASTHandle handle, DICT (ObjVar
 void interpreter_add_obj_mapping(const char *var_name, AmpObject *obj, DICT (ObjVars) *local_variables);
 /* Increments through a scope ast node's list of statements 
  * and evaulates them */
-void interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variable_scope_stack);
+void interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variable_scope_stack, bool32 local_scope_already_created);
 /* evaluates a statement if the resulting evaluation is a bool32 */
 AmpObject *interpreter_evaluate_statement_to_bool (ASTHandle statement_handle, DICT (ObjVars) **variable_scope_stack);
 /* evaluates each side of an equality statement and returns true if the statement is true */
 AmpObject *interpreter_evaluate_equality (ASTHandle equality_handle, DICT (ObjVars) **variable_scope_stack);
 /* insert the func_handle into a dict using the func name as the key */
 void interpreter_insert_function_into_dict (ASTHandle func_handle);
+
+void interpreter_evaluate_function_call (ASTHandle func_call, DICT (ObjVars) **variable_scope_stack);
 
 /* ***************
  * Debug Functions

@@ -59,6 +59,7 @@ ASTHandle parse_scope (struct Token *t_arr, struct Statement s);
 ASTHandle *parse_arguments(struct Token *t_arr, struct Statement s);
 /* returns an array of ast handles that should be freed with ARRAY_FREE */
 ASTHandle * parse_arguments_surrounded_by_parens (struct Token *t_arr, unsigned int start_index);
+ASTHandle parse_possible_function_call(struct Token *t_arr, struct Statement s);
 
 /* ===================
     Arithmetic helpers

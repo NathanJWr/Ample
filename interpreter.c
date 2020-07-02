@@ -55,7 +55,8 @@ InterpreterStart (ASTHandle head)
 {
   DictFunc_init (&func_dict, hash_string, string_compare, 10);
   /* evaluate the global scope */
-  interpreter_evaluate_scope (head, NULL);
+  interpreter_evaluate_scope (head, NULL, false);
+  DictFunc_free (&func_dict);
 }
 
 void
@@ -84,6 +85,82 @@ interpreter_evaluate_statement (ASTHandle statement,
   else if (s->type == AST_FUNC)
     {
       interpreter_insert_function_into_dict (statement); 
+    }
+  else if (s->type == AST_FUNC_CALL)
+    {
+      interpreter_evaluate_function_call (statement, variable_scope_stack);
+    }
+}
+
+void
+interpreter_evaluate_function_call (ASTHandle func_call,
+                                    DICT (ObjVars) **variable_scope_stack)
+{
+  ASTHandle func_handle;
+  struct AST *func_call_node = ast_get_node (func_call);
+  const char *func_name = func_call_node->d.func_call_data.name;
+  /* try to find the func definition */
+
+  bool32 found = DictFunc_get (&func_dict,
+                               func_name,
+                               &func_handle);
+  if (found)
+    {
+      /* copy args to a local scope */
+      struct AST *func_node = ast_get_node (func_handle);
+      ASTHandle *args = func_node->d.func_data.args;
+      ASTHandle *args_input = func_call_node->d.func_call_data.args;
+      size_t arg_count = ARRAY_COUNT (args);
+      size_t arg_input_count = ARRAY_COUNT (args_input);
+      size_t i;
+      DICT(ObjVars) local_variables;
+      DICT (ObjVars) **new_variable_scope_stack = NULL;
+
+      DictObjVars_init (&local_variables, hash_string, string_compare, 10);
+
+      if (arg_count != arg_input_count)
+        {
+          printf ("Invalid number of arguments for function \"%s\", expected %u arguments and %u were provided\n", func_name, (unsigned int) arg_count, (unsigned int) arg_input_count);
+          exit (1);
+        }
+      for (i = 0; i < arg_count; i++)
+        {
+          struct AST *arg = ast_get_node (args[i]);
+          if (arg->type == AST_IDENTIFIER)
+            {
+              AmpObject *obj =
+                interpreter_get_or_generate_amp_object (args_input[i],
+                                                        variable_scope_stack);
+              DictObjVars_insert (&local_variables, arg->d.id_data.id, obj);
+            }
+          else
+            {
+              printf ("Function arg specifiers should be identifier\n");
+              exit (1);
+            }
+        }
+
+      /* the local variables will be at index 0 */
+      ARRAY_PUSH (new_variable_scope_stack, &local_variables);
+      if (variable_scope_stack)
+        {
+          size_t arr_size = ARRAY_COUNT (variable_scope_stack);
+          for (i = 0; i < arr_size; i++)
+            {
+              ARRAY_PUSH (new_variable_scope_stack, variable_scope_stack[i]); 
+            }
+        }
+
+      /* this will free the local scope upon finishing */
+      interpreter_evaluate_scope (func_node->d.func_data.scope,
+                                  new_variable_scope_stack,
+                                  true);
+    }
+  else
+    {
+      printf ("Function does not exist: %s\n",
+              func_call_node->d.func_call_data.name);
+      exit (1);
     }
 }
 
@@ -174,24 +251,33 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
 
 void
 interpreter_evaluate_scope (ASTHandle scope_handle,
-                            DICT (ObjVars) **variable_scope_stack)
+                            DICT (ObjVars) **variable_scope_stack,
+                            bool32 local_scope_already_created)
 {
   struct AST *scope = ast_get_node (scope_handle);
   if (scope->type == AST_SCOPE)
     {
       /* set up the scope's variable stacks */
-      DICT(ObjVars) local_variables;
       DICT(ObjVars) **new_variable_scope_stack = NULL;
+      DICT(ObjVars) local_variables;
       size_t i;
-      DictObjVars_init (&local_variables, hash_string, string_compare, 10);
-      /* the local variables will be at index 0 */
-      ARRAY_PUSH (new_variable_scope_stack, &local_variables);
-      if (variable_scope_stack)
+
+      if (!local_scope_already_created)
         {
-          for (i = 0; i < ARRAY_COUNT (variable_scope_stack); i++)
+          DictObjVars_init (&local_variables, hash_string, string_compare, 10);
+          /* the local variables will be at index 0 */
+          ARRAY_PUSH (new_variable_scope_stack, &local_variables);
+          if (variable_scope_stack)
             {
-              ARRAY_PUSH (new_variable_scope_stack, variable_scope_stack[i]); 
+              for (i = 0; i < ARRAY_COUNT (variable_scope_stack); i++)
+                {
+                  ARRAY_PUSH (new_variable_scope_stack, variable_scope_stack[i]); 
+                }
             }
+        }
+      else
+        {
+          new_variable_scope_stack = variable_scope_stack;
         }
 
       for (i = 0; i < ARRAY_COUNT (scope->d.scope_data.statements); i++)
@@ -241,11 +327,13 @@ interpreter_evaluate_if (ASTHandle statement,
 
       if (AMP_BOOL (is_expr_true)->val)
         interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true,
-                                    variable_scope_stack);
+                                    variable_scope_stack,
+                                    false);
       else if (AMP_BOOL(is_expr_true)->val == false &&
                expr_node->d.if_data.scope_if_false)
         interpreter_evaluate_scope (expr_node->d.if_data.scope_if_false,
-                                    variable_scope_stack);
+                                    variable_scope_stack,
+                                    false);
 
 
       AmpObjectDecrementRefcount (is_expr_true);

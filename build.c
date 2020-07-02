@@ -1,6 +1,10 @@
 #ifdef _WIN32
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+
+/* possible debug defines:
+ * MEM_DEBUG,
+ * PARSER_DEBUG */
 #define MEM_DEBUG
 #include "mem_debug_public.h"
 #include "mem_debug.c"

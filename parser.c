@@ -71,6 +71,11 @@ get_statement (struct Token *__restrict tokens,
   s.end = i; /* don't care about the DELIM so the end if offset by 1 */
 
   *index = i + 1; /* offset by one to skip past the DELIM */
+
+  #ifdef PARSER_DEBUG
+  printf ("DEGUG Statement: \n");
+  debug_print_statement (tokens, s);
+  #endif
   return s;
 }
 
@@ -82,6 +87,11 @@ parse_statement (struct Token *t_arr, struct Statement s)
   node = parse_possible_function (t_arr, s);
   if (node)
     return node;
+
+  node = parse_possible_function_call (t_arr, s);
+  if (node)
+    return node;
+
   node = parse_possible_if_statement (t_arr, s);
   if (node)
     return node;
@@ -118,6 +128,34 @@ parse_statement (struct Token *t_arr, struct Statement s)
   debug_print_statement (t_arr, s);
   exit (1);
 }
+
+ASTHandle
+parse_possible_function_call(struct Token *t_arr, struct Statement s)
+{
+  ASTHandle node = 0;
+  /* lowerst possible size is 3
+   * i.e. "func()" is an identifier and
+   * the two paren tokens */
+  if (statement_size (s) >= 3)
+    {
+      if (t_arr[s.start].value == TOK_IDENTIFIER &&
+          t_arr[s.start + 1].value == '(' &&
+          t_arr[s.end - 1].value == ')')
+        {
+          struct AST *func_call;
+          ASTHandle *args =
+            parse_arguments_surrounded_by_parens (t_arr, s.start + 1);
+
+          node = ast_get_node_handle ();
+          func_call = ast_get_node (node);
+          func_call->type = AST_FUNC_CALL;
+          func_call->d.func_call_data.name = t_arr[s.start].string;
+          func_call->d.func_call_data.args = args;
+        }
+    }
+  return node;
+}
+
 ASTHandle *
 parse_arguments (struct Token *t_arr, struct Statement s)
 {
@@ -150,7 +188,14 @@ ASTHandle *
 parse_arguments_surrounded_by_parens (struct Token *t_arr,
                                       unsigned int start_index)
 {
-  if (t_arr[start_index].value == '(')
+  /* if there are no args return null */
+  if (t_arr[start_index].value == '(' &&
+      t_arr[start_index + 1].value == ')')
+    {
+      return NULL;
+    }
+  /* if we have args inside parens */
+  else if (t_arr[start_index].value == '(')
     {
       struct Statement s;
       unsigned int end_index = start_index + 1;
@@ -166,7 +211,8 @@ parse_arguments_surrounded_by_parens (struct Token *t_arr,
     }
   else
     {
-      return NULL;
+      printf ("Unable to parse arguments...\n");
+      exit (1);
     }
 }
 

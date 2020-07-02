@@ -33,12 +33,21 @@ ast_get_node (ASTHandle index)
 void
 ast_free_buffer ()
 {
-  unsigned int i = 0;
-  for (i = 0; i < ARRAY_COUNT (ast_buffer); i++)
+  size_t i = 0;
+  size_t count = ARRAY_COUNT (ast_buffer);
+  for (i = 0; i < count; i++)
     {
       if (ast_buffer[i].type == AST_SCOPE)
         {
           ARRAY_FREE (ast_buffer[i].d.scope_data.statements);
+        }
+      if (ast_buffer[i].type == AST_FUNC)
+        {
+          ARRAY_FREE (ast_buffer[i].d.func_data.args);
+        }
+      if (ast_buffer[i].type == AST_FUNC_CALL)
+        {
+          ARRAY_FREE (ast_buffer[i].d.func_call_data.args);
         }
     }
   ARRAY_FREE (ast_buffer);
