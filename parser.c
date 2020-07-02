@@ -78,6 +78,10 @@ ASTHandle
 parse_statement (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
+
+  node = parse_possible_function (t_arr, s);
+  if (node)
+    return node;
   node = parse_possible_if_statement (t_arr, s);
   if (node)
     return node;
@@ -113,6 +117,93 @@ parse_statement (struct Token *t_arr, struct Statement s)
   printf ("Invalid statement: \n");
   debug_print_statement (t_arr, s);
   exit (1);
+}
+ASTHandle *
+parse_arguments (struct Token *t_arr, struct Statement s)
+{
+  unsigned int i;
+  unsigned int start_statement = s.start;
+  const char argument_separator = ',';
+  ASTHandle *parsed_arguments = NULL;
+  struct Statement final_argument;
+
+  for (i = s.start; i <= s.end; i++)
+    {
+      if (t_arr[i].value == argument_separator)
+        {
+          struct Statement statement;
+          statement.start = start_statement;
+          statement.end = i - 1;
+          ARRAY_PUSH (parsed_arguments, parse_statement (t_arr, statement));
+
+          /* skip the argument separator */
+          start_statement = i + 1;
+        }
+    }
+  final_argument.start = start_statement;
+  final_argument.end = i - 1;
+  ARRAY_PUSH (parsed_arguments, parse_statement (t_arr, final_argument));
+  return parsed_arguments;
+}
+
+ASTHandle *
+parse_arguments_surrounded_by_parens (struct Token *t_arr,
+                                      unsigned int start_index)
+{
+  if (t_arr[start_index].value == '(')
+    {
+      struct Statement s;
+      unsigned int end_index = start_index + 1;
+      size_t arr_length = ARRAY_COUNT (t_arr);
+      s.start = start_index + 1;
+
+      while (end_index < arr_length && t_arr[end_index].value != ')')
+        {
+          end_index++;
+        }
+      s.end = end_index - 1;
+      return parse_arguments (t_arr, s);
+    }
+  else
+    {
+      return NULL;
+    }
+}
+
+ASTHandle
+parse_possible_function(struct Token *t_arr, struct Statement s)
+{
+  ASTHandle node = 0;
+  if (statement_size (s) > 1 && t_arr[s.start].value == TOK_FUNC)
+    {
+      unsigned int scope_index;
+      struct Statement scope_statement;
+      ASTHandle scope_handle;
+      ASTHandle *func_args;
+      struct AST *func_node;
+
+
+      /* get function name */
+      const char *func_name = t_arr[s.start + 1].string;
+      /* parse function arguments */
+      func_args = parse_arguments_surrounded_by_parens (t_arr, s.start + 2);
+      /* parse function scope */
+      scope_index = s.start;
+      while (t_arr[scope_index].value != '{')
+        scope_index++;
+      scope_statement.start = scope_index;
+      scope_statement.end = s.end;
+      scope_handle = parse_scope (t_arr, scope_statement);
+
+      /* fill out the func ast node */
+      node = ast_get_node_handle ();
+      func_node = ast_get_node (node);
+      func_node->type = AST_FUNC;
+      func_node->d.func_data.name = func_name;
+      func_node->d.func_data.args = func_args;
+      func_node->d.func_data.scope = scope_handle;
+    }
+  return node;
 }
 ASTHandle
 parse_possible_equality (struct Token *t_arr, struct Statement s_indexes)

@@ -67,6 +67,10 @@ LexAll (char *fb)
             {
               token.value = TOK_ELSE;
             }
+          else if (0 == strncmp ("func", id, 4))
+            {
+              token.value = TOK_FUNC;
+            }
           else
             {
               token.value = TOK_IDENTIFIER;

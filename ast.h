@@ -29,7 +29,8 @@ enum ASTType {
   AST_ASSIGNMENT,
   AST_IF,
   AST_BOOL,
-  AST_EQUALITY
+  AST_EQUALITY,
+  AST_FUNC
 };
 /* declare here so sub-ast types can have pointers to the general struct */
 struct AST;
@@ -71,6 +72,11 @@ struct EqualityAST {
   ASTHandle left;
   ASTHandle right;
 };
+struct FuncAST {
+  const char *name;
+  ASTHandle *args;
+  ASTHandle scope;
+};
 struct AST {
   enum ASTType type;
   union data {
@@ -83,6 +89,7 @@ struct AST {
     struct IfAST if_data;
     struct BoolAST bool_data;
     struct EqualityAST equality_data;
+    struct FuncAST func_data;
   } d;
 };
 

@@ -53,7 +53,12 @@ ASTHandle parse_possible_assignment(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_if_statement (struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_bool (struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_equality (struct Token *t_arr, struct Statement s_indexes);
+ASTHandle parse_possible_function(struct Token *t_arr, struct Statement s);
 ASTHandle parse_scope (struct Token *t_arr, struct Statement s);
+/* returns an array of ast handles that should be freed with ARRAY_FREE */
+ASTHandle *parse_arguments(struct Token *t_arr, struct Statement s);
+/* returns an array of ast handles that should be freed with ARRAY_FREE */
+ASTHandle * parse_arguments_surrounded_by_parens (struct Token *t_arr, unsigned int start_index);
 
 /* ===================
     Arithmetic helpers
