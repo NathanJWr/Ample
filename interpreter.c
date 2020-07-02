@@ -24,7 +24,11 @@
 #include "objects/strobject.h"
 
 #include <assert.h>
+#include <string.h>
 static DICT(ObjVars) global_variables;
+DICT_DECLARE (Func, const char *, ASTHandle);
+DICT_IMPL (Func, const char *, ASTHandle)
+static DICT(Func) func_dict;
 
 void
 interpreter_erase_variable_if_exists (const char *var,
@@ -49,6 +53,7 @@ interpreter_add_obj_mapping (const char *var_name,
 void
 InterpreterStart (ASTHandle head)
 {
+  DictFunc_init (&func_dict, hash_string, string_compare, 10);
   /* evaluate the global scope */
   interpreter_evaluate_scope (head, NULL);
 }
@@ -76,6 +81,17 @@ interpreter_evaluate_statement (ASTHandle statement,
         interpreter_evaluate_equality (statement, variable_scope_stack);
       AmpObjectDecrementRefcount (ret_bool);
     }
+  else if (s->type == AST_FUNC)
+    {
+      interpreter_insert_function_into_dict (statement); 
+    }
+}
+
+void
+interpreter_insert_function_into_dict (ASTHandle func_handle)
+{
+  const char *func_name = ast_get_node (func_handle)->d.func_data.name;
+  DictFunc_insert (&func_dict, func_name, func_handle);
 }
 
 AmpObject *

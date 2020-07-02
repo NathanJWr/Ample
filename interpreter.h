@@ -54,6 +54,8 @@ void interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variab
 AmpObject *interpreter_evaluate_statement_to_bool (ASTHandle statement_handle, DICT (ObjVars) **variable_scope_stack);
 /* evaluates each side of an equality statement and returns true if the statement is true */
 AmpObject *interpreter_evaluate_equality (ASTHandle equality_handle, DICT (ObjVars) **variable_scope_stack);
+/* insert the func_handle into a dict using the func name as the key */
+void interpreter_insert_function_into_dict (ASTHandle func_handle);
 
 /* ***************
  * Debug Functions
