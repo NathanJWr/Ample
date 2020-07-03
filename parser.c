@@ -34,7 +34,7 @@ ParseTokens (struct Token *tokens)
   ASTHandle *statements = NULL;
   struct AST *h;
 
-  while (global_statement_index < ARRAY_COUNT (tokens))
+  while (global_statement_index < ARRAY_COUNT (tokens) - 1)
     {
       struct Statement s = get_statement (tokens, &global_statement_index);
       ARRAY_PUSH (statements, parse_statement (tokens, s));
@@ -342,12 +342,14 @@ parse_possible_if_statement (struct Token *t_arr, struct Statement s)
         i++;
       scope_statement.start = i;
       scope_statement.end = s.end;
-      scope_if_true = parse_scope (t_arr, scope_statement);
+      /* make sure we don't have an empty scope */
+      if (statement_size (scope_statement) > 2)
+        scope_if_true = parse_scope (t_arr, scope_statement);
 	  
       /* if there subsequent if else statements, add them to the ast node */
-      do 
+      next_statement = get_statement (t_arr, &next_statement_index);
+      if (t_arr[next_statement.start].value == TOK_ELSE) 
         {
-          next_statement = get_statement (t_arr, &next_statement_index);
 	        if (next_statement.start < ARRAY_COUNT (t_arr))
             {
               if (t_arr[next_statement.start].value == TOK_ELSE)
@@ -360,15 +362,10 @@ parse_possible_if_statement (struct Token *t_arr, struct Statement s)
 
                   /* update the original statement index so the parser
                   * can skip the trailing parts of if */
-                  global_statement_index = next_statement_index;
+                  global_statement_index = next_statement_index + 1;
                 }
 	          }
-          else
-            {
-              break;
-            }
         }
-      while (t_arr[next_statement.start].value == TOK_ELSE);
 
     
       n = ast_get_node (node);
@@ -385,23 +382,34 @@ parse_scope(struct Token* t_arr, struct Statement s)
   ASTHandle handle = 0; 
   struct AST *scope = NULL;
   unsigned int index = s.start + 1; /* skip '{' */
+  unsigned int scope_number = 1;
   ASTHandle *statements = NULL;
 
   assert (t_arr[s.start].value == '{');
 
   handle = ast_get_node_handle ();
-  while (t_arr[index].value != '}')
+  while (scope_number != 0 )
     {
-      struct Statement statement_indexes = get_statement(t_arr, &index);
       ASTHandle statement;
+      struct Statement statement_indexes = get_statement(t_arr, &index);
+
       /* this kind of sucks that we have to test for things we
        * should ignore, but complicating the get_statement logic
        * to accomodate for if and else statements being one statement
        * instead of two is not worth it */
-      if (t_arr[statement_indexes.start].value == TOK_ELSE)
-        continue;
-      statement = parse_statement (t_arr, statement_indexes);
-      ARRAY_PUSH (statements, statement);
+      if (t_arr[statement_indexes.start].value != TOK_ELSE)
+        {
+          statement = parse_statement (t_arr, statement_indexes);
+          ARRAY_PUSH (statements, statement);
+        }
+
+      if (t_arr[index].value == '}')
+        scope_number--;
+      if (t_arr[index].value == '{')
+        scope_number++;
+
+      if (scope_number <= 0)
+        break;
     }
   
   scope = ast_get_node (handle);

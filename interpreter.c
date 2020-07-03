@@ -113,10 +113,10 @@ interpreter_evaluate_function_call (ASTHandle func_call,
       size_t arg_count = ARRAY_COUNT (args);
       size_t arg_input_count = ARRAY_COUNT (args_input);
       size_t i;
-      DICT(ObjVars) local_variables;
+      DICT(ObjVars) *local_variables = malloc (sizeof (DICT (ObjVars)));
       DICT (ObjVars) **new_variable_scope_stack = NULL;
 
-      DictObjVars_init (&local_variables, hash_string, string_compare, 10);
+      DictObjVars_init (local_variables, hash_string, string_compare, 10);
 
       if (arg_count != arg_input_count)
         {
@@ -131,7 +131,7 @@ interpreter_evaluate_function_call (ASTHandle func_call,
               AmpObject *obj =
                 interpreter_get_or_generate_amp_object (args_input[i],
                                                         variable_scope_stack);
-              DictObjVars_insert (&local_variables, arg->d.id_data.id, obj);
+              DictObjVars_insert (local_variables, arg->d.id_data.id, obj);
             }
           else
             {
@@ -141,7 +141,7 @@ interpreter_evaluate_function_call (ASTHandle func_call,
         }
 
       /* the local variables will be at index 0 */
-      ARRAY_PUSH (new_variable_scope_stack, &local_variables);
+      ARRAY_PUSH (new_variable_scope_stack, local_variables);
       if (variable_scope_stack)
         {
           size_t arr_size = ARRAY_COUNT (variable_scope_stack);
@@ -259,14 +259,14 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
     {
       /* set up the scope's variable stacks */
       DICT(ObjVars) **new_variable_scope_stack = NULL;
-      DICT(ObjVars) local_variables;
+      DICT(ObjVars) *local_variables = malloc (sizeof(DICT(ObjVars)));
       size_t i;
 
       if (!local_scope_already_created)
         {
-          DictObjVars_init (&local_variables, hash_string, string_compare, 10);
+          DictObjVars_init (local_variables, hash_string, string_compare, 10);
           /* the local variables will be at index 0 */
-          ARRAY_PUSH (new_variable_scope_stack, &local_variables);
+          ARRAY_PUSH (new_variable_scope_stack, local_variables);
           if (variable_scope_stack)
             {
               for (i = 0; i < ARRAY_COUNT (variable_scope_stack); i++)
@@ -300,6 +300,7 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
             }
         }
       DictObjVars_free (new_variable_scope_stack[0]);
+      free (new_variable_scope_stack[0]);
       ARRAY_FREE (new_variable_scope_stack);
     }
   else
