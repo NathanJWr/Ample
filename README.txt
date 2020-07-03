@@ -1,8 +1,8 @@
 TODO:
   * add else if to if statements
   * add for loops
-  * add functions
   * add print function
+  * add not equal operator
 
 Implemented so far:
   * Reference Counted Variables
