@@ -136,25 +136,26 @@ interpreter_evaluate_function_call (ASTHandle func_call,
                                     DICT (ObjVars) **variable_scope_stack)
 {
   ASTHandle func_handle;
+  bool32 user_defined_function;
   struct AST *func_call_node = ast_get_node (func_call);
   const char *func_name = func_call_node->d.func_call_data.name;
-  /* try to find the func definition */
 
-  bool32 found = DictFunc_get (&func_dict,
-                               func_name,
-                               &func_handle);
-  if (found)
+  /* try to find the func definition */
+  user_defined_function = DictFunc_get (&func_dict,
+                                               func_name,
+                                               &func_handle);
+  if (user_defined_function)
     {
+      /* execute a user defined function */
       /* copy args to a local scope */
+      DICT(ObjVars) *local_variables = malloc (sizeof (DICT (ObjVars)));
+      DICT (ObjVars) **new_variable_scope_stack = NULL;
       struct AST *func_node = ast_get_node (func_handle);
       ASTHandle *args = func_node->d.func_data.args;
       ASTHandle *args_input = func_call_node->d.func_call_data.args;
       size_t arg_count = ARRAY_COUNT (args);
       size_t arg_input_count = ARRAY_COUNT (args_input);
       size_t i;
-      DICT(ObjVars) *local_variables = malloc (sizeof (DICT (ObjVars)));
-      DICT (ObjVars) **new_variable_scope_stack = NULL;
-
       DictObjVars_init (local_variables, hash_string, string_compare, 10);
 
       if (arg_count != arg_input_count)
@@ -190,6 +191,39 @@ interpreter_evaluate_function_call (ASTHandle func_call,
       interpreter_evaluate_scope (func_node->d.func_data.scope,
                                   new_variable_scope_stack,
                                   true);
+    }
+  else if ((0 == strncmp ("print", func_name, 5)))
+    {
+      /* make sure print is being called with only 1 argument */
+      ASTHandle *args_input = func_call_node->d.func_call_data.args;
+      size_t arg_count = ARRAY_COUNT (args_input);
+      AmpObject *obj;
+      if (arg_count != 1)
+        {
+          printf ("Invalid number of arguments for function \"%s\", ",
+                  func_name);
+          printf ("expected %u argument(s) and %u were provided\n",
+                  1,
+                  (unsigned int) arg_count);
+          exit (1);
+        }
+      /* get the argument */
+      obj = interpreter_get_or_generate_amp_object (args_input[0],
+                                                    variable_scope_stack);
+      switch (obj->info->type)
+        {
+        case AMP_OBJ_INT:
+          printf ("%f\n", AMP_NUMBER (obj)->val);
+          break;
+        case AMP_OBJ_STR:
+          printf ("%s\n", AMP_STRING (obj)->string);
+          break;
+        case AMP_OBJ_BOOL:
+          printf ("%s", AMP_BOOL (obj)->val ? "true" : "false");
+          break;
+        }
+
+      AmpObjectDecrementRefcount (obj); 
     }
   else
     {
