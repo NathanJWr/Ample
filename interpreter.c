@@ -92,6 +92,45 @@ interpreter_evaluate_statement (ASTHandle statement,
     }
 }
 
+DICT (ObjVars) **
+interpreter_create_new_variable_scope_stack (DICT (ObjVars) *local_variables,
+                                             DICT (ObjVars) **var_scope_stack)
+{
+  size_t i;
+  DICT (ObjVars) **new_variable_scope_stack = NULL;
+  /* the local variables will be at index 0 */
+  ARRAY_PUSH (new_variable_scope_stack, local_variables);
+  if (var_scope_stack)
+    {
+      size_t arr_size = ARRAY_COUNT (var_scope_stack);
+      for (i = 0; i < arr_size; i++)
+        {
+          ARRAY_PUSH (new_variable_scope_stack, var_scope_stack[i]); 
+        }
+    }
+
+  return new_variable_scope_stack;
+}
+
+void
+interpreter_free_local_variables (DICT (ObjVars) *local_variables)
+{
+  size_t i;
+  for (i = 0; i < local_variables->capacity; i++)
+    {
+      if (local_variables->map[i] != 0)
+        {
+          AmpObject *val
+              = DictObjVars_get_entry_pointer 
+                  (local_variables, 
+                   local_variables->map[i])->val;
+          AmpObjectDecrementRefcount (val);
+        }
+    }
+  DictObjVars_free (local_variables);
+  free (local_variables);
+}
+
 void
 interpreter_evaluate_function_call (ASTHandle func_call,
                                     DICT (ObjVars) **variable_scope_stack)
@@ -143,17 +182,9 @@ interpreter_evaluate_function_call (ASTHandle func_call,
               exit (1);
             }
         }
-
-      /* the local variables will be at index 0 */
-      ARRAY_PUSH (new_variable_scope_stack, local_variables);
-      if (variable_scope_stack)
-        {
-          size_t arr_size = ARRAY_COUNT (variable_scope_stack);
-          for (i = 0; i < arr_size; i++)
-            {
-              ARRAY_PUSH (new_variable_scope_stack, variable_scope_stack[i]); 
-            }
-        }
+      new_variable_scope_stack =
+        interpreter_create_new_variable_scope_stack (local_variables,
+                                                     variable_scope_stack);
 
       /* this will free the local scope upon finishing */
       interpreter_evaluate_scope (func_node->d.func_data.scope,
@@ -264,28 +295,24 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
       /* set up the scope's variable stacks */
       DICT(ObjVars) **new_variable_scope_stack = NULL;
       DICT(ObjVars) *local_variables;
+      size_t statement_count;
       size_t i;
 
       if (!local_scope_already_created)
         {
           local_variables = malloc (sizeof(DICT(ObjVars)));
           DictObjVars_init (local_variables, hash_string, string_compare, 10);
-          /* the local variables will be at index 0 */
-          ARRAY_PUSH (new_variable_scope_stack, local_variables);
-          if (variable_scope_stack)
-            {
-              for (i = 0; i < ARRAY_COUNT (variable_scope_stack); i++)
-                {
-                  ARRAY_PUSH (new_variable_scope_stack, variable_scope_stack[i]); 
-                }
-            }
+          new_variable_scope_stack = 
+            interpreter_create_new_variable_scope_stack (local_variables,
+                                                         variable_scope_stack);
         }
       else
         {
           new_variable_scope_stack = variable_scope_stack;
         }
 
-      for (i = 0; i < ARRAY_COUNT (scope->d.scope_data.statements); i++)
+      statement_count = ARRAY_COUNT (scope->d.scope_data.statements);
+      for (i = 0; i < statement_count; i++)
         {
           interpreter_evaluate_statement (scope->d.scope_data.statements[i],
                                           new_variable_scope_stack);
@@ -294,20 +321,7 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
 #ifdef INTERPRETER_DEBUG
       debug__interpreter_print_all_vars (new_variable_scope_stack[0]);
 #endif
-      /* local variables have reached the end of their scope */
-      for (i = 0; i < new_variable_scope_stack[0]->capacity; i++)
-        {
-          if (new_variable_scope_stack[0]->map[i] != 0)
-            {
-              AmpObject *val
-                  = DictObjVars_get_entry_pointer 
-                      (new_variable_scope_stack[0], 
-                       new_variable_scope_stack[0]->map[i])->val;
-              AmpObjectDecrementRefcount (val);
-            }
-        }
-      DictObjVars_free (new_variable_scope_stack[0]);
-      free (new_variable_scope_stack[0]);
+      interpreter_free_local_variables (new_variable_scope_stack[0]);
       ARRAY_FREE (new_variable_scope_stack);
     }
   else

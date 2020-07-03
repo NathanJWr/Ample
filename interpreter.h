@@ -59,6 +59,13 @@ void interpreter_insert_function_into_dict (ASTHandle func_handle);
 
 void interpreter_evaluate_function_call (ASTHandle func_call, DICT (ObjVars) **variable_scope_stack);
 
+/* will decrement all references of the variables in the dict,
+ * then will call Dict Free and then free the pointer "local_variables" */
+void interpreter_free_local_variables (DICT (ObjVars) *local_variables);
+
+/* puts local variables at index 0 of a new array of variable dictionaries */
+DICT (ObjVars) **interpreter_create_new_variable_scope_stack (DICT (ObjVars) *local_variables, DICT (ObjVars) **var_scope_stack);
+
 /* ***************
  * Debug Functions
  * *************** */
