@@ -5,6 +5,7 @@
 #include "array.h"
 #include "mem_debug_public.h"
 
+#ifdef MEM_DEBUG
 static size_t total_allocated;
 static size_t currently_allocated;
 static size_t unique_id_counter;
@@ -99,3 +100,4 @@ MemDebugPrintLeaks ()
         }
     }
 }
+#endif

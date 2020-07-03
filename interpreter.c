@@ -120,7 +120,11 @@ interpreter_evaluate_function_call (ASTHandle func_call,
 
       if (arg_count != arg_input_count)
         {
-          printf ("Invalid number of arguments for function \"%s\", expected %u arguments and %u were provided\n", func_name, (unsigned int) arg_count, (unsigned int) arg_input_count);
+          printf ("Invalid number of arguments for function \"%s\",",
+                  func_name);
+          printf ("expected %u arguments and %u were provided\n",
+                  (unsigned int) arg_count,
+                  (unsigned int) arg_input_count);
           exit (1);
         }
       for (i = 0; i < arg_count; i++)
@@ -259,11 +263,12 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
     {
       /* set up the scope's variable stacks */
       DICT(ObjVars) **new_variable_scope_stack = NULL;
-      DICT(ObjVars) *local_variables = malloc (sizeof(DICT(ObjVars)));
+      DICT(ObjVars) *local_variables;
       size_t i;
 
       if (!local_scope_already_created)
         {
+          local_variables = malloc (sizeof(DICT(ObjVars)));
           DictObjVars_init (local_variables, hash_string, string_compare, 10);
           /* the local variables will be at index 0 */
           ARRAY_PUSH (new_variable_scope_stack, local_variables);
@@ -286,7 +291,9 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
                                           new_variable_scope_stack);
         }
 
+#ifdef INTERPRETER_DEBUG
       debug__interpreter_print_all_vars (new_variable_scope_stack[0]);
+#endif
       /* local variables have reached the end of their scope */
       for (i = 0; i < new_variable_scope_stack[0]->capacity; i++)
         {

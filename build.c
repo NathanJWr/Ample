@@ -4,8 +4,9 @@
 
 /* possible debug defines:
  * MEM_DEBUG,
- * PARSER_DEBUG */
-#define MEM_DEBUG
+ * PARSER_DEBUG 
+ * INTERPRETER_DEBUG */
+#define INTERPRETER_DEBUG
 #include "mem_debug_public.h"
 #include "mem_debug.c"
 #include "mem_debug.h"
