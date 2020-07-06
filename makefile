@@ -1,3 +1,3 @@
 all:
-	clang -g -Wall -Wextra -fsanitize=address -std=c89 -pedantic -Wno-switch build.c -o ample-clang
+	clang -g -Wall -Wextra -std=gnu11 -pedantic -Wno-switch build.c -o ample-clang
 

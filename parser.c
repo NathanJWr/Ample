@@ -665,9 +665,7 @@ parse_possible_arithmetic (struct Token *t_arr, struct Statement s)
    * a + b ...
    * (a / b ... */
   if (statement_size (s) >= 2
-      && (t_arr[s.start].value == TOK_INTEGER
-          || t_arr[s.start].value == TOK_IDENTIFIER
-          || t_arr[s.start].value == TOK_STRING)
+      && !is_arithmetic_op (t_arr[s.start].value)
       && is_arithmetic_op (t_arr[s.start + 1].value)
       && !contains_invalid_arithmetic_token (t_arr, s))
     {

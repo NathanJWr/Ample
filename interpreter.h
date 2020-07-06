@@ -30,7 +30,7 @@ AmpObject *InterpreterGetOrGenerateAmpObject(ASTHandle handle, DICT (ObjVars) **
    ****************** */
 /* top level evaluate function that will call more specific
  * evaluations depending on a node's type */
-void interpreter_evaluate_statement(ASTHandle statement, DICT (ObjVars) **variable_scope_stack);
+AmpObject *interpreter_evaluate_statement(ASTHandle statement, DICT (ObjVars) **variable_scope_stack);
 /* evaluates an ast node of type AST_BINARY_OP */
 AmpObject *interpreter_evaluate_binary_op(ASTHandle handle, DICT (ObjVars) **variable_scope_stack);
 /* evaluates an ast node of type  AST_ASSIGNMENT */
@@ -49,7 +49,7 @@ AmpObject *interpreter_get_amp_object(const char *var, DICT (ObjVars) **variable
 void interpreter_add_obj_mapping(const char *var_name, AmpObject *obj, DICT (ObjVars) *local_variables);
 /* Increments through a scope ast node's list of statements 
  * and evaulates them */
-void interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variable_scope_stack, bool32 local_scope_already_created);
+AmpObject *interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variable_scope_stack, bool32 local_scope_already_created);
 /* evaluates a statement if the resulting evaluation is a bool32 */
 AmpObject *interpreter_evaluate_statement_to_bool (ASTHandle statement_handle, DICT (ObjVars) **variable_scope_stack);
 /* evaluates each side of an equality statement and returns true if the statement is true */
@@ -57,7 +57,7 @@ AmpObject *interpreter_evaluate_equality (ASTHandle equality_handle, DICT (ObjVa
 /* insert the func_handle into a dict using the func name as the key */
 void interpreter_insert_function_into_dict (ASTHandle func_handle);
 
-void interpreter_evaluate_function_call (ASTHandle func_call, DICT (ObjVars) **variable_scope_stack);
+AmpObject *interpreter_evaluate_function_call (ASTHandle func_call, DICT (ObjVars) **variable_scope_stack);
 
 /* will decrement all references of the variables in the dict,
  * then will call Dict Free and then free the pointer "local_variables" */

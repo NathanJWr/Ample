@@ -60,7 +60,7 @@ InterpreterStart (ASTHandle head)
   DictFunc_free (&func_dict);
 }
 
-void
+AmpObject *
 interpreter_evaluate_statement (ASTHandle statement,
                                 DICT (ObjVars) **variable_scope_stack)
 {
@@ -71,7 +71,7 @@ interpreter_evaluate_statement (ASTHandle statement,
     }
   else if (s->type == AST_BINARY_OP)
     {
-      interpreter_evaluate_binary_op (statement, variable_scope_stack);
+      return interpreter_evaluate_binary_op (statement, variable_scope_stack);
     }
   else if (s->type == AST_IF)
     {
@@ -79,9 +79,7 @@ interpreter_evaluate_statement (ASTHandle statement,
     }
   else if (s->type == AST_EQUALITY)
     {
-      AmpObject *ret_bool =
-        interpreter_evaluate_equality (statement, variable_scope_stack);
-      AmpObjectDecrementRefcount (ret_bool);
+      return interpreter_evaluate_equality (statement, variable_scope_stack);
     }
   else if (s->type == AST_FUNC)
     {
@@ -89,8 +87,9 @@ interpreter_evaluate_statement (ASTHandle statement,
     }
   else if (s->type == AST_FUNC_CALL)
     {
-      interpreter_evaluate_function_call (statement, variable_scope_stack);
+      return interpreter_evaluate_function_call (statement, variable_scope_stack);
     }
+  return NULL;
 }
 
 DICT (ObjVars) **
@@ -119,12 +118,9 @@ interpreter_free_local_variables (DICT (ObjVars) *local_variables)
   size_t i;
   for (i = 0; i < local_variables->capacity; i++)
     {
-      if (local_variables->map[i] != 0)
+      if (local_variables->mem[i].key != 0)
         {
-          AmpObject *val
-              = DictObjVars_get_entry_pointer 
-                  (local_variables, 
-                   local_variables->map[i])->val;
+          AmpObject *val = local_variables->mem[i].val;
           AmpObjectDecrementRefcount (val);
         }
     }
@@ -132,7 +128,7 @@ interpreter_free_local_variables (DICT (ObjVars) *local_variables)
   free (local_variables);
 }
 
-void
+AmpObject *
 interpreter_evaluate_function_call (ASTHandle func_call,
                                     DICT (ObjVars) **variable_scope_stack)
 {
@@ -189,21 +185,29 @@ interpreter_evaluate_function_call (ASTHandle func_call,
                                                      variable_scope_stack);
 
       /* this will free the local scope upon finishing */
-      interpreter_evaluate_scope (func_node->d.func_data.scope,
-                                  new_variable_scope_stack,
-                                  true);
+      return interpreter_evaluate_scope (func_node->d.func_data.scope,
+                                         new_variable_scope_stack,
+                                         true);
     }
   else
     {
       ASTHandle *args_input = func_call_node->d.func_call_data.args;
       size_t arg_count = ARRAY_COUNT (args_input);
-      if (!ExecuteAmpleFunction (args_input, arg_count, func_name, variable_scope_stack))
+      AmpObject *obj;
+      if (!ExecuteAmpleFunction (args_input,
+                                 arg_count,
+                                 func_name,
+                                 variable_scope_stack,
+                                 &obj))
         {
           printf ("Function does not exist: %s\n",
                   func_call_node->d.func_call_data.name);
           exit (1);
         }
+      if (obj)
+        return obj;
     }
+  return NULL;
 }
 
 void
@@ -291,7 +295,7 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
     }
 }
 
-void
+AmpObject *
 interpreter_evaluate_scope (ASTHandle scope_handle,
                             DICT (ObjVars) **variable_scope_stack,
                             bool32 local_scope_already_created)
@@ -321,8 +325,16 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
       statement_count = ARRAY_COUNT (scope->d.scope_data.statements);
       for (i = 0; i < statement_count; i++)
         {
-          interpreter_evaluate_statement (scope->d.scope_data.statements[i],
-                                          new_variable_scope_stack);
+          AmpObject *obj;
+          obj = interpreter_evaluate_statement (scope->d.scope_data.statements[i],
+                                                new_variable_scope_stack);
+          if (obj)
+            {
+              /* NOTE: placeholder */
+              AmpObjectDecrementRefcount (obj);
+              /* if we get a return amp object then return something that
+               * is not null */
+            }
         }
 
 #ifdef INTERPRETER_DEBUG
@@ -336,6 +348,7 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
       printf ("Expression is not a scope\n");
       exit (1);
     }
+  return NULL;
 }
 
 void
@@ -570,6 +583,14 @@ interpreter_evaluate_assignment (ASTHandle statement,
                                       var,
                                       variable_scope_stack,
                                       scope_stack_index);
+    }
+  else if (expr->type == AST_FUNC_CALL)
+    {
+      AmpObject *obj = interpreter_evaluate_function_call (s->d.asgn_data.expr,
+                                                           variable_scope_stack);
+      interpreter_add_obj_mapping (var,
+                                   obj,
+                                   variable_scope_stack[scope_stack_index]);
     }
 }
 
