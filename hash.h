@@ -17,6 +17,7 @@
 #ifndef HASH_H_
 #define HASH_H_
 #include "array.h"
+#include "bool.h"
 /* USAGE:
    This file has two user facing macros: DICT_DECLARE and DICT_IMPL
    DICT_DECLARE creates the header definitions and structures necessary

@@ -22,6 +22,8 @@
    External functions
    ****************** */
 void InterpreterStart(ASTHandle head);
+/* Returns an amp object that will be created if none exist already */
+AmpObject *InterpreterGetOrGenerateAmpObject(ASTHandle handle, DICT (ObjVars) **variable_scope_stack);
 
 /* ******************
    Internal Functions
@@ -43,8 +45,6 @@ void interpreter_erase_variable_if_exists(const char *var, DICT (ObjVars) *local
 void interpreter_duplicate_variable(const char *var, const char *assign, DICT (ObjVars) **variable_scope_stack, size_t scope_stack_index);
 /* Returns an amp object that already exists as a variable */
 AmpObject *interpreter_get_amp_object(const char *var, DICT (ObjVars) **variable_scope_stack);
-/* Returns an amp object that will be created if none exist already */
-AmpObject *interpreter_get_or_generate_amp_object(ASTHandle handle, DICT (ObjVars) **variable_scope_stack);
 /* Add an object to the variable map for easy storage/access */
 void interpreter_add_obj_mapping(const char *var_name, AmpObject *obj, DICT (ObjVars) *local_variables);
 /* Increments through a scope ast node's list of statements 

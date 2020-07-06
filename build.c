@@ -6,7 +6,7 @@
  * MEM_DEBUG,
  * PARSER_DEBUG 
  * INTERPRETER_DEBUG */
-#define INTERPRETER_DEBUG
+#define MEM_DEBUG
 #include "mem_debug_public.h"
 #include "mem_debug.c"
 #include "mem_debug.h"
@@ -21,6 +21,7 @@
 #include "dict_vars.c"
 #include "hash.c"
 #include "interpreter.c"
+#include "interpreter_functions.c"
 #include "lexer.c"
 #include "ncl.c"
 #include "parser.c"

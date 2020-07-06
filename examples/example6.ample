@@ -3,6 +3,7 @@
 # stack size depending on how deep the recursive
 # calls go! (e.g. ulimit -s on linux)
 func foo (var) {
+  print (var);
   if (var == 0) {
    a = 10;
   } else {

@@ -15,6 +15,7 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "boolobject.h"
+#include <stdlib.h>
 static AmpObjectInfo bool_info;
 static bool32 bool_info_initialized;
 AmpObject *

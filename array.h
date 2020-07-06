@@ -63,7 +63,7 @@ struct Array_Buffer {
     arr_ptr[buff->count++] = item;                                             \
   }
 
-size_t ARRAY_COUNT(void *arr)
+static size_t ARRAY_COUNT(void *arr)
 {
   if (arr)
     return ARR_BASE_POINTER ((char*) arr)->count;

@@ -22,6 +22,7 @@
 #include "objects/numobject.h"
 #include "objects/boolobject.h"
 #include "objects/strobject.h"
+#include "interpreter_functions.h"
 
 #include <assert.h>
 #include <string.h>
@@ -173,8 +174,8 @@ interpreter_evaluate_function_call (ASTHandle func_call,
           if (arg->type == AST_IDENTIFIER)
             {
               AmpObject *obj =
-                interpreter_get_or_generate_amp_object (args_input[i],
-                                                        variable_scope_stack);
+                InterpreterGetOrGenerateAmpObject (args_input[i],
+                                                   variable_scope_stack);
               DictObjVars_insert (local_variables, arg->d.id_data.id, obj);
             }
           else
@@ -192,44 +193,16 @@ interpreter_evaluate_function_call (ASTHandle func_call,
                                   new_variable_scope_stack,
                                   true);
     }
-  else if ((0 == strncmp ("print", func_name, 5)))
-    {
-      /* make sure print is being called with only 1 argument */
-      ASTHandle *args_input = func_call_node->d.func_call_data.args;
-      size_t arg_count = ARRAY_COUNT (args_input);
-      AmpObject *obj;
-      if (arg_count != 1)
-        {
-          printf ("Invalid number of arguments for function \"%s\", ",
-                  func_name);
-          printf ("expected %u argument(s) and %u were provided\n",
-                  1,
-                  (unsigned int) arg_count);
-          exit (1);
-        }
-      /* get the argument */
-      obj = interpreter_get_or_generate_amp_object (args_input[0],
-                                                    variable_scope_stack);
-      switch (obj->info->type)
-        {
-        case AMP_OBJ_INT:
-          printf ("%f\n", AMP_NUMBER (obj)->val);
-          break;
-        case AMP_OBJ_STR:
-          printf ("%s\n", AMP_STRING (obj)->string);
-          break;
-        case AMP_OBJ_BOOL:
-          printf ("%s", AMP_BOOL (obj)->val ? "true" : "false");
-          break;
-        }
-
-      AmpObjectDecrementRefcount (obj); 
-    }
   else
     {
-      printf ("Function does not exist: %s\n",
-              func_call_node->d.func_call_data.name);
-      exit (1);
+      ASTHandle *args_input = func_call_node->d.func_call_data.args;
+      size_t arg_count = ARRAY_COUNT (args_input);
+      if (!ExecuteAmpleFunction (args_input, arg_count, func_name, variable_scope_stack))
+        {
+          printf ("Function does not exist: %s\n",
+                  func_call_node->d.func_call_data.name);
+          exit (1);
+        }
     }
 }
 
@@ -249,11 +222,11 @@ interpreter_evaluate_equality (ASTHandle equality_handle,
     {
       /* get amp objects to work with */
       AmpObject *left_obj =
-        interpreter_get_or_generate_amp_object
+        InterpreterGetOrGenerateAmpObject
           (equality_ast->d.equality_data.left,
            variable_scope_stack);
       AmpObject *right_obj =
-        interpreter_get_or_generate_amp_object
+        InterpreterGetOrGenerateAmpObject
           (equality_ast->d.equality_data.right,
            variable_scope_stack);
       AmpObject *retval = NULL;
@@ -420,8 +393,8 @@ interpreter_get_amp_object (const char *var,
 /* returns an owning pointer to an Amp Object
    i.e the object returned will have it's reference counter incremented */
 AmpObject *
-interpreter_get_or_generate_amp_object (ASTHandle handle,
-                                        DICT (ObjVars) **variable_scope_stack)
+InterpreterGetOrGenerateAmpObject (ASTHandle handle,
+                                        DICT (ObjVars) **__restrict__ variable_scope_stack)
 {
   struct AST *node = ast_get_node (handle);
   AmpObject *obj = NULL;
@@ -464,7 +437,7 @@ interpreter_evaluate_binary_op (ASTHandle handle,
 
       if (right_node->type != AST_BINARY_OP)
         {
-          right = interpreter_get_or_generate_amp_object (right_handle,
+          right = InterpreterGetOrGenerateAmpObject (right_handle,
                                                           variable_scope_stack);
         }
       else if (right_node->type == AST_BINARY_OP)
@@ -479,7 +452,7 @@ interpreter_evaluate_binary_op (ASTHandle handle,
 
       if (left_node->type != AST_BINARY_OP)
         {
-          left = interpreter_get_or_generate_amp_object (left_handle,
+          left = InterpreterGetOrGenerateAmpObject (left_handle,
                                                          variable_scope_stack);
         }
       else if (left_node->type == AST_BINARY_OP)
