@@ -150,10 +150,7 @@ parse_possible_function_call(struct Token *t_arr, struct Statement s)
   if (statement_size (s) >= 3)
     {
       if (t_arr[s.start].value == TOK_IDENTIFIER &&
-          t_arr[s.start + 1].value == '(' &&
-          (t_arr[s.end].value == ')' 
-           || (t_arr[s.end-1].value == ')' && t_arr[s.end].value == STATEMENT_DELIM)
-          ))
+          t_arr[s.start + 1].value == '(')
         {
           struct AST *func_call;
           ASTHandle *args =
@@ -685,8 +682,10 @@ parse_possible_arithmetic (struct Token *t_arr, struct Statement s)
   /* Expression Format:
    * a + b ...
    * (a / b ... */
+  if (statement_size (s) <= 1)
+    return node;
   size_t i;
-  for (i = s.start; i < s.end - 1; i++)
+  for (i = s.start; i <= s.end ; i++)
     {
       if (is_arithmetic_op(t_arr[i].value))
         {
