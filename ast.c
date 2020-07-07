@@ -23,12 +23,15 @@ ast_get_node_handle ()
 {
   struct AST a = { 0 };
   ARRAY_PUSH (ast_buffer, a);
-  return ARRAY_COUNT (ast_buffer) - 1;
+  return ARRAY_COUNT (ast_buffer);
 }
 struct AST *
 ast_get_node (ASTHandle index)
 {
-  return &ast_buffer[index];
+  if (index == 0)
+    return NULL;
+  else
+    return &ast_buffer[index-1];
 }
 void
 ast_free_buffer ()

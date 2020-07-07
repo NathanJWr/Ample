@@ -15,6 +15,7 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "ncl.h"
+#include <stdio.h>
 void *
 ncl_realloc (void *p, size_t s)
 {
@@ -28,3 +29,13 @@ ncl_realloc (void *p, size_t s)
       return tmp;
     }
 }
+
+char *
+NCL_DoubleToString(double num)
+{
+  size_t alloc_size = snprintf (NULL, 0, "%f", num);
+  char *ret = malloc (alloc_size);
+  sprintf (ret, "%f", num);
+  return ret;
+}
+

@@ -1,4 +1,5 @@
 #include "ast.h"
+#include "ncl.h"
 #include "bool.h"
 #include "dict_vars.h"
 #include "interpreter.h"
@@ -76,7 +77,6 @@ ample_cast_object_to_string (ASTHandle *__restrict__ args,
                              DICT (ObjVars) **__restrict__ variable_scope_stack)
 {
   AmpObject *obj, *ret_object = NULL;
-  char str[100];
   if (arg_count != 1)
     {
       printf ("Invalid number of arguments for function \"%s\", ",
@@ -91,10 +91,11 @@ ample_cast_object_to_string (ASTHandle *__restrict__ args,
                                            variable_scope_stack);
   switch (obj->info->type)
     {
-    case AMP_OBJ_INT:
-      snprintf (str, 100, "%f", AMP_NUMBER (obj)->val);
+    case AMP_OBJ_INT: {
+      char* str = NCL_DoubleToString (AMP_NUMBER (obj)->val);
       ret_object = AmpStringCreate (str);
-      break;
+      free (str);
+    } break;
     case AMP_OBJ_STR:
       AmpObjectIncrementRefcount (obj);
       ret_object = obj;

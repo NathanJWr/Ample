@@ -10,6 +10,9 @@ func abc() {
   var = 20;
 }
 
+# functions can take multiple arguments
+foo2 ("Hello", "World!");
+
 # calling this function requires no arguments
 abc();
 
@@ -17,6 +20,4 @@ abc();
 foo("Hey this is in an argument!");
 foo(10);
 
-# functions can take multiple arguments
-foo2 ("Hello", "World!");
 

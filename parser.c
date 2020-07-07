@@ -387,6 +387,9 @@ parse_scope(struct Token* t_arr, struct Statement s)
 
   assert (t_arr[s.start].value == '{');
 
+  if (s.start + 1 == s.end)
+    return handle;
+
   handle = ast_get_node_handle ();
   while (scope_number != 0 )
     {

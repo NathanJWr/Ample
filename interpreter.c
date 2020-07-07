@@ -116,13 +116,9 @@ void
 interpreter_free_local_variables (DICT (ObjVars) *local_variables)
 {
   size_t i;
-  for (i = 0; i < local_variables->capacity; i++)
+  for (i = 1; i < ARRAY_COUNT (local_variables->mem); i++)
     {
-      if (local_variables->mem[i].key != 0)
-        {
-          AmpObject *val = local_variables->mem[i].val;
-          AmpObjectDecrementRefcount (val);
-        }
+      AmpObjectDecrementRefcount (local_variables->mem[i].val);
     }
   DictObjVars_free (local_variables);
   free (local_variables);
@@ -301,53 +297,55 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
                             bool32 local_scope_already_created)
 {
   struct AST *scope = ast_get_node (scope_handle);
-  if (scope->type == AST_SCOPE)
+  if (!scope)
+    { 
+      if (local_scope_already_created)
+        {
+          interpreter_free_local_variables (variable_scope_stack[0]);
+          ARRAY_FREE (variable_scope_stack);
+        }
+      return NULL;
+    }
+  /* set up the scope's variable stacks */
+  DICT(ObjVars) **new_variable_scope_stack = NULL;
+  DICT(ObjVars) *local_variables;
+  size_t statement_count;
+  size_t i;
+
+  if (!local_scope_already_created)
     {
-      /* set up the scope's variable stacks */
-      DICT(ObjVars) **new_variable_scope_stack = NULL;
-      DICT(ObjVars) *local_variables;
-      size_t statement_count;
-      size_t i;
-
-      if (!local_scope_already_created)
-        {
-          local_variables = malloc (sizeof(DICT(ObjVars)));
-          DictObjVars_init (local_variables, hash_string, string_compare, 10);
-          new_variable_scope_stack = 
-            interpreter_create_new_variable_scope_stack (local_variables,
-                                                         variable_scope_stack);
-        }
-      else
-        {
-          new_variable_scope_stack = variable_scope_stack;
-        }
-
-      statement_count = ARRAY_COUNT (scope->d.scope_data.statements);
-      for (i = 0; i < statement_count; i++)
-        {
-          AmpObject *obj;
-          obj = interpreter_evaluate_statement (scope->d.scope_data.statements[i],
-                                                new_variable_scope_stack);
-          if (obj)
-            {
-              /* NOTE: placeholder */
-              AmpObjectDecrementRefcount (obj);
-              /* if we get a return amp object then return something that
-               * is not null */
-            }
-        }
-
-#ifdef INTERPRETER_DEBUG
-      debug__interpreter_print_all_vars (new_variable_scope_stack[0]);
-#endif
-      interpreter_free_local_variables (new_variable_scope_stack[0]);
-      ARRAY_FREE (new_variable_scope_stack);
+      local_variables = malloc (sizeof(DICT(ObjVars)));
+      DictObjVars_init (local_variables, hash_string, string_compare, 10);
+      new_variable_scope_stack = 
+        interpreter_create_new_variable_scope_stack (local_variables,
+                                                     variable_scope_stack);
     }
   else
     {
-      printf ("Expression is not a scope\n");
-      exit (1);
+      new_variable_scope_stack = variable_scope_stack;
     }
+
+  statement_count = ARRAY_COUNT (scope->d.scope_data.statements);
+  for (i = 0; i < statement_count; i++)
+    {
+      AmpObject *obj;
+      obj = interpreter_evaluate_statement (scope->d.scope_data.statements[i],
+                                            new_variable_scope_stack);
+      if (obj)
+        {
+          /* NOTE: placeholder */
+          AmpObjectDecrementRefcount (obj);
+          /* if we get a return amp object then return something that
+           * is not null */
+        }
+    }
+
+#ifdef INTERPRETER_DEBUG
+  debug__interpreter_print_all_vars (new_variable_scope_stack[0]);
+#endif
+  interpreter_free_local_variables (new_variable_scope_stack[0]);
+  ARRAY_FREE (new_variable_scope_stack);
+
   return NULL;
 }
 
@@ -407,7 +405,7 @@ interpreter_get_amp_object (const char *var,
    i.e the object returned will have it's reference counter incremented */
 AmpObject *
 InterpreterGetOrGenerateAmpObject (ASTHandle handle,
-                                        DICT (ObjVars) **__restrict__ variable_scope_stack)
+                                   DICT (ObjVars) **__restrict__ variable_scope_stack)
 {
   struct AST *node = ast_get_node (handle);
   AmpObject *obj = NULL;
