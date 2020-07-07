@@ -35,22 +35,30 @@ bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
     }
   return false;
 }
-
-void ample_print (ASTHandle  *__restrict__ args,
-                  size_t arg_count,
-                  const char *__restrict__ func_name,
-                  DICT (ObjVars) **__restrict__ variable_scope_stack)
+void
+ample_function_check_arg_numbers (size_t count,
+                                  size_t expected_count,
+                                  const char *func_name)
 {
-  AmpObject *obj;
-  if (arg_count != 1)
+  if (count != expected_count)
     {
       printf ("Invalid number of arguments for function \"%s\", ",
               func_name);
       printf ("expected %u argument(s) and %u were provided\n",
               1,
-              (unsigned int) arg_count);
+              (unsigned int) count);
       exit (1);
     }
+}
+
+void
+ample_print (ASTHandle  *__restrict__ args,
+             size_t arg_count,
+             const char *__restrict__ func_name,
+             DICT (ObjVars) **__restrict__ variable_scope_stack)
+{
+  AmpObject *obj;
+  ample_function_check_arg_numbers (arg_count, 1, func_name);
   /* get the argument */
   obj = InterpreterGetOrGenerateAmpObject (args[0],
                                            variable_scope_stack);
@@ -77,15 +85,7 @@ ample_cast_object_to_string (ASTHandle *__restrict__ args,
                              DICT (ObjVars) **__restrict__ variable_scope_stack)
 {
   AmpObject *obj, *ret_object = NULL;
-  if (arg_count != 1)
-    {
-      printf ("Invalid number of arguments for function \"%s\", ",
-              func_name);
-      printf ("expected %u argument(s) and %u were provided\n",
-              1,
-              (unsigned int) arg_count);
-      exit (1);
-    }
+  ample_function_check_arg_numbers (arg_count, 1, func_name);
   /* get the argument */
   obj = InterpreterGetOrGenerateAmpObject (args[0],
                                            variable_scope_stack);

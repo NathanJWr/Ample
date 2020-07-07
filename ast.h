@@ -31,7 +31,9 @@ enum ASTType {
   AST_BOOL,
   AST_EQUALITY,
   AST_FUNC,
-  AST_FUNC_CALL
+  AST_FUNC_CALL,
+  AST_OP,
+  AST_PAREN,
 };
 /* declare here so sub-ast types can have pointers to the general struct */
 struct AST;
@@ -82,6 +84,12 @@ struct FuncCallAST {
   const char *name;
   ASTHandle *args;
 };
+struct OpAST {
+  char op;
+};
+struct ParenAST {
+  char val;
+};
 struct AST {
   enum ASTType type;
   union data {
@@ -96,6 +104,8 @@ struct AST {
     struct EqualityAST equality_data;
     struct FuncAST func_data;
     struct FuncCallAST func_call_data;
+    struct OpAST op_data;
+    struct ParenAST paren_data;
   } d;
 };
 

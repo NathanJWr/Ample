@@ -83,7 +83,14 @@ ASTHandle
 parse_statement (struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
-
+  if (is_arithmetic_op (t_arr[s.start].value))
+    {
+      node = ast_get_node_handle ();
+      struct AST *ast = ast_get_node (node);
+      ast->d.op_data.op = t_arr[s.start].value;
+      ast->type = AST_OP;
+      return node;
+    }
   node = parse_possible_function (t_arr, s);
   if (node)
     return node;
@@ -140,7 +147,9 @@ parse_possible_function_call(struct Token *t_arr, struct Statement s)
     {
       if (t_arr[s.start].value == TOK_IDENTIFIER &&
           t_arr[s.start + 1].value == '(' &&
-          t_arr[s.end - 1].value == ')')
+          (t_arr[s.end].value == ')' 
+           || (t_arr[s.end-1].value == ')' && t_arr[s.end].value == STATEMENT_DELIM)
+          ))
         {
           struct AST *func_call;
           ASTHandle *args =
@@ -448,94 +457,103 @@ is_arithmetic_op (TValue v)
 }
 
 bool32
-greater_precedence (struct Token *left, struct Token *right)
+greater_precedence (const char left, const char right)
 {
-  if ('*' == left->value)
+  if ('*' == left)
     {
-      if (right->value == '+' || right->value == '-')
+      if (right == '+' || right == '-')
         return true;
     }
-  else if ('/' == left->value)
+  else if ('/' == left)
     {
-      if (right->value == '+' || right->value == '-')
+      if (right == '+' || right == '-')
         return true;
     }
   return false;
 }
 bool32
-equal_precedence (struct Token *left, struct Token *right)
+equal_precedence (const char left, const char right)
 {
-  if (('+' == left->value || '-' == left->value)
-      && ('+' == right->value || '-' == right->value))
+  if (('+' == left || '-' == left)
+      && ('+' == right || '-' == right))
     {
       return true;
     }
-  if (('*' == left->value || '/' == left->value)
-      && ('*' == right->value || '/' == right->value))
+  if (('*' == left || '/' == left)
+      && ('*' == right || '/' == right))
     {
       return true;
     }
   return false;
 }
 
-QUEUE (TokenQueue)
-convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
+QUEUE (ASTHandleQueue)
+convert_infix_to_postfix (QUEUE (ASTHandleQueue) * expr_q)
 {
-  STACK (TokenStack) s;
-  QUEUE (TokenQueue) q;
-  STACK_STRUCT_INIT (TokenStack, &s, struct Token *, 10);
-  QUEUE_STRUCT_INIT (TokenQueue, &q, struct Token *, 10);
+  STACK (ASTHandleStack) s;
+  QUEUE (ASTHandleQueue) q;
+  STACK_STRUCT_INIT (TokenStack, &s, ASTHandle, 10);
+  QUEUE_STRUCT_INIT (TokenQueue, &q, ASTHandle, 10);
   while (!QUEUE_EMPTY (expr_q))
     {
-      struct Token *n = QUEUE_FRONT (expr_q);
+      ASTHandle n = QUEUE_FRONT (expr_q);
       QUEUE_POP (expr_q);
-
-      if (n->value == TOK_INTEGER ||
-          n->value == TOK_IDENTIFIER ||
-          n->value == TOK_STRING)
+      struct AST *ast = ast_get_node (n);
+      if (ast->type != AST_OP)
         {
           QUEUE_PUSH (&q, n);
         }
-      if (is_arithmetic_op (n->value))
+      else if (ast->type == AST_OP)
         {
           if (!STACK_EMPTY (&s))
             {
-              struct Token *top_token = STACK_FRONT (&s);
-              while ((greater_precedence (top_token, n))
-                     || ((equal_precedence (top_token, n))
-                         && (top_token->value != ')')))
+              ASTHandle top = STACK_FRONT (&s);
+              struct AST *top_node = ast_get_node (top);
+
+              const char left = top_node->d.op_data.op;
+              const char right = ast->d.op_data.op;
+              while ((greater_precedence (left, right))
+                     || ((equal_precedence (left, right))
+                         && (left != ')')))
                 {
                   STACK_POP (&s);
-                  QUEUE_PUSH (&q, top_token);
+                  QUEUE_PUSH (&q, top);
 
                   if (STACK_EMPTY (&s))
                     break;
-                  top_token = STACK_FRONT (&s);
+                  top = STACK_FRONT (&s);
                 }
             }
           STACK_PUSH (&s, n);
         }
-      if (n->value == '(')
-        {
-          STACK_PUSH (&s, n);
-        }
-      if (n->value == ')')
-        {
-          struct Token *tn = STACK_FRONT (&s);
-          STACK_POP (&s);
-          while (tn->value != '(')
-            {
-              QUEUE_PUSH (&q, tn);
-              tn = STACK_FRONT (&s);
-              STACK_POP (&s);
-            }
-        }
+      if (ast->type == AST_PAREN)
+      {
+        if (ast->d.paren_data.val == '(')
+          {
+            STACK_PUSH (&s, n);
+          }
+        else
+          {
+            ASTHandle tn = STACK_FRONT (&s);
+            struct AST *tn_node = ast_get_node (tn);
+            STACK_POP (&s);
+            while (tn_node->type != AST_PAREN && tn_node->d.paren_data.val != '(')
+              {
+                QUEUE_PUSH (&q, tn);
+                tn = STACK_FRONT (&s);
+                tn_node = ast_get_node (tn);
+                STACK_POP (&s);
+              }
+          }
+      }
+      /*
       if (n->value == STATEMENT_DELIM)
         break;
+        */
     }
   while (!STACK_EMPTY (&s))
     {
-      struct Token *tn = STACK_FRONT (&s);
+      ASTHandle tn = STACK_FRONT (&s);
       STACK_POP (&s);
       QUEUE_PUSH (&q, tn);
     }
@@ -544,44 +562,22 @@ convert_infix_to_postfix (QUEUE (TokenQueue) * expr_q)
   return q;
 }
 ASTHandle
-convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q)
+convert_postfix_to_ast (QUEUE (ASTHandleQueue) * postfix_q)
 {
   STACK (ASTHandleStack) s;
   ASTHandle return_handle;
   STACK_STRUCT_INIT (ASTHandleStack, &s, ASTHandle, 10);
   while (!QUEUE_EMPTY (postfix_q))
     {
-      struct Token *n = QUEUE_FRONT (postfix_q);
+      ASTHandle n = QUEUE_FRONT (postfix_q);
+      struct AST *n_node = ast_get_node (n);
       QUEUE_POP (postfix_q);
 
-      if (n->value == TOK_INTEGER)
+      if (n_node->type != AST_OP)
         {
-          ASTHandle ast_handle = ast_get_node_handle ();
-          struct AST *integer_ast = ast_get_node (ast_handle);
-          integer_ast->type = AST_INTEGER;
-          integer_ast->d.int_data.value = atof (n->string);
-
-          STACK_PUSH (&s, ast_handle);
+          STACK_PUSH (&s, n);
         }
-      else if (n->value == TOK_IDENTIFIER)
-        {
-          ASTHandle ast_handle = ast_get_node_handle ();
-          struct AST *id_ast = ast_get_node (ast_handle);
-          id_ast->type = AST_IDENTIFIER;
-          id_ast->d.id_data.id = n->string;
-
-          STACK_PUSH (&s, ast_handle);
-        }
-      else if (n->value == TOK_STRING)
-        {
-          ASTHandle ast_handle = ast_get_node_handle ();
-          struct AST *str = ast_get_node (ast_handle);
-          str->type = AST_STRING;
-          str->d.str_data.str = n->string;
-
-          STACK_PUSH (&s, ast_handle);
-        }
-      else if (is_arithmetic_op (n->value))
+      else
         {
           ASTHandle left, right, ast_handle;
           struct AST *op;
@@ -599,7 +595,7 @@ convert_postfix_to_ast (QUEUE (TokenQueue) * postfix_q)
           op->type = AST_BINARY_OP;
           op->d.bop_data.left = left;
           op->d.bop_data.right = right;
-          op->d.bop_data.op = n->value;
+          op->d.bop_data.op = n_node->d.op_data.op;
           /* Insert the operation, instead of the left and right values */
           STACK_PUSH (&s, ast_handle);
         }
@@ -615,16 +611,34 @@ parser__arithmetic (struct Token *t_arr, struct Statement s)
 {
   /* storage necessary to put tokens into a queue/stack
      no more memory should be allocated for this process */
-  QUEUE (TokenQueue) expr_q = { 0 };
-  QUEUE (TokenQueue) postfix = { 0 };
+  QUEUE (ASTHandleQueue) expr_q = { 0 };
+  QUEUE (ASTHandleQueue) postfix = { 0 };
   unsigned int i;
   ASTHandle op;
 
-  QUEUE_STRUCT_INIT (TokenQueue, &expr_q, struct Token *, 10);
-  for (i = s.start; i <= s.end; i++)
+  QUEUE_STRUCT_INIT (ASTHandleQueue, &expr_q, ASTHandle, 10);
+
+  unsigned int start_index = s.start;
+  for (i = s.start; i < s.end; i++)
     {
-      QUEUE_PUSH (&expr_q, t_arr + i);
+      if (is_arithmetic_op (t_arr[i].value))
+        {
+          struct Statement sub_statement = { start_index, i-1 };
+          ASTHandle h = parse_statement (t_arr, sub_statement);
+          QUEUE_PUSH (&expr_q, h);
+
+          struct Statement op_statement = { i, i };
+          h = parse_statement (t_arr, op_statement);
+          QUEUE_PUSH (&expr_q, h);
+          
+          start_index = i + 1;
+        }
     }
+  struct Statement sub_statement = { start_index, i };
+  ASTHandle h = parse_statement (t_arr, sub_statement);
+  QUEUE_PUSH (&expr_q, h);
+  start_index = i + 1;
+
   postfix = convert_infix_to_postfix (&expr_q);
   op = convert_postfix_to_ast (&postfix);
   return op;
@@ -667,12 +681,13 @@ parse_possible_arithmetic (struct Token *t_arr, struct Statement s)
   /* Expression Format:
    * a + b ...
    * (a / b ... */
-  if (statement_size (s) >= 2
-      && !is_arithmetic_op (t_arr[s.start].value)
-      && is_arithmetic_op (t_arr[s.start + 1].value)
-      && !contains_invalid_arithmetic_token (t_arr, s))
+  size_t i;
+  for (i = s.start; i < s.end - 1; i++)
     {
-      node = parser__arithmetic (t_arr, s);
+      if (is_arithmetic_op(t_arr[i].value))
+        {
+          node = parser__arithmetic (t_arr, s);
+        }
     }
   return node;
 }

@@ -425,6 +425,9 @@ InterpreterGetOrGenerateAmpObject (ASTHandle handle,
     case AST_BINARY_OP:
       obj = interpreter_evaluate_binary_op (handle, variable_scope_stack);
       break;
+    case AST_FUNC_CALL:
+      obj = interpreter_evaluate_function_call (handle, variable_scope_stack);
+      break;
     default:
       assert (false);
       break;

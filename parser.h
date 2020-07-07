@@ -66,9 +66,9 @@ ASTHandle parse_possible_function_call(struct Token *t_arr, struct Statement s);
    =================== */
 bool32 is_arithmetic_op(TValue v);
 /* true if left is of greater operator precedence than right */
-bool32 greater_precedence(struct Token *left, struct Token *right);
+bool32 greater_precedence(const char left, const char right);
 /* true if left is of equal operator precedence than right */
-bool32 equal_precedence(struct Token *left, struct Token *right);
+bool32 equal_precedence(const char left, const char right);
 /* checks if there are any tokens that don't make sense in an arithmetic statement */
 bool32 contains_invalid_arithmetic_token (struct Token *t_arr, struct Statement s);
 
@@ -77,13 +77,15 @@ bool32 contains_invalid_arithmetic_token (struct Token *t_arr, struct Statement 
    ==================*/
 STACK_DECLARATION(TokenStack, struct Token *);
 QUEUE_DECLARATION(TokenQueue, struct Token *);
+
 STACK_DECLARATION(ASTHandleStack, ASTHandle);
+QUEUE_DECLARATION(ASTHandleQueue, ASTHandle);
 /* converts a normal mathematical (infix) expression to something more workable
  */
-QUEUE(TokenQueue) convert_infix_to_postfix(QUEUE(TokenQueue) * expr_q);
+QUEUE(ASTHandleQueue) convert_infix_to_postfix(QUEUE(ASTHandleQueue) * expr_q);
 /* converts a postfix expression gotten from convert_infix_to_postfix into an
  * ast */
-ASTHandle convert_postfix_to_ast(QUEUE(TokenQueue) * infix_q);
+ASTHandle convert_postfix_to_ast(QUEUE(ASTHandleQueue) * infix_q);
 
 /* ==============
     Debug output

@@ -1,11 +1,6 @@
-num = 99.3;
-bool = true;
-str = "Hello";
+num = 19;
+var = str(num) + " hello";
+print (var);
 
-str_num = str(num);
-str_bool = str(bool);
-str_str = str (str);
-
-print (str_num + " " + str_bool + " " + str_str);
-
-str_str_str = str_str;
+var = 10 + 10 * 9 - 100.1;
+print (var);
