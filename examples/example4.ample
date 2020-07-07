@@ -5,13 +5,15 @@ if (10 == 20) { # evaluates to false
 } else {
   # this is the statement
   # that should run
+  print ("In the else block");
   a = 20;
-
+  
   # a nested if else block!
   if (false) {
     b = "true";
   } else {
     b = "false";
+    print ("In a nested else block");
   }
 }
 

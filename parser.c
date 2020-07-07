@@ -82,15 +82,13 @@ get_statement (struct Token *__restrict tokens,
 ASTHandle
 parse_statement (struct Token *t_arr, struct Statement s)
 {
+  /* the "biggest" kinds of statements should go first
+   * that way we pick the biggest statement (like an if statement)
+   * and then progressively parse smaller and smaller blocks */
   ASTHandle node = 0;
-  if (is_arithmetic_op (t_arr[s.start].value))
-    {
-      node = ast_get_node_handle ();
-      struct AST *ast = ast_get_node (node);
-      ast->d.op_data.op = t_arr[s.start].value;
-      ast->type = AST_OP;
-      return node;
-    }
+  node = parse_possible_if_statement (t_arr, s);
+  if (node)
+    return node;
   node = parse_possible_function (t_arr, s);
   if (node)
     return node;
@@ -99,7 +97,7 @@ parse_statement (struct Token *t_arr, struct Statement s)
   if (node)
     return node;
 
-  node = parse_possible_if_statement (t_arr, s);
+  node = parse_possible_equality (t_arr, s);
   if (node)
     return node;
 
@@ -127,9 +125,15 @@ parse_statement (struct Token *t_arr, struct Statement s)
   if (node)
     return node;
 
-  node = parse_possible_equality (t_arr, s);
-  if (node)
-    return node;
+  if (is_arithmetic_op (t_arr[s.start].value))
+    {
+      node = ast_get_node_handle ();
+      struct AST *ast = ast_get_node (node);
+      ast->d.op_data.op = t_arr[s.start].value;
+      ast->type = AST_OP;
+      return node;
+    }
+
 
   printf ("Invalid statement: \n");
   debug_print_statement (t_arr, s);

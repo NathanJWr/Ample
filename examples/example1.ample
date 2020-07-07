@@ -3,4 +3,6 @@ global_string = "This is a global string";
 if (val)
 {
   local_string = global_string + " copy that is in a scope";
+  print (local_string);
 }
+print (global_string);

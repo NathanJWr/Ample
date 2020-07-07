@@ -1,5 +1,6 @@
 func foo2 (var1, var2) {
-
+  print (var1);
+  print (var2);
 }
 
 func foo (var) {

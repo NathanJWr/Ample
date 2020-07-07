@@ -1,12 +1,18 @@
 global_var = "This is a global var";
 if (true) {
   local_var1 = global_var + " in scope 1";
+  print(local_var1);
   if (true) {
     local_var2 = local_var1 + " in scope 2";
     local_var3 = global_var + " in scope 2";
+    print(local_var2);
+    print(local_var3);
     if (true) {
       local_var4 = global_var;
       local_var5 = local_var4 + " in scope 3";
+
+      print(local_var4);
+      print(local_var5);
     }
   }
 }
