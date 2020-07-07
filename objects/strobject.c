@@ -53,7 +53,7 @@ AmpStringCreate (const char *str)
   
   if (!str_info_initialized)
     {
-      str_info.type = AMP_OBJ_STR;
+      str_info.type = AMP_OBJECT_STRING;
       AmpObjectInitializeOperationsToUnsupported (&str_info.ops);
       str_info.ops.add = amp_string_concat;
       str_info.ops.equal = amp_string_equal;

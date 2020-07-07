@@ -17,6 +17,17 @@
 #ifndef INTERPRETER_FUNCTIONS_H_
 #define INTERPRETER_FUNCTIONS_H_
 #include "ast.h"
+
+typedef enum AmpleErrorCode {
+  ERROR_INVALID_NUMBER_OF_ARGUMENTS,
+  ERROR_INVALID_CAST,
+} AmpleErrorCode;
+const char *ample_error_codes[] = {
+  "ERROR: Invalid number of arguments for function \"%s\", expected %u \
+argument(s) and %u were provided\n",
+  "ERROR: Cannot cast object of type %s to %s\n",
+};
+
 bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
                              size_t arg_count,
                              const char *__restrict__ func_name,
@@ -31,5 +42,13 @@ ample_cast_object_to_string (ASTHandle *__restrict__ args,
                              size_t arg_count,
                              const char *__restrict__ func_name,
                              DICT (ObjVars) **__restrict__ variable_scope_stack);
+/* cast to create an integer. 
+ * This will throw away any decimal and just return the integer part of
+ * a number */
+AmpObject *
+ample_cast_object_to_integer (ASTHandle *__restrict__ args,
+                              size_t arg_count,
+                              const char *__restrict__ func_name,
+                              DICT (ObjVars) **__restrict__ variable_scope_stack);
 #endif
 

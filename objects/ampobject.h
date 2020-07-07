@@ -16,7 +16,21 @@
 */
 #ifndef AMP_OBJECT_H_
 #define AMP_OBJECT_H_
-typedef enum AmpObjectType { AMP_OBJ_INT, AMP_OBJ_STR, AMP_OBJ_BOOL } AmpObjectType;
+
+#define X(type) type,
+#define AMP_OBJECT_TYPES \
+  X(AMP_OBJECT_NUMBER) \
+  X(AMP_OBJECT_STRING) \
+  X(AMP_OBJECT_BOOL)
+typedef enum AmpObjectType { 
+  AMP_OBJECT_TYPES
+} AmpObjectType;
+#undef X
+#define X(type) #type,
+const char *AMP_OBJECT_TYPE_STR[] = {
+  AMP_OBJECT_TYPES
+};
+#undef X
 
 struct AmpObject;
 typedef struct AmpObject AmpObject;

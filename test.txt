@@ -1,5 +1,7 @@
 var = str(19) + " hello";
 print (var);
 
-var = 10 + 10 * 9 - 100.1;
-print (str(10));
+var = 10 + 10 * 9 - 50.1;
+print ("Cast to an int: " + str(int(var)));
+print ("Original value: " + str(var));
+

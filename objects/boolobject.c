@@ -24,7 +24,7 @@ AmpBoolCreate (bool32 val)
   AmpObject_Bool *obj = NULL;
   if (!bool_info_initialized)
     {
-      bool_info.type = AMP_OBJ_BOOL;
+      bool_info.type = AMP_OBJECT_BOOL;
       AmpObjectInitializeOperationsToUnsupported (&bool_info.ops);
     }
   obj = malloc (sizeof (AmpObject_Bool));

@@ -267,7 +267,7 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
       char *identifier_str = expr->d.id_data.id;
       AmpObject *obj = interpreter_get_amp_object (identifier_str,
                                                    variable_scope_stack);
-      if (obj->info->type == AMP_OBJ_BOOL)
+      if (obj->info->type == AMP_OBJECT_BOOL)
         {
           AmpObjectIncrementRefcount (obj);
           return obj;
@@ -609,15 +609,15 @@ debug__interpreter_print_all_vars (DICT (ObjVars) *vars)
           AmpObject *obj = e->val;
           switch (obj->info->type)
             {
-            case AMP_OBJ_INT:
+            case AMP_OBJECT_NUMBER:
               printf ("Int Variable: %s\n\tValue: %f\n",
                       e->key, AMP_NUMBER (obj)->val);
               break;
-            case AMP_OBJ_STR:
+            case AMP_OBJECT_STRING:
               printf ("Str Variable: %s\n\tValue: %s\n",
                       e->key, AMP_STRING (obj)->string);
               break;
-            case AMP_OBJ_BOOL:
+            case AMP_OBJECT_BOOL:
               printf ("Bool Variable %s\n\tValue: %s\n", e->key, 
                       AMP_BOOL (obj)->val ? "true" : "false");
               break;

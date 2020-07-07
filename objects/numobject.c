@@ -72,7 +72,7 @@ AmpNumberCreate (double val)
   /* fill out type info */
   if (!int_info_initialized)
     {
-      int_info.type = AMP_OBJ_INT;
+      int_info.type = AMP_OBJECT_NUMBER;
       AmpObjectInitializeOperationsToUnsupported (&int_info.ops);
       int_info.ops.add = amp_integer_add;
       int_info.ops.sub = amp_integer_sub;
