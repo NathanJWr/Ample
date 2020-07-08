@@ -22,6 +22,7 @@ typedef enum AmpleErrorCode {
   ERROR_INVALID_NUMBER_OF_ARGUMENTS,
   ERROR_INVALID_CAST,
 } AmpleErrorCode;
+
 const char *ample_error_codes[] = {
   "ERROR: Invalid number of arguments for function \"%s\", expected %u \
 argument(s) and %u were provided\n",

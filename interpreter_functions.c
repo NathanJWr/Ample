@@ -29,6 +29,8 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
+#include <limits.h>
 bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
                              size_t arg_count,
                              const char *__restrict__ func_name,
@@ -152,6 +154,40 @@ ample_cast_object_to_integer (ASTHandle *__restrict__ args,
     {
     case AMP_OBJECT_NUMBER: {
       int num = (int) AMP_NUMBER (obj)->val; 
+      ret_object = AmpNumberCreate (num);
+    } break;
+    case AMP_OBJECT_STRING: {
+      long val;
+      const char *str = AMP_STRING(obj)->string;
+      char *endptr;
+      errno = 0; /* To distinguish success/failure after call */
+      val = strtol(str, &endptr, 10);
+
+      /* Check for various possible errors */
+
+      if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+          || (errno != 0 && val == 0))
+        {
+          printf (ample_error_codes[ERROR_INVALID_CAST],
+                  AMP_OBJECT_TYPE_STR[obj->info->type],
+                  AMP_OBJECT_TYPE_STR[AMP_OBJECT_STRING]);
+          exit(EXIT_FAILURE);
+        }
+      if (endptr == str)
+        {
+          printf (ample_error_codes[ERROR_INVALID_CAST],
+                  AMP_OBJECT_TYPE_STR[obj->info->type],
+                  AMP_OBJECT_TYPE_STR[AMP_OBJECT_STRING]);
+          exit(EXIT_FAILURE);
+        }
+
+      ret_object = AmpNumberCreate ((int)(val));
+    } break;
+    case AMP_OBJECT_BOOL: {
+      int num = AMP_BOOL (obj)->val;
+      /* clamp the number to 0 or 1 */
+      if (num > 0)
+        num = 1;
       ret_object = AmpNumberCreate (num);
     } break;
     default:

@@ -422,6 +422,9 @@ InterpreterGetOrGenerateAmpObject (ASTHandle handle,
     case AST_STRING:
       obj = AmpStringCreate (node->d.str_data.str);
       break;
+    case AST_BOOL:
+      obj = AmpBoolCreate (node->d.bool_data.value);
+      break;
     case AST_BINARY_OP:
       obj = interpreter_evaluate_binary_op (handle, variable_scope_stack);
       break;

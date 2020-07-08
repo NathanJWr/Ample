@@ -5,3 +5,10 @@ var = 10 + 10 * 9 - 50.1;
 print ("Cast to an int: " + str(int(var)));
 print ("Original value: " + str(var));
 
+
+integer = int ("123abc 5");
+print(integer);
+
+boolean = int (true);
+print (boolean);
+
