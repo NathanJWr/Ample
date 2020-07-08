@@ -1,3 +1,4 @@
+# testing the str cast function
 var = str(19) + " hello";
 print (var);
 
@@ -5,10 +6,17 @@ var = 10 + 10 * 9 - 50.1;
 print ("Cast to an int: " + str(int(var)));
 print ("Original value: " + str(var));
 
-
-integer = int ("123abc 5");
-print(integer);
+# testing the int cast function
+integer = int ("123");
+print (integer);
 
 boolean = int (true);
 print (boolean);
+
+# testing the bool cast
+
+bool_cast = bool (100);
+bool_cast2 = bool (false);
+print (bool_cast);
+print (bool_cast2);
 

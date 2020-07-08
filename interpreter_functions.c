@@ -59,6 +59,14 @@ bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
                                                   variable_scope_stack);
       return true;
     }
+  else if (0 == strncmp ("bool", func_name, 4))
+    {
+      *ret_object = ample_cast_object_to_bool (args,
+                                               arg_count,
+                                               func_name,
+                                               variable_scope_stack);
+      return true;
+    }
   return false;
 }
 
@@ -97,7 +105,7 @@ ample_print (ASTHandle  *__restrict__ args,
       printf ("%s\n", AMP_STRING (obj)->string);
       break;
     case AMP_OBJECT_BOOL:
-      printf ("%s", AMP_BOOL (obj)->val ? "true" : "false");
+      printf ("%s\n", AMP_BOOL (obj)->val ? "true" : "false");
       break;
     }
 
@@ -200,3 +208,34 @@ ample_cast_object_to_integer (ASTHandle *__restrict__ args,
   return ret_object;
 }
 
+AmpObject *
+ample_cast_object_to_bool (ASTHandle *restrict args,
+                           size_t arg_count,
+                           const char *restrict func_name,
+                           DICT (ObjVars) **restrict variable_scope_stack)
+{
+  AmpObject *obj, *ret_object = NULL;
+  ample_function_check_arg_numbers (arg_count, 1, func_name);
+  /* get the argument */
+  obj = InterpreterGetOrGenerateAmpObject (args[0],
+                                           variable_scope_stack);
+  switch (obj->info->type)
+    {
+    case AMP_OBJECT_BOOL: {
+      ret_object = AmpBoolCreate (AMP_BOOL (obj)->val);
+    } break;
+    case AMP_OBJECT_NUMBER: {
+      bool32 val = (bool32) AMP_NUMBER (obj)->val;
+      if (val > 0)
+        val = 1;
+      ret_object = AmpBoolCreate (val);
+    } break;
+    default:
+      printf (ample_error_codes[ERROR_INVALID_CAST],
+              AMP_OBJECT_TYPE_STR[obj->info->type],
+              AMP_OBJECT_TYPE_STR[AMP_OBJECT_NUMBER]);
+      exit (EXIT_FAILURE);
+    }
+  AmpObjectDecrementRefcount (obj);
+  return ret_object;
+}

@@ -51,5 +51,10 @@ ample_cast_object_to_integer (ASTHandle *__restrict__ args,
                               size_t arg_count,
                               const char *__restrict__ func_name,
                               DICT (ObjVars) **__restrict__ variable_scope_stack);
+AmpObject *
+ample_cast_object_to_bool (ASTHandle *restrict args,
+                           size_t arg_count,
+                           const char *restrict func_name,
+                           DICT (ObjVars) **restrict variable_scope_stack);
 #endif
 
