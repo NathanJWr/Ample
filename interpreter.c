@@ -77,9 +77,9 @@ interpreter_evaluate_statement (ASTHandle statement,
     {
       interpreter_evaluate_if (statement, variable_scope_stack);
     }
-  else if (s->type == AST_EQUALITY)
+  else if (s->type == AST_BINARY_COMPARATOR)
     {
-      return interpreter_evaluate_equality (statement, variable_scope_stack);
+      return interpreter_evaluate_binary_comparison (statement, variable_scope_stack);
     }
   else if (s->type == AST_FUNC)
     {
@@ -214,34 +214,34 @@ interpreter_insert_function_into_dict (ASTHandle func_handle)
 }
 
 AmpObject *
-interpreter_evaluate_equality (ASTHandle equality_handle,
+interpreter_evaluate_binary_comparison (ASTHandle binary_comparison_handle,
                                DICT (ObjVars) **variable_scope_stack)
 {
-  struct AST *equality_ast = ast_get_node (equality_handle);
+  struct AST *binary_comparison_ast = ast_get_node (binary_comparison_handle);
     /* get amp objects to work with */
   AmpObject *left_obj =
     InterpreterGetOrGenerateAmpObject
-      (equality_ast->d.equality_data.left,
+      (binary_comparison_ast->d.bcmp_data.left,
        variable_scope_stack);
   AmpObject *right_obj =
     InterpreterGetOrGenerateAmpObject
-      (equality_ast->d.equality_data.right,
+      (binary_comparison_ast->d.bcmp_data.right,
        variable_scope_stack);
   AmpObject *retval = NULL;
 
 
   if (left_obj->info->type == right_obj->info->type)
     {
-      if (equality_ast->d.equality_data.type == BOP_EQUAL)
+      if (binary_comparison_ast->d.bcmp_data.type == BOP_EQUAL)
         retval = left_obj->info->ops.equal (left_obj, right_obj);
-      else if (equality_ast->d.equality_data.type == BOP_NOT_EQUAL)
+      else if (binary_comparison_ast->d.bcmp_data.type == BOP_NOT_EQUAL)
         retval = left_obj->info->ops.not_equal (left_obj, right_obj);
-      else if (equality_ast->d.equality_data.type == BOP_LESS_THAN)
+      else if (binary_comparison_ast->d.bcmp_data.type == BOP_LESS_THAN)
         retval = left_obj->info->ops.less_than (left_obj, right_obj);
     }
   else
     {
-      printf ("Cannot perform equality operation on different types\n");
+      printf ("Cannot perform binary_comparison operation on different types\n");
       exit (1);
     }
   AmpObjectDecrementRefcount (left_obj);
@@ -275,9 +275,9 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
           exit (1);
         }
     }
-  else if (expr->type == AST_EQUALITY)
+  else if (expr->type == AST_BINARY_COMPARATOR)
     {
-      AmpObject *obj = interpreter_evaluate_equality (statement_handle,
+      AmpObject *obj = interpreter_evaluate_binary_comparison (statement_handle,
                                                       variable_scope_stack);
       return obj;
     }

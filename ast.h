@@ -29,7 +29,7 @@ enum ASTType {
   AST_ASSIGNMENT,
   AST_IF,
   AST_BOOL,
-  AST_EQUALITY,
+  AST_BINARY_COMPARATOR,
   AST_FUNC,
   AST_FUNC_CALL,
   AST_OP,
@@ -79,7 +79,7 @@ typedef enum {
   BOP_GREATER_THAN,
 } BinaryOpBoolType;
 
-struct EqualityAST {
+struct BinaryComparatorAST {
   ASTHandle left;
   ASTHandle right;
   BinaryOpBoolType type;
@@ -110,7 +110,7 @@ struct AST {
     struct AssignmentAST asgn_data;
     struct IfAST if_data;
     struct BoolAST bool_data;
-    struct EqualityAST equality_data;
+    struct BinaryComparatorAST bcmp_data;
     struct FuncAST func_data;
     struct FuncCallAST func_call_data;
     struct OpAST op_data;

@@ -52,8 +52,8 @@ void interpreter_add_obj_mapping(const char *var_name, AmpObject *obj, DICT (Obj
 AmpObject *interpreter_evaluate_scope (ASTHandle scope_handle, DICT (ObjVars) **variable_scope_stack, bool32 local_scope_already_created);
 /* evaluates a statement if the resulting evaluation is a bool32 */
 AmpObject *interpreter_evaluate_statement_to_bool (ASTHandle statement_handle, DICT (ObjVars) **variable_scope_stack);
-/* evaluates each side of an equality statement and returns true if the statement is true */
-AmpObject *interpreter_evaluate_equality (ASTHandle equality_handle, DICT (ObjVars) **variable_scope_stack);
+/* evaluates each side of an binary_comparison statement and returns true if the statement is true */
+AmpObject *interpreter_evaluate_binary_comparison (ASTHandle binary_comparison_handle, DICT (ObjVars) **variable_scope_stack);
 /* insert the func_handle into a dict using the func name as the key */
 void interpreter_insert_function_into_dict (ASTHandle func_handle);
 

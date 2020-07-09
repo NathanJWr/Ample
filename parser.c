@@ -297,10 +297,10 @@ parse_binary_op_bool_statement (struct Token *t_arr,
   /* create a new ast node for the equality statement */
   node = ast_get_node_handle ();
   equality_ast = ast_get_node (node);
-  equality_ast->type = AST_EQUALITY;
-  equality_ast->d.equality_data.left = left_handle;
-  equality_ast->d.equality_data.right = right_handle;
-  equality_ast->d.equality_data.type = type;
+  equality_ast->type = AST_BINARY_COMPARATOR;
+  equality_ast->d.bcmp_data.left = left_handle;
+  equality_ast->d.bcmp_data.right = right_handle;
+  equality_ast->d.bcmp_data.type = type;
 
   /* don't need to keep moving through the for loop */
   return node;
