@@ -238,6 +238,8 @@ interpreter_evaluate_binary_comparison (ASTHandle binary_comparison_handle,
         retval = left_obj->info->ops.not_equal (left_obj, right_obj);
       else if (binary_comparison_ast->d.bcmp_data.type == BOP_LESS_THAN)
         retval = left_obj->info->ops.less_than (left_obj, right_obj);
+      else if (binary_comparison_ast->d.bcmp_data.type == BOP_GREATER_THAN)
+        retval = left_obj->info->ops.greater_than (left_obj, right_obj);
     }
   else
     {

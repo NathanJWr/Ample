@@ -325,6 +325,12 @@ parse_possible_equality (struct Token *t_arr, struct Statement s_indexes)
         }
       if (t_arr[i].value == '<')
         return parse_binary_op_bool_statement (t_arr, s_indexes, i, BOP_LESS_THAN);
+      else if (t_arr[i].value == '>')
+        return parse_binary_op_bool_statement (t_arr,
+                                               s_indexes, 
+                                               i,
+                                               BOP_GREATER_THAN);
+
 
     }
   return node;
