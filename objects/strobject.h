@@ -27,4 +27,5 @@ AmpObject *AmpStringCreate (const char* str);
 
 AmpObject *amp_string_concat (AmpObject *this, AmpObject *str);
 AmpObject *amp_string_equal (AmpObject *this, AmpObject *str);
+AmpObject *amp_string_not_equal (AmpObject *this, AmpObject *str);
 #endif

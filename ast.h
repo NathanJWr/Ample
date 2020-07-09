@@ -74,6 +74,7 @@ struct BoolAST {
 struct EqualityAST {
   ASTHandle left;
   ASTHandle right;
+  bool32 equal; /* set to true if testing equality or false if testing not-equal */
 };
 struct FuncAST {
   const char *name;

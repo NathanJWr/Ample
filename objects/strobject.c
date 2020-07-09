@@ -44,6 +44,15 @@ amp_string_equal (AmpObject *this, AmpObject *str)
   return AmpBoolCreate (equal);
 }
 
+AmpObject *
+amp_string_not_equal (AmpObject *this, AmpObject *str)
+{
+  AmpObject_Bool *equal = AMP_BOOL (amp_string_equal (this, str));
+  equal->val = !equal->val;
+  return AMP_OBJECT (equal);
+}
+
+
 static AmpObjectInfo str_info;
 static bool32 str_info_initialized;
 AmpObject *
@@ -57,6 +66,7 @@ AmpStringCreate (const char *str)
       AmpObjectInitializeOperationsToUnsupported (&str_info.ops);
       str_info.ops.add = amp_string_concat;
       str_info.ops.equal = amp_string_equal;
+      str_info.ops.not_equal = amp_string_not_equal;
       str_info_initialized = true;
     }
 

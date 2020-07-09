@@ -270,7 +270,8 @@ parse_possible_equality (struct Token *t_arr, struct Statement s_indexes)
   unsigned int i;
   for (i = s_indexes.start; i < s_indexes.end - 1; i++)
     {
-      if (t_arr[i].value == '=' && t_arr[i+1].value == '=')
+      if ((t_arr[i].value == '=' || t_arr[i].value == '!') &&
+          (t_arr[i+1].value == '='))
         {
           struct Statement left_statement, right_statement;
           ASTHandle left_handle, right_handle;
@@ -292,6 +293,11 @@ parse_possible_equality (struct Token *t_arr, struct Statement s_indexes)
           equality_ast->type = AST_EQUALITY;
           equality_ast->d.equality_data.left = left_handle;
           equality_ast->d.equality_data.right = right_handle;
+          if (t_arr[i].value == '=')
+            equality_ast->d.equality_data.equal = true;
+          else
+            equality_ast->d.equality_data.equal = false;
+
 
           /* don't need to keep moving through the for loop */
           return node;

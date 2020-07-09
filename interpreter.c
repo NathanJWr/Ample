@@ -218,38 +218,33 @@ interpreter_evaluate_equality (ASTHandle equality_handle,
                                DICT (ObjVars) **variable_scope_stack)
 {
   struct AST *equality_ast = ast_get_node (equality_handle);
-  if (equality_ast->type == AST_EQUALITY)
+    /* get amp objects to work with */
+  AmpObject *left_obj =
+    InterpreterGetOrGenerateAmpObject
+      (equality_ast->d.equality_data.left,
+       variable_scope_stack);
+  AmpObject *right_obj =
+    InterpreterGetOrGenerateAmpObject
+      (equality_ast->d.equality_data.right,
+       variable_scope_stack);
+  AmpObject *retval = NULL;
+
+
+  if (left_obj->info->type == right_obj->info->type)
     {
-      /* get amp objects to work with */
-      AmpObject *left_obj =
-        InterpreterGetOrGenerateAmpObject
-          (equality_ast->d.equality_data.left,
-           variable_scope_stack);
-      AmpObject *right_obj =
-        InterpreterGetOrGenerateAmpObject
-          (equality_ast->d.equality_data.right,
-           variable_scope_stack);
-      AmpObject *retval = NULL;
-
-
-      if (left_obj->info->type == right_obj->info->type)
-        {
-          retval = left_obj->info->ops.equal (left_obj, right_obj);
-        }
+      if (equality_ast->d.equality_data.equal)
+        retval = left_obj->info->ops.equal (left_obj, right_obj);
       else
-        {
-          printf ("Cannot perform equality operation on different types\n");
-          exit (1);
-        }
-      AmpObjectDecrementRefcount (left_obj);
-      AmpObjectDecrementRefcount (right_obj);
-      return retval;
+        retval = left_obj->info->ops.not_equal (left_obj, right_obj);
     }
   else
     {
-      printf ("Statement is not an equality statement\n");
+      printf ("Cannot perform equality operation on different types\n");
       exit (1);
     }
+  AmpObjectDecrementRefcount (left_obj);
+  AmpObjectDecrementRefcount (right_obj);
+  return retval;
 }
 
 AmpObject *

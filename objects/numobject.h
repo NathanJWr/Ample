@@ -30,4 +30,5 @@ AmpObject *amp_number_sub(AmpObject *this, AmpObject *val);
 AmpObject *amp_number_div(AmpObject *this, AmpObject *val);
 AmpObject *amp_number_mul(AmpObject *this, AmpObject *val);
 AmpObject *amp_number_equal(AmpObject *this, AmpObject *val);
+AmpObject *amp_integer_not_equal (AmpObject *this, AmpObject *val);
 #endif
