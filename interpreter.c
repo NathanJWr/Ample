@@ -15,6 +15,7 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "interpreter.h"
+#include "ample_errors.h"
 #include "bool.h"
 #include "array.h"
 #include "dict_vars.h"
@@ -243,7 +244,9 @@ interpreter_evaluate_binary_comparison (ASTHandle binary_comparison_handle,
     }
   else
     {
-      printf ("Cannot perform binary_comparison operation on different types\n");
+      printf (ample_error_codes[ERROR_OPERATION_ON_DIFFERENT_TYPES],
+              AMP_OBJECT_TYPE_STR[left_obj->info->type],
+              AMP_OBJECT_TYPE_STR[right_obj->info->type]);
       exit (1);
     }
   AmpObjectDecrementRefcount (left_obj);

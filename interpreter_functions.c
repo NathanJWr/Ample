@@ -19,6 +19,7 @@
 #include "bool.h"
 #include "dict_vars.h"
 #include "interpreter.h"
+#include "ample_errors.h"
 #include "objects/ampobject.h"
 #include "objects/numobject.h"
 #include "objects/boolobject.h"

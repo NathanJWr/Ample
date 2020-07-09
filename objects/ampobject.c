@@ -15,6 +15,7 @@
     along with Ample.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "ampobject.h"
+#include "../ample_errors.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -41,9 +42,10 @@ AmpObjectDecrementRefcount (AmpObject *obj)
 
 AmpObject *AmpObjectUnsupportedOperation (AmpObject *this, AmpObject *var)
 {
-  printf ("unsupported operation for variable of type %d operating on type %d\n",
-           this->info->type, var->info->type);
-  exit (1);
+  printf (ample_error_codes[ERROR_UNSUPPORTED_OPERATION],
+          AMP_OBJECT_TYPE_STR[this->info->type],
+          AMP_OBJECT_TYPE_STR[var->info->type]);
+  exit (EXIT_FAILURE);
 }
 
 void AmpObjectInitializeOperationsToUnsupported (AmpOperations *ops)

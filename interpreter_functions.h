@@ -17,18 +17,6 @@
 #ifndef INTERPRETER_FUNCTIONS_H_
 #define INTERPRETER_FUNCTIONS_H_
 #include "ast.h"
-
-typedef enum AmpleErrorCode {
-  ERROR_INVALID_NUMBER_OF_ARGUMENTS,
-  ERROR_INVALID_CAST,
-} AmpleErrorCode;
-
-const char *ample_error_codes[] = {
-  "ERROR: Invalid number of arguments for function \"%s\", expected %u \
-argument(s) and %u were provided\n",
-  "ERROR: Cannot cast object of type %s to %s\n",
-};
-
 bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
                              size_t arg_count,
                              const char *__restrict__ func_name,
