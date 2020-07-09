@@ -232,10 +232,12 @@ interpreter_evaluate_equality (ASTHandle equality_handle,
 
   if (left_obj->info->type == right_obj->info->type)
     {
-      if (equality_ast->d.equality_data.equal)
+      if (equality_ast->d.equality_data.type == BOP_EQUAL)
         retval = left_obj->info->ops.equal (left_obj, right_obj);
-      else
+      else if (equality_ast->d.equality_data.type == BOP_NOT_EQUAL)
         retval = left_obj->info->ops.not_equal (left_obj, right_obj);
+      else if (equality_ast->d.equality_data.type == BOP_LESS_THAN)
+        retval = left_obj->info->ops.less_than (left_obj, right_obj);
     }
   else
     {

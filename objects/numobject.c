@@ -71,6 +71,17 @@ amp_integer_not_equal (AmpObject *this, AmpObject *val)
   return AMP_OBJECT (equal);
 }
 
+AmpObject *
+amp_integer_less_than (AmpObject *this, AmpObject *other)
+{
+  bool32 less_than;
+  double this_val = AMP_NUMBER (this)->val;
+  double other_val = AMP_NUMBER (other)->val;
+
+  less_than = this_val < other_val;
+  return AmpBoolCreate (less_than);
+}
+
 static AmpObjectInfo int_info;
 static bool32 int_info_initialized;
 AmpObject *
@@ -88,6 +99,9 @@ AmpNumberCreate (double val)
       int_info.ops.mult = amp_integer_mul;
       int_info.ops.equal = amp_integer_equal;
       int_info.ops.not_equal = amp_integer_not_equal;
+      int_info.ops.less_than = amp_integer_less_than;
+
+      int_info_initialized = true;
     }
 
   a = malloc (sizeof (AmpObject_Num));

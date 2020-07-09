@@ -261,6 +261,52 @@ parse_possible_function(struct Token *t_arr, struct Statement s)
     }
   return node;
 }
+
+ASTHandle
+parse_binary_op_bool_statement (struct Token *t_arr,
+                                struct Statement s_indexes,
+                                unsigned int op_index,
+                                BinaryOpBoolType type)
+{
+  ASTHandle node = 0;
+  struct Statement left_statement, right_statement;
+  ASTHandle left_handle, right_handle;
+  struct AST *equality_ast;
+
+  /* split the statement into two, left expr and right */
+  left_statement.start = s_indexes.start;
+  left_statement.end = op_index - 1;
+
+  switch (type)
+    {
+    case BOP_EQUAL:
+    case BOP_NOT_EQUAL:
+      right_statement.start = op_index + 2;
+      break;
+    case BOP_LESS_THAN:
+    case BOP_GREATER_THAN:
+      right_statement.start = op_index + 1;
+      break;
+    }
+  right_statement.end = s_indexes.end;
+
+  /* parse the left and right statements into ast nodes */
+  left_handle = parse_statement (t_arr, left_statement);
+  right_handle = parse_statement (t_arr, right_statement);
+
+  /* create a new ast node for the equality statement */
+  node = ast_get_node_handle ();
+  equality_ast = ast_get_node (node);
+  equality_ast->type = AST_EQUALITY;
+  equality_ast->d.equality_data.left = left_handle;
+  equality_ast->d.equality_data.right = right_handle;
+  equality_ast->d.equality_data.type = type;
+
+  /* don't need to keep moving through the for loop */
+  return node;
+}
+
+
 ASTHandle
 parse_possible_equality (struct Token *t_arr, struct Statement s_indexes)
 {
@@ -268,40 +314,18 @@ parse_possible_equality (struct Token *t_arr, struct Statement s_indexes)
   /* FORMAT
    * Left_Expr == Right_Expr */
   unsigned int i;
-  for (i = s_indexes.start; i < s_indexes.end - 1; i++)
+  for (i = s_indexes.start; i < s_indexes.end; i++)
     {
-      if ((t_arr[i].value == '=' || t_arr[i].value == '!') &&
-          (t_arr[i+1].value == '='))
+      if (i < s_indexes.end - 1)
         {
-          struct Statement left_statement, right_statement;
-          ASTHandle left_handle, right_handle;
-          struct AST *equality_ast;
-
-          /* split the statement into two, left expr and right */
-          left_statement.start = s_indexes.start;
-          left_statement.end = i - 1;
-          right_statement.start = i + 2;
-          right_statement.end = s_indexes.end;
-
-          /* parse the left and right statements into ast nodes */
-          left_handle = parse_statement (t_arr, left_statement);
-          right_handle = parse_statement (t_arr, right_statement);
-
-          /* create a new ast node for the equality statement */
-          node = ast_get_node_handle ();
-          equality_ast = ast_get_node (node);
-          equality_ast->type = AST_EQUALITY;
-          equality_ast->d.equality_data.left = left_handle;
-          equality_ast->d.equality_data.right = right_handle;
-          if (t_arr[i].value == '=')
-            equality_ast->d.equality_data.equal = true;
-          else
-            equality_ast->d.equality_data.equal = false;
-
-
-          /* don't need to keep moving through the for loop */
-          return node;
+          if (t_arr[i].value == '='  && t_arr[i+1].value == '=')
+            return parse_binary_op_bool_statement (t_arr, s_indexes, i, BOP_EQUAL);
+          else if (t_arr[i].value == '!' && t_arr[i+1].value == '=')
+            return parse_binary_op_bool_statement (t_arr, s_indexes, i, BOP_NOT_EQUAL);
         }
+      if (t_arr[i].value == '<')
+        return parse_binary_op_bool_statement (t_arr, s_indexes, i, BOP_LESS_THAN);
+
     }
   return node;
 }

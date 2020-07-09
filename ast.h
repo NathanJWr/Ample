@@ -71,10 +71,18 @@ struct IfAST {
 struct BoolAST {
   bool32 value;
 };
+
+typedef enum {
+  BOP_EQUAL,
+  BOP_NOT_EQUAL,
+  BOP_LESS_THAN,
+  BOP_GREATER_THAN,
+} BinaryOpBoolType;
+
 struct EqualityAST {
   ASTHandle left;
   ASTHandle right;
-  bool32 equal; /* set to true if testing equality or false if testing not-equal */
+  BinaryOpBoolType type;
 };
 struct FuncAST {
   const char *name;

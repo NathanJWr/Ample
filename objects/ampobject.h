@@ -42,6 +42,7 @@ typedef struct AmpOperations {
   AmpObject *(*mult)(AmpObject *, AmpObject *);
   AmpObject *(*equal)(AmpObject *, AmpObject *);
   AmpObject *(*not_equal)(AmpObject *, AmpObject *);
+  AmpObject *(*less_than)(AmpObject *, AmpObject *);
 } AmpOperations;
 typedef struct AmpObjectInfo {
   AmpObjectType type;
