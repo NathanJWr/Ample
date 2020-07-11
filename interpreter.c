@@ -393,13 +393,13 @@ interpreter_evaluate_if (ASTHandle statement,
                                                   variable_scope_stack);
 
       if (AMP_BOOL (is_expr_true)->val)
-        interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true,
+      scope_ret = interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true,
                                     variable_scope_stack,
                                     false,
                                     return_from_scope);
       else if (AMP_BOOL(is_expr_true)->val == false &&
                expr_node->d.if_data.scope_if_false)
-        interpreter_evaluate_scope (expr_node->d.if_data.scope_if_false,
+      scope_ret = interpreter_evaluate_scope (expr_node->d.if_data.scope_if_false,
                                     variable_scope_stack,
                                     false,
                                     return_from_scope);
