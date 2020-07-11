@@ -15,6 +15,7 @@ func foo2 (var) {
   if (var != 0) {
     foo (var - 1);
   }
+  return ();
 }
 
 foo (5000);

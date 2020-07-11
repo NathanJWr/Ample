@@ -30,6 +30,7 @@
 static DICT(ObjVars) global_variables;
 DICT_DECLARE (Func, const char *, ASTHandle);
 DICT_IMPL (Func, const char *, ASTHandle)
+#define DEFUALT_DICT_INIT_COUNT 1
 static DICT(Func) func_dict;
 
 void
@@ -156,7 +157,10 @@ interpreter_evaluate_function_call (ASTHandle func_call,
       size_t arg_count = ARRAY_COUNT (args);
       size_t arg_input_count = ARRAY_COUNT (args_input);
       size_t i;
-      DictObjVars_init (local_variables, hash_string, string_compare, 10);
+      DictObjVars_init (local_variables,
+                        hash_string,
+                        string_compare,
+                        DEFUALT_DICT_INIT_COUNT);
 
       if (arg_count != arg_input_count)
         {

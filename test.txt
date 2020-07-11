@@ -1,12 +1,8 @@
-func foo (n) {
-  print (n);
-  if (n == 1) {
-    return ("Finished correctly");
-  } else {
-    foo (n - 1);
+func fib (n) {
+  if (n < 2) {
+    return (n);
   }
+  return (fib(n - 1) + fib(n - 2));
 }
 
-
-n = foo (2);
-print (n);
+print (fib (9));

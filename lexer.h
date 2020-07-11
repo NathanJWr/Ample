@@ -20,6 +20,10 @@
 /* starts with the last ascii value */
 /* ascii values can be represented as tokens just by their value */
 typedef enum {
+  TOK_PLUS = '+',
+  TOK_MINUS = '-',
+  TOK_MULT = '*',
+  TOK_DIV = '/',
   TOK_IDENTIFIER = 127,
   TOK_INTEGER = 128,
   TOK_BOOL = 129,
