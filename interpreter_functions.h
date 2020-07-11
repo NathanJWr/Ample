@@ -17,28 +17,33 @@
 #ifndef INTERPRETER_FUNCTIONS_H_
 #define INTERPRETER_FUNCTIONS_H_
 #include "ast.h"
-bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
+bool32 ExecuteAmpleFunction (ASTHandle  *restrict args,
                              size_t arg_count,
-                             const char *__restrict__ func_name,
-                             DICT (ObjVars) **__restrict__ variable_scope_stack,
-                             AmpObject **ret_object);
-void ample_print (ASTHandle  *__restrict__ args,
+                             const char *restrict func_name,
+                             DICT (ObjVars) **restrict variable_scope_stack,
+                             AmpObject **ret_object,
+                             bool32 *return_from_scope);
+void
+ample_function_check_arg_numbers (size_t count,
+                                  size_t expected_count,
+                                  const char *func_name);
+void ample_print (ASTHandle  *restrict args,
                   size_t arg_count,
-                  const char *__restrict__ func_name,
-                  DICT (ObjVars) **__restrict__ variable_scope_stack);
+                  const char *restrict func_name,
+                  DICT (ObjVars) **restrict variable_scope_stack);
 AmpObject *
-ample_cast_object_to_string (ASTHandle *__restrict__ args,
+ample_cast_object_to_string (ASTHandle *restrict args,
                              size_t arg_count,
-                             const char *__restrict__ func_name,
-                             DICT (ObjVars) **__restrict__ variable_scope_stack);
+                             const char *restrict func_name,
+                             DICT (ObjVars) **restrict variable_scope_stack);
 /* cast to create an integer. 
  * This will throw away any decimal and just return the integer part of
  * a number */
 AmpObject *
-ample_cast_object_to_integer (ASTHandle *__restrict__ args,
+ample_cast_object_to_integer (ASTHandle *restrict args,
                               size_t arg_count,
-                              const char *__restrict__ func_name,
-                              DICT (ObjVars) **__restrict__ variable_scope_stack);
+                              const char *restrict func_name,
+                              DICT (ObjVars) **restrict variable_scope_stack);
 AmpObject *
 ample_cast_object_to_bool (ASTHandle *restrict args,
                            size_t arg_count,

@@ -57,13 +57,15 @@ InterpreterStart (ASTHandle head)
 {
   DictFunc_init (&func_dict, hash_string, string_compare, 10);
   /* evaluate the global scope */
-  interpreter_evaluate_scope (head, NULL, false);
+  bool32 should_return = false;
+  interpreter_evaluate_scope (head, NULL, false, &should_return);
   DictFunc_free (&func_dict);
 }
 
 AmpObject *
 interpreter_evaluate_statement (ASTHandle statement,
-                                DICT (ObjVars) **variable_scope_stack)
+                                DICT (ObjVars) **variable_scope_stack,
+                                bool32 *return_from_scope)
 {
   struct AST *s = ast_get_node (statement);
   if (s->type == AST_ASSIGNMENT)
@@ -76,7 +78,7 @@ interpreter_evaluate_statement (ASTHandle statement,
     }
   else if (s->type == AST_IF)
     {
-      interpreter_evaluate_if (statement, variable_scope_stack);
+      return interpreter_evaluate_if (statement, variable_scope_stack, return_from_scope);
     }
   else if (s->type == AST_BINARY_COMPARATOR)
     {
@@ -88,8 +90,11 @@ interpreter_evaluate_statement (ASTHandle statement,
     }
   else if (s->type == AST_FUNC_CALL)
     {
-      return interpreter_evaluate_function_call (statement, variable_scope_stack);
+      return interpreter_evaluate_function_call (statement,
+                                                 variable_scope_stack,
+                                                 return_from_scope);
     }
+
   return NULL;
 }
 
@@ -127,7 +132,8 @@ interpreter_free_local_variables (DICT (ObjVars) *local_variables)
 
 AmpObject *
 interpreter_evaluate_function_call (ASTHandle func_call,
-                                    DICT (ObjVars) **variable_scope_stack)
+                                    DICT (ObjVars) **variable_scope_stack,
+                                    bool32 *return_from_scope)
 {
   ASTHandle func_handle;
   bool32 user_defined_function;
@@ -182,9 +188,17 @@ interpreter_evaluate_function_call (ASTHandle func_call,
                                                      variable_scope_stack);
 
       /* this will free the local scope upon finishing */
-      return interpreter_evaluate_scope (func_node->d.func_data.scope,
-                                         new_variable_scope_stack,
-                                         true);
+      bool32 should_return = false;
+      if (return_from_scope)
+        return interpreter_evaluate_scope (func_node->d.func_data.scope,
+                                           new_variable_scope_stack,
+                                           true,
+                                           return_from_scope);
+      else
+        return interpreter_evaluate_scope (func_node->d.func_data.scope,
+                                           new_variable_scope_stack,
+                                           true,
+                                           &should_return);
     }
   else
     {
@@ -195,7 +209,8 @@ interpreter_evaluate_function_call (ASTHandle func_call,
                                  arg_count,
                                  func_name,
                                  variable_scope_stack,
-                                 &obj))
+                                 &obj,
+                                 return_from_scope))
         {
           printf ("Function does not exist: %s\n",
                   func_call_node->d.func_call_data.name);
@@ -296,7 +311,8 @@ interpreter_evaluate_statement_to_bool32 (ASTHandle statement_handle,
 AmpObject *
 interpreter_evaluate_scope (ASTHandle scope_handle,
                             DICT (ObjVars) **variable_scope_stack,
-                            bool32 local_scope_already_created)
+                            bool32 local_scope_already_created,
+                            bool32 *should_return)
 {
   struct AST *scope = ast_get_node (scope_handle);
   if (!scope)
@@ -330,15 +346,22 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
   statement_count = ARRAY_COUNT (scope->d.scope_data.statements);
   for (i = 0; i < statement_count; i++)
     {
-      AmpObject *obj;
+      AmpObject *obj = NULL;
       obj = interpreter_evaluate_statement (scope->d.scope_data.statements[i],
-                                            new_variable_scope_stack);
+                                            new_variable_scope_stack,
+                                            should_return);
       if (obj)
         {
-          /* NOTE: placeholder */
-          AmpObjectDecrementRefcount (obj);
-          /* if we get a return amp object then return something that
-           * is not null */
+          if (!(*should_return))
+            AmpObjectDecrementRefcount (obj);
+        }
+      if (*should_return) 
+        {
+          /* if there is a ret value, it's ref count will be high enough
+           * so that it's not freed by the free local variables func */
+          interpreter_free_local_variables (new_variable_scope_stack[0]);
+          ARRAY_FREE (new_variable_scope_stack);
+          return obj;
         }
     }
 
@@ -351,9 +374,10 @@ interpreter_evaluate_scope (ASTHandle scope_handle,
   return NULL;
 }
 
-void
+AmpObject *
 interpreter_evaluate_if (ASTHandle statement,
-                         DICT (ObjVars) **variable_scope_stack)
+                         DICT (ObjVars) **variable_scope_stack,
+                         bool32 *return_from_scope)
 {
   struct AST *if_node = ast_get_node (statement);
   if (if_node->type == AST_IF)
@@ -361,6 +385,7 @@ interpreter_evaluate_if (ASTHandle statement,
       /* run different scopes depending on the if's true or false */
       struct AST *expr_node = ast_get_node (statement);
       AmpObject *is_expr_true;
+      AmpObject *scope_ret = NULL;
 
       /* expr_node should evaluate to a bool32 */
       is_expr_true = 
@@ -370,16 +395,21 @@ interpreter_evaluate_if (ASTHandle statement,
       if (AMP_BOOL (is_expr_true)->val)
         interpreter_evaluate_scope (expr_node->d.if_data.scope_if_true,
                                     variable_scope_stack,
-                                    false);
+                                    false,
+                                    return_from_scope);
       else if (AMP_BOOL(is_expr_true)->val == false &&
                expr_node->d.if_data.scope_if_false)
         interpreter_evaluate_scope (expr_node->d.if_data.scope_if_false,
                                     variable_scope_stack,
-                                    false);
+                                    false,
+                                    return_from_scope);
 
 
       AmpObjectDecrementRefcount (is_expr_true);
+      if (scope_ret)
+        return scope_ret;
     }
+  return NULL;
 }
 
 AmpObject *
@@ -431,7 +461,10 @@ InterpreterGetOrGenerateAmpObject (ASTHandle handle,
       obj = interpreter_evaluate_binary_op (handle, variable_scope_stack);
       break;
     case AST_FUNC_CALL:
-      obj = interpreter_evaluate_function_call (handle, variable_scope_stack);
+      obj = interpreter_evaluate_function_call (handle, variable_scope_stack, NULL);
+      break;
+    case AST_BINARY_COMPARATOR:
+      obj = interpreter_evaluate_binary_comparison (handle, variable_scope_stack);
       break;
     default:
       assert (false);
@@ -593,7 +626,8 @@ interpreter_evaluate_assignment (ASTHandle statement,
   else if (expr->type == AST_FUNC_CALL)
     {
       AmpObject *obj = interpreter_evaluate_function_call (s->d.asgn_data.expr,
-                                                           variable_scope_stack);
+                                                           variable_scope_stack,
+                                                           NULL);
       interpreter_add_obj_mapping (var,
                                    obj,
                                    variable_scope_stack[scope_stack_index]);

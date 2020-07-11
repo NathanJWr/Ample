@@ -32,16 +32,19 @@
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
-bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
+bool32 ExecuteAmpleFunction (ASTHandle  *restrict args,
                              size_t arg_count,
-                             const char *__restrict__ func_name,
-                             DICT (ObjVars) **__restrict__ variable_scope_stack,
-                             AmpObject **ret_object)
+                             const char *restrict func_name,
+                             DICT (ObjVars) **restrict variable_scope_stack,
+                             AmpObject **ret_object,
+                             bool32 *return_from_scope)
 {
   *ret_object = NULL;
   if (0 == strncmp ("print", func_name, 5))
     {
       ample_print (args, arg_count, func_name, variable_scope_stack);
+      if (return_from_scope)
+        *return_from_scope = false;
       return true;
     }
   else if (0 == strncmp ("str", func_name, 3))
@@ -50,6 +53,8 @@ bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
                                                  arg_count,
                                                  func_name,
                                                  variable_scope_stack);
+      if (return_from_scope)
+        *return_from_scope = false;
       return true;
     }
   else if (0 == strncmp ("int", func_name, 3))
@@ -58,6 +63,8 @@ bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
                                                   arg_count,
                                                   func_name,
                                                   variable_scope_stack);
+      if (return_from_scope)
+        *return_from_scope = false;
       return true;
     }
   else if (0 == strncmp ("bool", func_name, 4))
@@ -66,7 +73,28 @@ bool32 ExecuteAmpleFunction (ASTHandle  *__restrict__ args,
                                                arg_count,
                                                func_name,
                                                variable_scope_stack);
+      if (return_from_scope)
+        *return_from_scope = false;
       return true;
+    }
+  else if (0 == strncmp ("return", func_name, 5))
+    {
+      if (return_from_scope)
+        *return_from_scope = true;
+      else
+        return false;
+
+      if (arg_count == 0)
+        {
+          return true;
+        }
+      else
+        {
+          ample_function_check_arg_numbers (arg_count, 1, func_name);
+          *ret_object = InterpreterGetOrGenerateAmpObject (args[0],
+                                                           variable_scope_stack);
+          return true;
+        }
     }
   return false;
 }
@@ -87,10 +115,10 @@ ample_function_check_arg_numbers (size_t count,
 }
 
 void
-ample_print (ASTHandle  *__restrict__ args,
+ample_print (ASTHandle  *restrict args,
              size_t arg_count,
-             const char *__restrict__ func_name,
-             DICT (ObjVars) **__restrict__ variable_scope_stack)
+             const char *restrict func_name,
+             DICT (ObjVars) **restrict variable_scope_stack)
 {
   AmpObject *obj;
   ample_function_check_arg_numbers (arg_count, 1, func_name);
@@ -114,10 +142,10 @@ ample_print (ASTHandle  *__restrict__ args,
 }
 
 AmpObject *
-ample_cast_object_to_string (ASTHandle *__restrict__ args,
+ample_cast_object_to_string (ASTHandle *restrict args,
                              size_t arg_count,
-                             const char *__restrict__ func_name,
-                             DICT (ObjVars) **__restrict__ variable_scope_stack)
+                             const char *restrict func_name,
+                             DICT (ObjVars) **restrict variable_scope_stack)
 {
   AmpObject *obj, *ret_object = NULL;
   ample_function_check_arg_numbers (arg_count, 1, func_name);
@@ -149,10 +177,10 @@ ample_cast_object_to_string (ASTHandle *__restrict__ args,
 }
 
 AmpObject *
-ample_cast_object_to_integer (ASTHandle *__restrict__ args,
+ample_cast_object_to_integer (ASTHandle *restrict args,
                               size_t arg_count,
-                              const char *__restrict__ func_name,
-                              DICT (ObjVars) **__restrict__ variable_scope_stack)
+                              const char *restrict func_name,
+                              DICT (ObjVars) **restrict variable_scope_stack)
 {
   AmpObject *obj, *ret_object = NULL;
   ample_function_check_arg_numbers (arg_count, 1, func_name);

@@ -1,8 +1,12 @@
-if ("Hello" > 1)
-{
-  print ("Not equal works!");
+func foo (n) {
+  print (n);
+  if (n == 1) {
+    return ("Finished correctly");
+  } else {
+    foo (n - 1);
+  }
 }
-else
-{
-  print ("Not equal else works!");
-}
+
+
+n = foo (2);
+print (n);
