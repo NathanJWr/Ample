@@ -31,6 +31,7 @@ AmpObject *InterpreterGetOrGenerateAmpObject(ASTHandle handle, DICT (ObjVars) **
 /* top level evaluate function that will call more specific
  * evaluations depending on a node's type */
 AmpObject *interpreter_evaluate_statement(ASTHandle statement, DICT (ObjVars) **variable_scope_stack, bool32 *return_from_scope);
+AmpObject *interpreter_evaluate_list (ASTHandle statement, DICT (ObjVars) **variable_scope_stack, bool32 *return_from_scope);
 /* evaluates an ast node of type AST_BINARY_OP */
 AmpObject *interpreter_evaluate_binary_op(ASTHandle handle, DICT (ObjVars) **variable_scope_stack);
 /* evaluates an ast node of type  AST_ASSIGNMENT */

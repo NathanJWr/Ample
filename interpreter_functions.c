@@ -24,6 +24,7 @@
 #include "objects/numobject.h"
 #include "objects/boolobject.h"
 #include "objects/strobject.h"
+#include "objects/listobject.h"
 
 #include "interpreter_functions.h"
 #include <stdlib.h>
@@ -114,6 +115,37 @@ ample_function_check_arg_numbers (size_t count,
     }
 }
 
+void ample_print_object (AmpObject *obj)
+{
+  switch (obj->info->type)
+    {
+    case AMP_OBJECT_NUMBER:
+      printf ("%f", AMP_NUMBER (obj)->val);
+      break;
+    case AMP_OBJECT_STRING:
+      printf ("%s", AMP_STRING (obj)->string);
+      break;
+    case AMP_OBJECT_BOOL:
+      printf ("%s", AMP_BOOL (obj)->val ? "true" : "false");
+      break;
+    case AMP_OBJECT_LIST:
+      size_t i;
+      printf("[ ");
+      for (i = 0; i < ARRAY_COUNT (AMP_LIST (obj)->array) - 1; i++)
+        {
+          ample_print_object (AMP_LIST (obj)->array[i]);
+          printf (", ");
+        }
+      ample_print_object (AMP_LIST (obj)->array[i]);
+      printf (" ]");
+      break;
+    default:
+      printf (ample_error_codes[ERROR_INVALID_OBJECT_TYPE],
+              AMP_OBJECT_TYPE_STR[AMP_OBJECT_LIST]);
+      exit (EXIT_FAILURE);
+    }
+}
+
 void
 ample_print (ASTHandle  *restrict args,
              size_t arg_count,
@@ -125,19 +157,8 @@ ample_print (ASTHandle  *restrict args,
   /* get the argument */
   obj = InterpreterGetOrGenerateAmpObject (args[0],
                                            variable_scope_stack);
-  switch (obj->info->type)
-    {
-    case AMP_OBJECT_NUMBER:
-      printf ("%f\n", AMP_NUMBER (obj)->val);
-      break;
-    case AMP_OBJECT_STRING:
-      printf ("%s\n", AMP_STRING (obj)->string);
-      break;
-    case AMP_OBJECT_BOOL:
-      printf ("%s\n", AMP_BOOL (obj)->val ? "true" : "false");
-      break;
-    }
-
+  ample_print_object (obj);
+  printf ("\n");
   AmpObjectDecrementRefcount (obj); 
 }
 

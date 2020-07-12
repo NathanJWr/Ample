@@ -16,6 +16,7 @@
 #include "objects/numobject.c"
 #include "objects/strobject.c"
 #include "objects/boolobject.c"
+#include "objects/listobject.c"
 
 #include "ast.c"
 #include "dict_vars.c"

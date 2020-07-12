@@ -23,6 +23,7 @@
 #include "objects/numobject.h"
 #include "objects/boolobject.h"
 #include "objects/strobject.h"
+#include "objects/listobject.h"
 #include "interpreter_functions.h"
 
 #include <assert.h>
@@ -69,33 +70,6 @@ interpreter_evaluate_statement (ASTHandle statement,
                                 bool32 *return_from_scope)
 {
   struct AST *s = ast_get_node (statement);
-  if (s->type == AST_ASSIGNMENT)
-    {
-      interpreter_evaluate_assignment (statement, variable_scope_stack);
-    }
-  else if (s->type == AST_BINARY_OP)
-    {
-      return interpreter_evaluate_binary_op (statement, variable_scope_stack);
-    }
-  else if (s->type == AST_IF)
-    {
-      return interpreter_evaluate_if (statement, variable_scope_stack, return_from_scope);
-    }
-  else if (s->type == AST_BINARY_COMPARATOR)
-    {
-      return interpreter_evaluate_binary_comparison (statement, variable_scope_stack);
-    }
-  else if (s->type == AST_FUNC)
-    {
-      interpreter_insert_function_into_dict (statement); 
-    }
-  else if (s->type == AST_FUNC_CALL)
-    {
-      return interpreter_evaluate_function_call (statement,
-                                                 variable_scope_stack,
-                                                 return_from_scope);
-    }
-
   switch (s->type)
     {
     case AST_ASSIGNMENT:
@@ -134,9 +108,34 @@ interpreter_evaluate_statement (ASTHandle statement,
       return interpreter_find_variable (s->d.id_data.id,
                                         variable_scope_stack);
       break;
-
+    case AST_LIST:
+      return interpreter_evaluate_list (statement,
+                                        variable_scope_stack,
+                                        return_from_scope);
+      break;
+    default:
+      printf ("Unhandled statement\n");
+      exit (EXIT_FAILURE);
     }
   return NULL;
+}
+
+AmpObject *
+interpreter_evaluate_list (ASTHandle statement,
+                           DICT (ObjVars) **restrict variable_scope_stack,
+                           bool32 *return_from_scope)
+{
+  struct AST *s = ast_get_node (statement);
+  ASTHandle *items = s->d.list_data.items;
+  AmpObject **objects = NULL;
+  for (size_t i = 0; i < ARRAY_COUNT (items); i++)
+    {
+      AmpObject *obj = interpreter_evaluate_statement (items[i],
+                                                       variable_scope_stack,
+                                                       return_from_scope);
+      ARRAY_PUSH (objects, obj);
+    }
+  return AmpListCreate (objects);
 }
 
 AmpObject *
@@ -527,6 +526,11 @@ InterpreterGetOrGenerateAmpObject (ASTHandle handle,
       break;
     case AST_BINARY_COMPARATOR:
       obj = interpreter_evaluate_binary_comparison (handle, variable_scope_stack);
+      break;
+    case AST_LIST:
+      obj = interpreter_evaluate_list (handle,
+                                       variable_scope_stack,
+                                       NULL);
       break;
     default:
       assert (false);

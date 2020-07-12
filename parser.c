@@ -147,47 +147,64 @@ parse_statement (struct Token *t_arr, struct Statement s)
 ASTHandle
 parse_possible_list(struct Token *t_arr, struct Statement s)
 {
-  ASTHandle node = 0;
   /* [ ... ]
    * [ A, B, C]
    * [] */
   if (statement_size (s) >= 2 &&
       t_arr[s.start].value == '[')
     {
-      struct AST *n = NULL;
-      ASTHandle *items = NULL;
-      unsigned int end = s.start + 1; /* skip '[' */
-      while (1)
-        {
-          /* parse a comma separated argument */
-          unsigned int start = end;
-          while (t_arr[end].value != ',' && t_arr[end].value != ']')
-            {
-              if (t_arr[end].value == '[') /* inner list */
-                {
-                  while (t_arr[end].value != ']')
-                    end++;
-                }
-              end++;
-            }
-          if (end-start >= 1)
-            {
-              struct Statement item_statement;
-              item_statement.start = start;
-              item_statement.end = end-1; /* ignore ',' */
-              ARRAY_PUSH (items, parse_statement (t_arr, item_statement));
-            }
-          if (t_arr[end].value == ']')
-            break;
-          else
-            ++end; /* skip over ',' */
-
-        }
-      node = ast_get_node_handle ();
-      n = ast_get_node (node);
-      n->type = AST_LIST;
-      n->d.list_data.items = items;
+      unsigned int end_index;
+      return parse_list (t_arr, s, &end_index);
     }
+
+  return 0;
+}
+
+ASTHandle
+parse_list (struct Token *restrict t_arr,
+            struct Statement s,
+            unsigned int *restrict end_index)
+{
+  ASTHandle node = 0;
+  struct AST *n = NULL;
+  ASTHandle *items = NULL;
+  unsigned int end = s.start + 1; /* skip '[' */
+  while (1)
+    {
+      /* parse a comma separated argument */
+      unsigned int start = end;
+      while (t_arr[end].value != ',' && t_arr[end].value != ']')
+        {
+          if (t_arr[end].value == '[') /* inner list */
+            {
+              struct Statement inner_list = { end, s.end };
+              ARRAY_PUSH (items, parse_list (t_arr, inner_list, &end));
+              start = ++end;
+              continue;
+            }
+          end++;
+        }
+      if (end-start >= 1)
+        {
+          struct Statement item_statement;
+          item_statement.start = start;
+          item_statement.end = end-1; /* ignore ',' */
+          ARRAY_PUSH (items, parse_statement (t_arr, item_statement));
+        }
+      if (t_arr[end].value == ']')
+        {
+          *end_index = end;
+          break;
+        }
+      else
+        {
+          ++end; /* skip over ',' */
+        }
+    }
+  node = ast_get_node_handle ();
+  n = ast_get_node (node);
+  n->type = AST_LIST;
+  n->d.list_data.items = items;
 
   return node;
 }
@@ -227,9 +244,18 @@ parse_arguments (struct Token *t_arr, struct Statement s)
   ASTHandle *parsed_arguments = NULL;
   struct Statement final_argument;
 
-  for (i = s.start; i <= s.end; i++)
+  i = s.start;
+  bool32 another_argument = true;
+  while (i <= s.end)
     {
-      if (t_arr[i].value == argument_separator)
+      if (t_arr[i].value == '[')
+        {
+          struct Statement list_statement = { i, s.end };
+          ARRAY_PUSH (parsed_arguments,
+                      parse_list (t_arr, list_statement, &i));
+          another_argument = false;
+        }
+      else if (t_arr[i].value == argument_separator)
         {
           struct Statement statement;
           statement.start = start_statement;
@@ -238,11 +264,17 @@ parse_arguments (struct Token *t_arr, struct Statement s)
 
           /* skip the argument separator */
           start_statement = i + 1;
+          another_argument = true;
         }
+      ++i;
     }
-  final_argument.start = start_statement;
-  final_argument.end = i - 1;
-  ARRAY_PUSH (parsed_arguments, parse_statement (t_arr, final_argument));
+  if (another_argument)
+    {
+      struct Statement statement;
+      statement.start = start_statement;
+      statement.end = i-1;
+      ARRAY_PUSH (parsed_arguments, parse_statement (t_arr, statement));
+    }
   return parsed_arguments;
 }
 

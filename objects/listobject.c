@@ -22,6 +22,11 @@
 void
 amp_list_dealloc(AmpObject *obj)
 {
+  AmpObject_List *list = AMP_LIST (obj);
+  for (size_t i = 0; i < ARRAY_COUNT (list->array); i++)
+    {
+      AmpObjectDecrementRefcount (list->array[i]);
+    }
   ARRAY_FREE (AMP_LIST (obj)->array);
   AmpObjectDestroyBasic (obj);
 }
@@ -29,7 +34,7 @@ amp_list_dealloc(AmpObject *obj)
 static AmpObjectInfo list_info;
 static bool32 list_info_initialized;
 AmpObject *
-AmpListCreate (AmpObject *array)
+AmpListCreate (AmpObject **array)
 {
   AmpObject_List *list = NULL;
   if (!list_info_initialized)
@@ -43,6 +48,7 @@ AmpListCreate (AmpObject *array)
   list->info = &list_info;
   list->dealloc = amp_list_dealloc;
   list->refcount = 1;
-  ARRAY_ADD (list->array, 10);
+  if (array)
+    list->array = array;
   return AMP_OBJECT (list);
 }

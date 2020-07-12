@@ -1,4 +1,7 @@
-d = [];
-c = [[a, b], [c, d]];
-b = [20, 30, 40 + 5, 60 - 1];
-a = [a, b, c];
+func foo (a, b, c) {
+  print (a + b + c);
+}
+foo ("Hello", "New", "World");
+
+print([[[2, 3, 4], "Hello"]]);
+

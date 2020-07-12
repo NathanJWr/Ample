@@ -52,6 +52,10 @@ ast_free_buffer ()
         {
           ARRAY_FREE (ast_buffer[i].d.func_call_data.args);
         }
+      if (ast_buffer[i].type == AST_LIST)
+        {
+          ARRAY_FREE (ast_buffer[i].d.list_data.items);
+        }
     }
   ARRAY_FREE (ast_buffer);
 }

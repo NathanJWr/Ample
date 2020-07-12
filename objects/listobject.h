@@ -19,8 +19,8 @@
 #include "ampobject.h"
 typedef struct AmpObject_List {
   AMP_OBJECT_HEADER;
-  AmpObject *array;
+  AmpObject **array;
 } AmpObject_List;
 #define AMP_LIST(obj) ((AmpObject_List *)(obj))
-AmpObject *AmpListCreate(AmpObject *array);
+AmpObject *AmpListCreate(AmpObject **array);
 #endif

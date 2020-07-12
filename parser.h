@@ -50,6 +50,7 @@ ASTHandle parse_possible_identifier(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_arithmetic(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_string(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_list(struct Token *t_arr, struct Statement s);
+ASTHandle parse_list (struct Token *t_arr, struct Statement s, unsigned int *end_index);
 ASTHandle parse_possible_assignment(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_if_statement (struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_bool (struct Token *t_arr, struct Statement s);
