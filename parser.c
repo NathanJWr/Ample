@@ -242,7 +242,6 @@ parse_arguments (struct Token *t_arr, struct Statement s)
   unsigned int start_statement = s.start;
   const char argument_separator = ',';
   ASTHandle *parsed_arguments = NULL;
-  struct Statement final_argument;
 
   i = s.start;
   bool32 another_argument = true;
@@ -698,7 +697,7 @@ convert_postfix_to_ast (QUEUE (ASTHandleQueue) * postfix_q)
         {
           STACK_PUSH (&s, n);
         }
-      else
+      else if (n_node->type == AST_OP)
         {
           ASTHandle left, right, ast_handle;
           struct AST *op;
@@ -710,6 +709,7 @@ convert_postfix_to_ast (QUEUE (ASTHandleQueue) * postfix_q)
           right = STACK_FRONT (&s);
           STACK_POP (&s);
           ast_handle = ast_get_node_handle ();
+          n_node = ast_get_node (n); /* re-get n_node pointer */
 
           /* Fill out information of binary op */
           op = ast_get_node (ast_handle);

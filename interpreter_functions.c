@@ -129,15 +129,17 @@ void ample_print_object (AmpObject *obj)
       printf ("%s", AMP_BOOL (obj)->val ? "true" : "false");
       break;
     case AMP_OBJECT_LIST:
-      size_t i;
-      printf("[ ");
-      for (i = 0; i < ARRAY_COUNT (AMP_LIST (obj)->array) - 1; i++)
-        {
-          ample_print_object (AMP_LIST (obj)->array[i]);
-          printf (", ");
-        }
-      ample_print_object (AMP_LIST (obj)->array[i]);
-      printf (" ]");
+      {
+        size_t i;
+        printf("[ ");
+        for (i = 0; i < ARRAY_COUNT (AMP_LIST (obj)->array) - 1; i++)
+          {
+            ample_print_object (AMP_LIST (obj)->array[i]);
+            printf (", ");
+          }
+        ample_print_object (AMP_LIST (obj)->array[i]);
+        printf (" ]");
+      }
       break;
     default:
       printf (ample_error_codes[ERROR_INVALID_OBJECT_TYPE],

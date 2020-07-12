@@ -1,7 +1,6 @@
 func foo (a, b, c) {
   print (a + b + c);
 }
-foo ("Hello", "New", "World");
 
-print([[[2, 3, 4], "Hello"]]);
-
+list = [1, 2, ["Hello", "World"], 3];
+print (list);

@@ -50,18 +50,29 @@ ASTHandle parse_possible_identifier(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_arithmetic(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_string(struct Token *t_arr, struct Statement s);
 ASTHandle parse_possible_list(struct Token *t_arr, struct Statement s);
-ASTHandle parse_list (struct Token *t_arr, struct Statement s, unsigned int *end_index);
-ASTHandle parse_possible_assignment(struct Token *t_arr, struct Statement s);
-ASTHandle parse_possible_if_statement (struct Token *t_arr, struct Statement s);
-ASTHandle parse_possible_bool (struct Token *t_arr, struct Statement s);
-ASTHandle parse_possible_equality (struct Token *t_arr, struct Statement s_indexes);
-ASTHandle parse_possible_function(struct Token *t_arr, struct Statement s);
-ASTHandle parse_scope (struct Token *t_arr, struct Statement s);
+ASTHandle parse_list (struct Token *t_arr,
+                      struct Statement s,
+                      unsigned int *end_index);
+ASTHandle parse_possible_assignment(struct Token *t_arr,
+                                    struct Statement s);
+ASTHandle parse_possible_if_statement (struct Token *t_arr,
+                                       struct Statement s);
+ASTHandle parse_possible_bool (struct Token *t_arr,
+                               struct Statement s);
+ASTHandle parse_possible_equality (struct Token *t_arr,
+                                   struct Statement s_indexes);
+ASTHandle parse_possible_function(struct Token *t_arr,
+                                  struct Statement s);
+ASTHandle parse_scope (struct Token *t_arr,
+                       struct Statement s);
 /* returns an array of ast handles that should be freed with ARRAY_FREE */
-ASTHandle *parse_arguments(struct Token *t_arr, struct Statement s);
+ASTHandle *parse_arguments(struct Token *t_arr,
+                           struct Statement s);
 /* returns an array of ast handles that should be freed with ARRAY_FREE */
-ASTHandle * parse_arguments_surrounded_by_parens (struct Token *t_arr, unsigned int start_index);
-ASTHandle parse_possible_function_call(struct Token *t_arr, struct Statement s);
+ASTHandle * parse_arguments_surrounded_by_parens (struct Token *t_arr,
+                                                  unsigned int start_index);
+ASTHandle parse_possible_function_call(struct Token *t_arr,
+                                       struct Statement s);
 
 /* ===================
     Arithmetic helpers
@@ -71,8 +82,10 @@ bool32 is_arithmetic_op(TValue v);
 bool32 greater_precedence(const char left, const char right);
 /* true if left is of equal operator precedence than right */
 bool32 equal_precedence(const char left, const char right);
-/* checks if there are any tokens that don't make sense in an arithmetic statement */
-bool32 contains_invalid_arithmetic_token (struct Token *t_arr, struct Statement s);
+/* checks if there are any tokens that don't make sense
+ * in an arithmetic statement */
+bool32 contains_invalid_arithmetic_token (struct Token *t_arr,
+                                          struct Statement s);
 
 /* ==================
     Arithmetic parsing
