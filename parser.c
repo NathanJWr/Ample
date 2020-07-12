@@ -105,6 +105,10 @@ parse_statement (struct Token *t_arr, struct Statement s)
   if (node)
     return node;
 
+  node = parse_possible_list (t_arr, s);
+  if (node)
+    return node;
+
   node = parse_possible_integer (t_arr, s);
   if (node)
     return node;
@@ -138,6 +142,51 @@ parse_statement (struct Token *t_arr, struct Statement s)
   printf ("Invalid statement: \n");
   debug_print_statement (t_arr, s);
   exit (1);
+}
+
+ASTHandle
+parse_possible_list(struct Token *t_arr, struct Statement s)
+{
+  ASTHandle node = 0;
+  if (statement_size (s) >= 2 &&
+      t_arr[s.start].value == '[')
+    {
+      struct AST *n = NULL;
+      ASTHandle *items = NULL;
+      unsigned int end = s.start + 1; /* skip '[' */
+      while (1)
+        {
+          /* parse a comma separated argument */
+          unsigned int start = end;
+          while (t_arr[end].value != ',' && t_arr[end].value != ']')
+            {
+              if (t_arr[end].value == '[') /* inner list */
+                {
+                  while (t_arr[end].value != ']')
+                    end++;
+                }
+              end++;
+            }
+          if (end-start >= 1)
+            {
+              struct Statement item_statement;
+              item_statement.start = start;
+              item_statement.end = end-1; /* ignore ',' */
+              ARRAY_PUSH (items, parse_statement (t_arr, item_statement));
+            }
+          if (t_arr[end].value == ']')
+            break;
+          else
+            ++end; /* skip over ',' */
+
+        }
+      node = ast_get_node_handle ();
+      n = ast_get_node (node);
+      n->type = AST_LIST;
+      n->d.list_data.nodes = items;
+    }
+
+  return node;
 }
 
 ASTHandle

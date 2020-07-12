@@ -21,7 +21,8 @@
 #define AMP_OBJECT_TYPES \
   X(AMP_OBJECT_STRING) \
   X(AMP_OBJECT_NUMBER) \
-  X(AMP_OBJECT_BOOL)
+  X(AMP_OBJECT_BOOL) \
+  X(AMP_OBJECT_LIST)
 typedef enum AmpObjectType { 
   AMP_OBJECT_TYPES
 } AmpObjectType;
