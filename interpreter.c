@@ -96,7 +96,65 @@ interpreter_evaluate_statement (ASTHandle statement,
                                                  return_from_scope);
     }
 
+  switch (s->type)
+    {
+    case AST_ASSIGNMENT:
+      interpreter_evaluate_assignment (statement, variable_scope_stack);
+      break;
+    case AST_BINARY_OP:
+      return interpreter_evaluate_binary_op (statement, variable_scope_stack);
+      break;
+    case AST_IF:
+      return interpreter_evaluate_if (statement,
+                                      variable_scope_stack,
+                                      return_from_scope);
+      break;
+    case AST_BINARY_COMPARATOR:
+      return interpreter_evaluate_binary_comparison (statement,
+                                                     variable_scope_stack);
+      break;
+    case AST_FUNC:
+      interpreter_insert_function_into_dict (statement);
+      break;
+    case AST_FUNC_CALL:
+      return interpreter_evaluate_function_call (statement,
+                                                 variable_scope_stack,
+                                                 return_from_scope);
+      break;
+    case AST_INTEGER:
+      return AmpNumberCreate (s->d.int_data.value);
+      break;
+    case AST_STRING:
+      return AmpStringCreate (s->d.str_data.str);
+      break;
+    case AST_BOOL:
+      return AmpBoolCreate (s->d.bool_data.value);
+      break;
+    case AST_IDENTIFIER:
+      return interpreter_find_variable (s->d.id_data.id,
+                                        variable_scope_stack);
+      break;
+
+    }
   return NULL;
+}
+
+AmpObject *
+interpreter_find_variable (const char *var,
+                           DICT (ObjVars) **variable_scope_stack)
+{
+  /* make sure that the variable doesn't already exist in a parent scope */
+  size_t i = 0;
+  AmpObject *obj = NULL;
+  for (i = 0; i < ARRAY_COUNT (variable_scope_stack); i++)
+    {
+      bool32 exists_in_scope = DictObjVars_get (variable_scope_stack[i],
+                                                var,
+                                                &obj);
+      if (exists_in_scope)
+        return obj;
+    }
+  return obj;
 }
 
 DICT (ObjVars) **
@@ -571,13 +629,14 @@ interpreter_evaluate_assignment (ASTHandle statement,
   struct AST *s = ast_get_node (statement);
   struct AST *expr = ast_get_node (s->d.asgn_data.expr);
   size_t i;
-  AmpObject *parent_obj = NULL;
-  bool32 exists_in_parent_scope = false;
   const char *var = s->d.asgn_data.var;
   size_t scope_stack_index = 0;
+
   /* make sure that the variable doesn't already exist in a parent scope */
+  bool32 exists_in_parent_scope = false;
   for (i = 1; i < ARRAY_COUNT (variable_scope_stack); i++)
     {
+      AmpObject *parent_obj = NULL;
       exists_in_parent_scope = DictObjVars_get (variable_scope_stack[i],
                                                 var,
                                                 &parent_obj);
@@ -587,92 +646,17 @@ interpreter_evaluate_assignment (ASTHandle statement,
           break;
         }
     }
-  if (expr->type == AST_INTEGER)
-    {
-      double val = expr->d.int_data.value;
-      AmpObject *obj = AmpNumberCreate (val);
-      interpreter_add_obj_mapping (var,
-                                   obj,
-                                   variable_scope_stack[scope_stack_index]);
-    }
-  else if (expr->type == AST_BINARY_OP)
-    {
-      AmpObject *obj = interpreter_evaluate_binary_op (s->d.asgn_data.expr,
-                                                       variable_scope_stack);
-      interpreter_add_obj_mapping (var,
-                                   obj,
-                                   variable_scope_stack[scope_stack_index]);
-    }
-  else if (expr->type == AST_STRING)
-    {
-      const char *val = expr->d.str_data.str;
-      AmpObject *obj = AmpStringCreate (val);
-      interpreter_add_obj_mapping (var,
-                                   obj,
-                                   variable_scope_stack[scope_stack_index]);
-    }
-  else if (expr->type == AST_BOOL)
-    {
-      bool32 val = expr->d.bool_data.value;
-      AmpObject *obj = AmpBoolCreate (val);
-      interpreter_add_obj_mapping (var,
-                                   obj,
-                                   variable_scope_stack[scope_stack_index]);
-    }
-  else if (expr->type == AST_IDENTIFIER)
-    {
-      const char *expr_var = expr->d.id_data.id;
-      interpreter_duplicate_variable (expr_var,
-                                      var,
-                                      variable_scope_stack,
-                                      scope_stack_index);
-    }
-  else if (expr->type == AST_FUNC_CALL)
-    {
-      AmpObject *obj = interpreter_evaluate_function_call (s->d.asgn_data.expr,
-                                                           variable_scope_stack,
-                                                           NULL);
-      interpreter_add_obj_mapping (var,
-                                   obj,
-                                   variable_scope_stack[scope_stack_index]);
-    }
+  AmpObject *obj = 
+    interpreter_evaluate_statement (s->d.asgn_data.expr, variable_scope_stack, NULL);
+  if (expr->type == AST_IDENTIFIER)
+    interpreter_duplicate_variable (expr->d.id_data.id,
+                                    var,
+                                    variable_scope_stack,
+                                    scope_stack_index);
+  else 
+    interpreter_add_obj_mapping (var,
+                                 obj,
+                                 variable_scope_stack[scope_stack_index]);
+                         
 }
 
-void
-debug__interpreter_print_all_vars (DICT (ObjVars) *vars)
-{
-  size_t i;
-  printf ("DEBUG output of variable map...\n");
-  for (i = 0; i < vars->capacity; i++)
-    {
-      DictEntryHandle h = vars->map[i];
-      if (h != 0)
-        {
-          const DICT_ENTRY (ObjVars) *e = &vars->mem[h];
-          AmpObject *obj = e->val;
-          switch (obj->info->type)
-            {
-            case AMP_OBJECT_NUMBER:
-              printf ("Int Variable: %s\n\tValue: %f\n",
-                      e->key, AMP_NUMBER (obj)->val);
-              break;
-            case AMP_OBJECT_STRING:
-              printf ("Str Variable: %s\n\tValue: %s\n",
-                      e->key, AMP_STRING (obj)->string);
-              break;
-            case AMP_OBJECT_BOOL:
-              printf ("Bool Variable %s\n\tValue: %s\n", e->key, 
-                      AMP_BOOL (obj)->val ? "true" : "false");
-              break;
-            }
-        }
-    }
-}
-
-AmpObject *
-debug__interpreter_get_variable_object (const char *var)
-{
-  AmpObject *obj = NULL;
-  DictObjVars_get (&global_variables, var, &obj);
-  return obj;
-}

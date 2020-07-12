@@ -148,6 +148,9 @@ ASTHandle
 parse_possible_list(struct Token *t_arr, struct Statement s)
 {
   ASTHandle node = 0;
+  /* [ ... ]
+   * [ A, B, C]
+   * [] */
   if (statement_size (s) >= 2 &&
       t_arr[s.start].value == '[')
     {
@@ -183,7 +186,7 @@ parse_possible_list(struct Token *t_arr, struct Statement s)
       node = ast_get_node_handle ();
       n = ast_get_node (node);
       n->type = AST_LIST;
-      n->d.list_data.nodes = items;
+      n->d.list_data.items = items;
     }
 
   return node;

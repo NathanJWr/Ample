@@ -101,7 +101,7 @@ struct ParenAST {
   char val;
 };
 struct ListAST {
-  ASTHandle *nodes;
+  ASTHandle *items;
 };
 struct AST {
   enum ASTType type;
